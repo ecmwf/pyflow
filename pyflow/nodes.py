@@ -678,25 +678,41 @@ class Node(Base):
                     include_path=self.anchor.include_path,
                     what=what,
                 )
+            if isinstance(code, list):
+                return [convert(cls, element, what) for element in code]
             return code
 
-        head = []
-        tail = []
+        heads = []
+        tails = []
 
         if "head" in self.__dict__:
-            head.append(convert(self.__class__, self.__dict__["head"], "head"))
+            heads.append(convert(self.__class__, self.__dict__["head"], "head"))
         if "tail" in self.__dict__:
-            tail.append(convert(self.__class__, self.__dict__["tail"], "tail"))
+            tails.append(convert(self.__class__, self.__dict__["tail"], "tail"))
 
         for cls in inspect.getmro(self.__class__):
             if "head" in cls.__dict__:
-                head.append(convert(cls, cls.__dict__["head"], "head"))
+                heads.append(convert(cls, cls.__dict__["head"], "head"))
             if "tail" in cls.__dict__:
-                tail.append(convert(cls, cls.__dict__["tail"], "tail"))
+                tails.append(convert(cls, cls.__dict__["tail"], "tail"))
 
         parent_head, parent_tail = self.parent.headers
 
-        return parent_head + list(reversed(head)), tail + parent_tail
+        heads = reversed(heads)
+        heads_flatten = []
+        for head in heads:
+            if isinstance(head, list):
+                heads_flatten.append(*head)
+            else:
+                heads_flatten.append(head)
+        tails_flatten = []
+        for tail in tails:
+            if isinstance(head, list):
+                tails_flatten.append(*tail)
+            else:
+                tails_flatten.append(tail)
+
+        return parent_head + heads_flatten, tails_flatten + parent_tail
 
     ################################################
 
