@@ -702,13 +702,13 @@ class Node(Base):
         heads_flatten = []
         for head in heads:
             if isinstance(head, list):
-                heads_flatten.append(*head)
+                heads_flatten.extend(head)
             else:
                 heads_flatten.append(head)
         tails_flatten = []
         for tail in tails:
             if isinstance(tail, list):
-                tails_flatten.append(*tail)
+                tails_flatten.extend(tail)
             else:
                 tails_flatten.append(tail)
 
