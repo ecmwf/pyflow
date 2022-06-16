@@ -707,7 +707,7 @@ class Node(Base):
                 heads_flatten.append(head)
         tails_flatten = []
         for tail in tails:
-            if isinstance(head, list):
+            if isinstance(tail, list):
                 tails_flatten.append(*tail)
             else:
                 tails_flatten.append(tail)
