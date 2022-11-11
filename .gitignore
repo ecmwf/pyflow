@@ -1,0 +1,13 @@
+.cache
+.idea
+.ipynb_checkpoints
+*.egg-info
+*.gv
+*.pdf
+*.pyc
+*.sublime-workspace
+build
+dist
+pyflow.slides.html
+course/scratch/*
+docs/_build

@@ -1,0 +1,18 @@
+
+channels:
+  - conda-forge
+
+dependencies:
+  - python
+  - pip
+  - jupyterlab
+  - ecflow
+  - jinja2
+  - requests
+  - pytest
+  - pygraphviz
+  - pip:
+    - '.'
+
+variables:
+  QT_MAC_WANTS_LAYER: 1

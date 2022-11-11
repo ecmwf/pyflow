@@ -1,0 +1,3 @@
+echo "I am in the INNER test1 case"
+echo "job: %ECF_JOB%"
+echo "task: %TASK%"

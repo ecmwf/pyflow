@@ -1,0 +1,74 @@
+{
+    "FOO": 42,
+    "f1": {
+        "YMD": [
+            "2010-01-01",
+            "2011-01-01"
+        ],
+        "labels": {
+            "foo_label": "bar"
+        },
+        "limits": {
+            "foo": 1,
+            "bar": 2
+        },
+        "t1": {
+            "autocancel": true
+        },
+        "t2": {
+            "cron": "10 * * * *",
+            "triggers": {
+                "complete": "t1"
+            }
+        },
+        "t3": {
+            "day": [
+                "monday",
+                "sunday"
+            ],
+            "defstatus": "complete"
+        },
+        "t4": {
+            "time": "* * * * *",
+            "triggers": {
+                "or": [
+                    {
+                        "complete": "t1"
+                    },
+                    {
+                        "complete": "t2"
+                    }
+                ]
+            }
+        },
+        "t5": {
+            "today": "* * * * *"
+        },
+        "t6": {
+            "meters": {
+                "foo": [
+                    1,
+                    100
+                ],
+                "bar": [
+                    1,
+                    100
+                ]
+            }
+        },
+        "t7": {
+            "script" : "Hello"
+        },
+        "t8": {
+            "inlimits": [
+                "foo",
+                "bar"
+            ]
+        },
+        "t9": {}
+    },
+    "f2": {
+        "FOO": 42
+    },
+    "repeat": true
+}

@@ -1,0 +1,1 @@
+echo 'I am a script in a file'

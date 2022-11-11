@@ -1,0 +1,5 @@
+ipykernel
+nbsphinx
+sphinx-rtd-theme==0.5.2
+sphinx-copybutton==0.3.1
+sphinx-tabs

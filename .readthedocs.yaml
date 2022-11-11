@@ -1,0 +1,21 @@
+# .readthedocs.yaml
+# Read the Docs configuration file
+# See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
+
+# Version of this Read the Docs configuration file.
+version: 3
+
+# Build documentation in the docs/ directory with Sphinx.
+sphinx:
+   configuration: docs/conf.py
+   fail_on_warning: true
+
+# Do not build additional formats.
+formats: []
+
+# Pin the version of Python and requirements required to build the docs.
+python:
+   version: 3.8
+   install:
+     - requirements: docs/requirements.txt
+   system_packages: true

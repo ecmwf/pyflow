@@ -1,0 +1,3 @@
+echo "I am in the outer-most test1 case"
+echo "job: %ECF_JOB%"
+echo "task: %TASK%"
