@@ -283,7 +283,7 @@ class Host:
 
         script = textwrap.dedent(
             """
-        # ----------------------------- TRAPS FOR SUMBITTED JOBS ----------------------------
+        # ----------------------------- TRAPS FOR SUBMITTED JOBS ----------------------------
 
         # Define a error handler
         ERROR() {

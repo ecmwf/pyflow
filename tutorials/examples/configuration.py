@@ -2,7 +2,7 @@
 """
 Example showing the use of the pyflow Configurator
 
-The purpose of the configurator is to enable the creation of sophisticated, reproducable,
+The purpose of the configurator is to enable the creation of sophisticated, reproducible,
 discrete configurations that can be selected on the command line.
 
 Example usages:
