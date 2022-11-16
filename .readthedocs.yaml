@@ -18,11 +18,13 @@ formats: []
 conda:
   environment: environment.yml
 
+build:
+  tools:
+    python: "mambaforge-4.10"
+
 # Pin the version of Python and requirements required to build the docs.
 python:
-   version: 3.8
    install:
      - requirements: docs/requirements.txt  
      - method: pip
        path: .
-   system_packages: true
