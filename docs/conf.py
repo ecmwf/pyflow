@@ -10,6 +10,7 @@ import datetime
 import os
 import re
 import sys
+import pyflow
 
 # -- Path manipulation--------------------------------------------------------
 
@@ -34,7 +35,7 @@ else:
 
 copyright = "%s, %s" % (years, author)
 
-release = "2.1.1"
+release = pyflow.__version__
 
 
 def parse_version(ver_str):

@@ -40,7 +40,7 @@ Copy the following code into a new file called ``hello_pyflow.py``:
    server_port = 1500+passwd.pw_uid
 
    with pf.Suite('hello_pyflow',
-                 host=pf.get_host('localhost'),
+                 host=pf.LocalHost('localhost'),
                  files=filesdir,
                  home=outdir,
                  defstatus=pf.state.suspended) as s:

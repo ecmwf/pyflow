@@ -238,8 +238,6 @@ Hosts
 
 .. autoclass:: pyflow.PBSHost
 
-.. autoclass:: pyflow.TrimurtiHost
-
 
 Scripts
 -------
@@ -285,8 +283,6 @@ Helper Functions
 .. autofunction:: pyflow.ecflow_name
 
 .. autofunction:: pyflow.all_complete
-
-.. autofunction:: pyflow.get_host
 
 .. autofunction:: pyflow.sequence
 
