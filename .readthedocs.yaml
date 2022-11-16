@@ -16,16 +16,9 @@ formats: []
 # create conda environment to install dependencies
 # required to build the jupyter notebook
 conda:
-    environment: environment.yml
+    environment: docs/environment_docs.yml
 
 build:
     os: "ubuntu-20.04"
     tools:
         python: "mambaforge-4.10"
-
-# Pin the version of Python and requirements required to build the docs.
-python:
-    install:
-        - requirements: docs/requirements.txt  
-        - method: pip
-          path: .
