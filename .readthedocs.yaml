@@ -25,7 +25,6 @@ build:
 
 # Pin the version of Python and requirements required to build the docs.
 python:
-    version: 3
     install:
         - requirements: docs/requirements.txt  
         - method: pip
