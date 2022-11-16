@@ -16,7 +16,7 @@ formats: []
 # create conda environment to install dependencies
 # required to build the jupyter notebook
 conda:
-    environment: docs/environment_docs.yml
+    environment: docs/environment.yml
 
 build:
     os: "ubuntu-20.04"
