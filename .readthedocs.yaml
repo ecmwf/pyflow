@@ -13,9 +13,16 @@ sphinx:
 # Do not build additional formats.
 formats: []
 
+# create conda environment to install dependencies
+# required to build the jupyter notebook
+conda:
+  environment: environment.yml
+
 # Pin the version of Python and requirements required to build the docs.
 python:
    version: 3.8
    install:
-     - requirements: docs/requirements.txt
+     - requirements: docs/requirements.txt  
+     - method: pip
+        path: .
    system_packages: true
