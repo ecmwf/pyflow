@@ -2,7 +2,7 @@
 
 **Pyflow** is a high level Python interface to ecFlow allowing the creation of ecFlow suites in a modular and "pythonic" way.
 
-The documentation can be found at <https://sites.ecmwf.int/docs/pyflow/index.html>.
+The documentation can be found at <https://ecmwf-pyflow.readthedocs.io>.
 
 ## Installation
 To install pyflow using conda:
