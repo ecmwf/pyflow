@@ -359,6 +359,8 @@ class NullHost(Host):
         label_host(bool): Whether to create an `exec_host` label on nodes where this host is freshly set.
         user(str): The user running the script. May be used to determine paths. Defaults to current user.
         ecflow_path(str): The directory containing the `ecflow_client` executable.
+        server_ecfvars(bool): If true, don't define ECF_JOB_CMD, ECF_KILL_CMD, ECF_STATUS_CMD and ECF_OUT variables
+            and use defaults from server
 
     Example::
 
@@ -423,6 +425,8 @@ class LocalHost(Host):
         label_host(bool): Whether to create an `exec_host` label on nodes where this host is freshly set.
         user(str): The user running the script. May be used to determine paths. Defaults to current user.
         ecflow_path(str): The directory containing the `ecflow_client` executable.
+        server_ecfvars(bool): If true, don't define ECF_JOB_CMD, ECF_KILL_CMD, ECF_STATUS_CMD and ECF_OUT variables
+            and use defaults from server
 
     Example::
 
@@ -543,6 +547,8 @@ class SSHHost(Host):
         purge_models(bool): Whether to run the `module purge` command, before loading any environment modules.
         label_host(bool): Whether to create an `exec_host` label on nodes where this host is freshly set.
         ecflow_path(str): The directory containing the `ecflow_client` executable.
+        server_ecfvars(bool): If true, don't define ECF_JOB_CMD, ECF_KILL_CMD, ECF_STATUS_CMD and ECF_OUT variables
+            and use defaults from server
 
     Example::
 
@@ -747,6 +753,8 @@ class SLURMHost(SSHHost):
         purge_models(bool): Whether to run the `module purge` command, before loading any environment modules.
         label_host(bool): Whether to create an `exec_host` label on nodes where this host is freshly set.
         ecflow_path(str): The directory containing the `ecflow_client` executable.
+        server_ecfvars(bool): If true, don't define ECF_JOB_CMD, ECF_KILL_CMD, ECF_STATUS_CMD and ECF_OUT variables
+            and use defaults from server
 
     Example::
 
@@ -839,6 +847,8 @@ class PBSHost(SSHHost):
         purge_models(bool): Whether to run the `module purge` command, before loading any environment modules.
         label_host(bool): Whether to create an `exec_host` label on nodes where this host is freshly set.
         ecflow_path(str): The directory containing the `ecflow_client` executable.
+        server_ecfvars(bool): If true, don't define ECF_JOB_CMD, ECF_KILL_CMD, ECF_STATUS_CMD and ECF_OUT variables
+            and use defaults from server
 
     Example::
 
@@ -929,6 +939,8 @@ class TroikaHost(Host):
         purge_models(bool): Whether to run the `module purge` command, before loading any environment modules.
         label_host(bool): Whether to create an `exec_host` label on nodes where this host is freshly set.
         ecflow_path(str): The directory containing the `ecflow_client` executable.
+        server_ecfvars(bool): If true, don't define ECF_JOB_CMD, ECF_KILL_CMD, ECF_STATUS_CMD and ECF_OUT variables
+            and use defaults from server
 
     Example::
 
@@ -953,15 +965,6 @@ class TroikaHost(Host):
             ]
         )
         return cmd
-
-    @property
-    def ecflow_variables(self):
-        """*dict*: The variables that must be set on relevant nodes to run on this host."""
-        if self.inherit_from_server:
-            vars = {}
-        else:
-            vars = super().ecflow_variables
-        return vars
 
     @property
     def job_cmd(self):
