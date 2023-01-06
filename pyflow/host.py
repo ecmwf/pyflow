@@ -59,6 +59,8 @@ class Host:
         user(str): The user running the script. May be used to determine paths, or for login details. Defaults to
             current user.
         ecflow_path(str): The directory containing the `ecflow_client` executable.
+        server_ecfvars(bool): If true, don't define ECF_JOB_CMD, ECF_KILL_CMD, ECF_STATUS_CMD and ECF_OUT variables
+            and use defaults from server
 
     Example::
 
@@ -83,6 +85,7 @@ class Host:
         label_host=True,
         user=getpass.getuser(),
         ecflow_path=None,
+        server_ecfvars=False,
     ):
         self.name = name
         self.hostname = hostname or name
@@ -116,6 +119,8 @@ class Host:
             ecflow_path = os.path.dirname(shutil.which("ecflow_client"))
         self.ecflow_path = ecflow_path
 
+        self.server_ecfvars = server_ecfvars
+
     def __str__(self):
         return "{}({})".format(self.__class__.__name__, self.hostname)
 
@@ -125,12 +130,16 @@ class Host:
     @property
     def ecflow_variables(self):
         """*dict*: The variables that must be set on relevant nodes to run on this host."""
-        vars = {
-            "ECF_JOB_CMD": self.job_cmd,
-            "ECF_KILL_CMD": self.kill_cmd,
-            "ECF_STATUS_CMD": self.status_cmd,
-            "ECF_OUT": self.log_directory,
-        }
+        if self.server_ecfvars:
+            vars = {}
+        else:
+            vars = {
+                "ECF_JOB_CMD": self.job_cmd,
+                "ECF_KILL_CMD": self.kill_cmd,
+                "ECF_STATUS_CMD": self.status_cmd,
+                "ECF_CHECK_CMD": self.check_cmd,
+                "ECF_OUT": self.log_directory,
+            }
         vars.update(self.extra_variables)
         return vars
 
@@ -157,6 +166,11 @@ class Host:
     @property
     def status_cmd(self):
         """*str*: The **ecflow** status command."""
+        return "true"
+
+    @property
+    def check_cmd(self):
+        """*str*: The **ecflow** check command."""
         return "true"
 
     def run_simple_command(self, cmd):
@@ -345,6 +359,8 @@ class NullHost(Host):
         label_host(bool): Whether to create an `exec_host` label on nodes where this host is freshly set.
         user(str): The user running the script. May be used to determine paths. Defaults to current user.
         ecflow_path(str): The directory containing the `ecflow_client` executable.
+        server_ecfvars(bool): If true, don't define ECF_JOB_CMD, ECF_KILL_CMD, ECF_STATUS_CMD and ECF_OUT variables
+            and use defaults from server
 
     Example::
 
@@ -409,6 +425,8 @@ class LocalHost(Host):
         label_host(bool): Whether to create an `exec_host` label on nodes where this host is freshly set.
         user(str): The user running the script. May be used to determine paths. Defaults to current user.
         ecflow_path(str): The directory containing the `ecflow_client` executable.
+        server_ecfvars(bool): If true, don't define ECF_JOB_CMD, ECF_KILL_CMD, ECF_STATUS_CMD and ECF_OUT variables
+            and use defaults from server
 
     Example::
 
@@ -529,6 +547,8 @@ class SSHHost(Host):
         purge_models(bool): Whether to run the `module purge` command, before loading any environment modules.
         label_host(bool): Whether to create an `exec_host` label on nodes where this host is freshly set.
         ecflow_path(str): The directory containing the `ecflow_client` executable.
+        server_ecfvars(bool): If true, don't define ECF_JOB_CMD, ECF_KILL_CMD, ECF_STATUS_CMD and ECF_OUT variables
+            and use defaults from server
 
     Example::
 
@@ -733,6 +753,8 @@ class SLURMHost(SSHHost):
         purge_models(bool): Whether to run the `module purge` command, before loading any environment modules.
         label_host(bool): Whether to create an `exec_host` label on nodes where this host is freshly set.
         ecflow_path(str): The directory containing the `ecflow_client` executable.
+        server_ecfvars(bool): If true, don't define ECF_JOB_CMD, ECF_KILL_CMD, ECF_STATUS_CMD and ECF_OUT variables
+            and use defaults from server
 
     Example::
 
@@ -825,6 +847,8 @@ class PBSHost(SSHHost):
         purge_models(bool): Whether to run the `module purge` command, before loading any environment modules.
         label_host(bool): Whether to create an `exec_host` label on nodes where this host is freshly set.
         ecflow_path(str): The directory containing the `ecflow_client` executable.
+        server_ecfvars(bool): If true, don't define ECF_JOB_CMD, ECF_KILL_CMD, ECF_STATUS_CMD and ECF_OUT variables
+            and use defaults from server
 
     Example::
 
@@ -915,6 +939,8 @@ class TroikaHost(Host):
         purge_models(bool): Whether to run the `module purge` command, before loading any environment modules.
         label_host(bool): Whether to create an `exec_host` label on nodes where this host is freshly set.
         ecflow_path(str): The directory containing the `ecflow_client` executable.
+        server_ecfvars(bool): If true, don't define ECF_JOB_CMD, ECF_KILL_CMD, ECF_STATUS_CMD and ECF_OUT variables
+            and use defaults from server
 
     Example::
 
@@ -922,12 +948,11 @@ class TroikaHost(Host):
             pass
     """
 
-    def __init__(self, hostname, user, **kwargs):
+    def __init__(self, name, user, **kwargs):
 
         self.troika_exec = kwargs.pop("troika_exec", "troika")
         self.troika_config = kwargs.pop("troika_config", "")
-
-        super().__init__(hostname, user=user, **kwargs)
+        super().__init__(name, user=user, **kwargs)
 
     def troika_command(self, command):
         cmd = " ".join(
@@ -957,6 +982,11 @@ class TroikaHost(Host):
     def status_cmd(self):
         """*str*: The **ecflow** status command."""
         return self.troika_command("monitor") + " {} %ECF_JOB%".format(self.hostname)
+
+    @property
+    def check_cmd(self):
+        """*str*: The **ecflow** check command."""
+        return self.troika_command("check") + " {} %ECF_JOB%".format(self.hostname)
 
     @property
     def host_preamble(self):
