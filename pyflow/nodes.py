@@ -150,7 +150,7 @@ class Node(Base):
             variables(Variable_): An attribute for setting an **ecFlow** variable.
             zombies(Zombies_): An attribute that defines how a zombie should be handled in an automated fashion.
             events(Event_): An attribute for declaring an action that a task can trigger while it is running.
-            **kwargs(dict): Accept extra keyword arguments as variables to be set on the node.
+            **kwargs(str): Accept extra keyword arguments as variables to be set on the node.
         """
 
         super().__init__(name)
@@ -808,7 +808,7 @@ class Family(Node):
             variables(Variable_): An attribute for setting an **ecFlow** variable.
             zombies(Zombies_): An attribute that defines how a zombie should be handled in an automated fashion.
             events(Event_): An attribute for declaring an action that a task can trigger while it is running.
-            **kwargs(dict): Accept extra keyword arguments as variables to be set on the family.
+            **kwargs(str): Accept extra keyword arguments as variables to be set on the family.
 
         Example::
 
@@ -890,7 +890,7 @@ class AnchorFamily(AnchorMixin, Family):
             variables(Variable_): An attribute for setting an **ecFlow** variable.
             zombies(Zombies_): An attribute that defines how a zombie should be handled in an automated fashion.
             events(Event_): An attribute for declaring an action that a task can trigger while it is running.
-            **kwargs(dict): Accept extra keyword arguments as variables to be set on the anchor family.
+            **kwargs(str): Accept extra keyword arguments as variables to be set on the anchor family.
 
         Example::
 
@@ -947,7 +947,7 @@ class Suite(AnchorMixin, Node):
             variables(Variable_): An attribute for setting an **ecFlow** variable.
             zombies(Zombies_): An attribute that defines how a zombie should be handled in an automated fashion.
             events(Event_): An attribute for declaring an action that a task can trigger while it is running.
-            **kwargs(dict): Accept extra keyword arguments as variables to be set on the suite.
+            **kwargs(str): Accept extra keyword arguments as variables to be set on the suite.
 
         Example::
 
@@ -1097,7 +1097,7 @@ class Task(Node):
             variables(Variable_): An attribute for setting an **ecFlow** variable.
             zombies(Zombies_): An attribute that defines how a zombie should be handled in an automated fashion.
             events(Event_): An attribute for declaring an action that a task can trigger while it is running.
-            **kwargs(dict): Accept extra keyword arguments as variables to be set on the task.
+            **kwargs(str): Accept extra keyword arguments as variables to be set on the task.
 
         Example::
 
