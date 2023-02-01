@@ -176,8 +176,7 @@ class Host:
     def run_simple_command(self, cmd):
         raise NotImplementedError
 
-    @property
-    def preamble(self):
+    def preamble(self, exit_hook=[]):
         """*list*: The host-specific preamble script for jobs."""
         preamble = SET_ECF_VARIABLES.split("\n")
         if self.extra_paths:
@@ -185,7 +184,7 @@ class Host:
         for var, val in self.environment_variables.items():
             preamble.append('export {}="{}"'.format(var, val))
 
-        specific_preamble = self.host_preamble
+        specific_preamble = self.host_preamble(exit_hook)
         if specific_preamble:
             preamble += specific_preamble
         if self.extra_preamble:
@@ -193,8 +192,7 @@ class Host:
             preamble += self.extra_preamble
         return preamble
 
-    @property
-    def host_preamble(self):
+    def host_preamble(self, exit_hook=[]):
         """*list*: The host-specific implementation of preamble script, always empty."""
         return []
 
@@ -283,7 +281,7 @@ class Host:
 
         return script
 
-    def preamble_error_function(self, ecflowpath, additional_commands=[]):
+    def preamble_error_function(self, ecflowpath, exit_hook=[]):
         """
         Returns the host-specific error function for jobs.
 
@@ -297,45 +295,47 @@ class Host:
 
         script = textwrap.dedent(
             """
-        # ----------------------------- TRAPS FOR SUBMITTED JOBS ----------------------------
-
-        # Define a error handler
-        ERROR() {
-        """
+            # custom exit/cleanup code
+            exit_hook () {
+                echo "cleaning up ...."
+            """
         )
-
-        for line in additional_commands:
+        for line in exit_hook:
             script += "  {}\n".format(line)
+        script += "}\n\n"
 
-        script += (
-            textwrap.dedent(
-                """
-        #
-          export PATH=%(ecf_path)s:$PATH
-          set +e                      # Clear -e flag, so we don't fail
-          wait                        # wait for background process to stop
-          ecflow_client --abort=trap  # Notify ecFlow that something went wrong, using 'trap' as the reason
-          trap 0                      # Remove the trap
-          exit 1                      # End the script with error
-        }
+        script = textwrap.dedent(
+            (
+            """
+            # ----------------------------- TRAPS FOR SUBMITTED JOBS ----------------------------
 
-        # Trap any calls to exit and errors caught by the -e flag
-        trap ERROR 0
+            # Define a error handler
+            ERROR() {
+                export PATH=%(ecf_path)s:$PATH
+                set +e                      # Clear -e flag, so we don't fail
+                wait                        # wait for background process to stop
+                exit_hook                   # calling custom exit/cleaning code
+                ecflow_client --abort=trap  # Notify ecFlow that something went wrong, using 'trap' as the reason
+                trap 0                      # Remove the trap
+                exit 1                      # End the script with error
+            }
 
-        # Trap any signal that may cause the script to fail
-        trap '{ echo "Killed by a signal"; ERROR ; }' 1 2 3 4 5 6 7 8 10 12 13 15
-        """
+            # Trap any calls to exit and errors caught by the -e flag
+            trap ERROR 0
+
+            # Trap any signal that may cause the script to fail
+            trap '{ echo "Killed by a signal"; ERROR ; }' 1 2 3 4 5 6 7 8 10 12 13 15
+            """
             )
             % {"ecf_path": ecflowpath}
         )
         return script
 
-    @property
-    def job_preamble(self):
+    def job_preamble(self, exit_hook=[]):
         """*list*: The host-specific preamble for jobs."""
         return self.preamble_init(self.ecflow_path).split(
             "\n"
-        ) + self.preamble_error_function(self.ecflow_path).split("\n")
+        ) + self.preamble_error_function(self.ecflow_path, exit_hook).split("\n")
 
 
 class NullHost(Host):
@@ -377,8 +377,7 @@ class NullHost(Host):
         """*dict*: The variables that must be set on relevant nodes to run on this host, always empty."""
         return {}
 
-    @property
-    def host_preamble(self):
+    def host_preamble(self, exit_hook=[]):
         """
         The host-specific implementation of preamble script, always raises an error.
 
@@ -721,9 +720,8 @@ class SimpleSSHHost(Host):
     def run_simple_command(self, cmd):
         return "ssh {} {}".format(self.host, cmd)
 
-    @property
-    def host_preamble(self):
-        return self.job_preamble
+    def host_preamble(self, exit_hook=[]):
+        return self.job_preamble(exit_hook)
 
     @property
     def host_postamble(self):
@@ -813,10 +811,9 @@ class SLURMHost(SSHHost):
             + " && ecflow_client --abort"
         )
 
-    @property
-    def host_preamble(self):
+    def host_preamble(self, exit_hook=[]):
         """*list*: The host-specific implementation of preamble script."""
-        return self.job_preamble
+        return self.job_preamble(exit_hook)
 
     @property
     def host_postamble(self):
@@ -907,10 +904,9 @@ class PBSHost(SSHHost):
 
         return args
 
-    @property
-    def host_preamble(self):
+    def host_preamble(self, exit_hook=[]):
         """*list*: The host-specific implementation of preamble script."""
-        return self.job_preamble
+        return self.job_preamble(exit_hook)
 
     @property
     def host_postamble(self):
@@ -988,9 +984,8 @@ class TroikaHost(Host):
         """*str*: The **ecflow** check command."""
         return self.troika_command("check") + " {} %ECF_JOB%".format(self.hostname)
 
-    @property
-    def host_preamble(self):
-        return self.job_preamble
+    def host_preamble(self, exit_hook=[]):
+        return self.job_preamble(exit_hook)
 
     @property
     def host_postamble(self):
