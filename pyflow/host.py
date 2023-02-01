@@ -301,10 +301,10 @@ class Host:
             """
         )
         for line in exit_hook:
-            script += "  {}\n".format(line)
+            script += f"    {line}\n"
         script += "}\n\n"
 
-        script = textwrap.dedent(
+        script += textwrap.dedent(
             (
             """
             # ----------------------------- TRAPS FOR SUBMITTED JOBS ----------------------------
