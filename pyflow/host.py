@@ -177,7 +177,7 @@ class Host:
     def run_simple_command(self, cmd):
         raise NotImplementedError
 
-    def preamble(self, exit_hook=[]):
+    def preamble(self, exit_hook=None):
         """*list*: The host-specific preamble script for jobs."""
         preamble = SET_ECF_VARIABLES.split("\n")
         if self.extra_paths:
@@ -193,7 +193,7 @@ class Host:
             preamble += self.extra_preamble
         return preamble
 
-    def host_preamble(self, exit_hook=[]):
+    def host_preamble(self, exit_hook=None):
         """*list*: The host-specific implementation of preamble script, always empty."""
         return []
 
@@ -282,7 +282,7 @@ class Host:
 
         return script
 
-    def preamble_error_function(self, ecflowpath, exit_hook=[]):
+    def preamble_error_function(self, ecflowpath, exit_hook=None):
         """
         Returns the host-specific error function for jobs.
 
@@ -293,16 +293,18 @@ class Host:
         Returns:
             *str*: The error function script.
         """
+        script = ""
 
-        script = textwrap.dedent(
+        script += textwrap.dedent(
             """
             # custom exit/cleanup code
             exit_hook () {
                 echo "cleaning up ...."
             """
         )
-        for line in exit_hook:
-            script += f"    {line}\n"
+        if exit_hook: 
+            for line in exit_hook:
+                script += f"    {line}\n"
         script += "}\n\n"
 
         script += textwrap.dedent(
@@ -332,7 +334,7 @@ class Host:
         )
         return script
 
-    def job_preamble(self, exit_hook=[]):
+    def job_preamble(self, exit_hook=None):
         """*list*: The host-specific preamble for jobs."""
         return self.preamble_init(self.ecflow_path).split(
             "\n"
@@ -378,7 +380,7 @@ class NullHost(Host):
         """*dict*: The variables that must be set on relevant nodes to run on this host, always empty."""
         return {}
 
-    def host_preamble(self, exit_hook=[]):
+    def host_preamble(self, exit_hook=None):
         """
         The host-specific implementation of preamble script, always raises an error.
 
@@ -721,7 +723,7 @@ class SimpleSSHHost(Host):
     def run_simple_command(self, cmd):
         return "ssh {} {}".format(self.host, cmd)
 
-    def host_preamble(self, exit_hook=[]):
+    def host_preamble(self, exit_hook=None):
         return self.job_preamble(exit_hook)
 
     @property
@@ -812,7 +814,7 @@ class SLURMHost(SSHHost):
             + " && ecflow_client --abort"
         )
 
-    def host_preamble(self, exit_hook=[]):
+    def host_preamble(self, exit_hook=None):
         """*list*: The host-specific implementation of preamble script."""
         return self.job_preamble(exit_hook)
 
@@ -905,7 +907,7 @@ class PBSHost(SSHHost):
 
         return args
 
-    def host_preamble(self, exit_hook=[]):
+    def host_preamble(self, exit_hook=None):
         """*list*: The host-specific implementation of preamble script."""
         return self.job_preamble(exit_hook)
 
@@ -985,7 +987,7 @@ class TroikaHost(Host):
         """*str*: The **ecflow** check command."""
         return self.troika_command("check") + " {} %ECF_JOB%".format(self.hostname)
 
-    def host_preamble(self, exit_hook=[]):
+    def host_preamble(self, exit_hook=None):
         return self.job_preamble(exit_hook)
 
     @property
