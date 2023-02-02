@@ -26,8 +26,8 @@ POSTAMBLE_SUBMITTED_JOBS = """
 # -------------------------- ECFLOW STATUS FOR SUBMITTED JOBS ------------------------,
 
 wait                      # wait for background process to stop
-trap 0                    # Remove all traps
 exit_hook                 # calling custom exit/cleaning code
+trap 0                    # Remove all traps
 ecflow_client --complete  # Notify ecFlow of a normal end
 exit 0
 """
@@ -315,7 +315,7 @@ class Host:
             # Define a error handler
             ERROR() {
                 export PATH=%(ecf_path)s:$PATH
-                set +e                      # Clear -e flag, so we don't fail
+                set +eu                     # Clear -eu flag, so we don't fail
                 wait                        # wait for background process to stop
                 exit_hook                   # calling custom exit/cleaning code
                 ecflow_client --abort=trap  # Notify ecFlow that something went wrong, using 'trap' as the reason
