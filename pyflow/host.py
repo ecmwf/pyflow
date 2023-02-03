@@ -787,8 +787,7 @@ class SLURMHost(SSHHost):
         return (
             "mkdir -p $(dirname %ECF_JOBOUT%); "
             + 'cp %ECF_JOB% "%ECF_JOBOUT%.jobfile"; '
-            + ('{} {}@{} "sh -l -c \'sbatch -o "%ECF_JOBOUT%" "%ECF_JOBOUT%.jobfile"'
-               ' /> "%ECF_JOBOUT%.jobfile.sub"\'"').format(
+            + '{} {}@{} "sh -l -c \'sbatch -o "%ECF_JOBOUT%" "%ECF_JOBOUT%.jobfile" /> "%ECF_JOBOUT%.jobfile.sub"\'"'.format(  # noqa: E501
                 SSH_COMMAND, self.user, self.hostname
             )
         )
@@ -802,10 +801,10 @@ class SLURMHost(SSHHost):
             + "export ECF_NAME=%ECF_NAME%; "
             + "export ECF_PASS=%ECF_PASS%; "
             + "export ECF_TRYNO=%ECF_TRYNO%; "
-            + ("{} {}@{} \"sh -l -c 'scancel \"\\$(grep Submitted '%ECF_JOBOUT%.jobfile.sub'"
-               " | cut -d' ' -f4)\"'\"").format(
-                SSH_COMMAND, self.user, self.hostname
-            )
+            + (
+                "{} {}@{} \"sh -l -c 'scancel \"\\$(grep Submitted '%ECF_JOBOUT%.jobfile.sub'"
+                " | cut -d' ' -f4)\"'\""
+            ).format(SSH_COMMAND, self.user, self.hostname)
             + " && ecflow_client --abort"
         )
 

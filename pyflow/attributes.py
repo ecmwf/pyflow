@@ -1026,7 +1026,9 @@ class Manual(Attribute):
         if not self.value.strip():
             return []
 
-        return ["%manual"] + [line.rstrip() for line in self.value.split("\n")] + ["%end"]
+        return (
+            ["%manual"] + [line.rstrip() for line in self.value.split("\n")] + ["%end"]
+        )
 
 
 ###################################################################
