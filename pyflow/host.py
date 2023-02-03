@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 
 import getpass
-import grp
 
 # Code needed for all types of script to set the ecflow variables used later
 import os
@@ -11,7 +10,6 @@ import textwrap
 
 from .attributes import Label, Limit
 from .base import STACK
-from .configurator import FileConfiguration
 from .nodes import DuplicateNodeError, Family, ecflow_name
 
 SET_ECF_VARIABLES = """
@@ -33,8 +31,6 @@ exit 0
 """
 
 
-#  SSH_COMMAND = 'ssh -o ControlMaster=auto -o ControlPath="%ECF_FILES%/%%l:%%r@%%h:%%p" -o ControlPersist=yes -o ConnectionAttempts=200 -o ServerAliveInterval=30 -vvv'
-#  SSH_COMMAND = 'ssh -v'
 SSH_COMMAND = "ssh -v -o StrictHostKeyChecking=no"
 
 
@@ -765,7 +761,6 @@ class SLURMHost(SSHHost):
     def __init__(self, name, **kwargs):
         passwd = pwd.getpwuid(os.getuid())
         username = passwd.pw_name
-        group = grp.getgrgid(passwd.pw_gid).gr_name
 
         kwargs.setdefault("user", username)
 
@@ -792,7 +787,8 @@ class SLURMHost(SSHHost):
         return (
             "mkdir -p $(dirname %ECF_JOBOUT%); "
             + 'cp %ECF_JOB% "%ECF_JOBOUT%.jobfile"; '
-            + '{} {}@{} "sh -l -c \'sbatch -o "%ECF_JOBOUT%" "%ECF_JOBOUT%.jobfile" > "%ECF_JOBOUT%.jobfile.sub"\'"'.format(
+            + ('{} {}@{} "sh -l -c \'sbatch -o "%ECF_JOBOUT%" "%ECF_JOBOUT%.jobfile"'
+               ' /> "%ECF_JOBOUT%.jobfile.sub"\'"').format(
                 SSH_COMMAND, self.user, self.hostname
             )
         )
@@ -806,7 +802,8 @@ class SLURMHost(SSHHost):
             + "export ECF_NAME=%ECF_NAME%; "
             + "export ECF_PASS=%ECF_PASS%; "
             + "export ECF_TRYNO=%ECF_TRYNO%; "
-            + "{} {}@{} \"sh -l -c 'scancel \"\\$(grep Submitted '%ECF_JOBOUT%.jobfile.sub' | cut -d' ' -f4)\"'\"".format(
+            + ("{} {}@{} \"sh -l -c 'scancel \"\\$(grep Submitted '%ECF_JOBOUT%.jobfile.sub'"
+               " | cut -d' ' -f4)\"'\"").format(
                 SSH_COMMAND, self.user, self.hostname
             )
             + " && ecflow_client --abort"

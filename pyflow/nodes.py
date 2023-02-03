@@ -505,7 +505,7 @@ class Node(Base):
 
         try:
             f = self._relative_path(node)
-        except:
+        except Exception:
             raise RuntimeError(
                 "Cannot determine relative path between {} and {}".format(self, node)
             )
@@ -717,13 +717,13 @@ class Node(Base):
     def _tree(self, dot):
         try:
             dot.edge(self.parent, self)
-        except:
+        except Exception:
             pass
         for n in self._nodes.values():
             if n.name[0] != "_":
                 try:
                     n._tree(dot)
-                except:
+                except Exception:
                     pass
 
     ################################################
@@ -1407,7 +1407,7 @@ def _set_accessor(cls):
 def _get_doc(cls):
     doc = cls.__doc__
 
-    if doc == None:
+    if doc is None:
         return None
 
     return "%s_: %s" % (

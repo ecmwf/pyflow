@@ -16,7 +16,7 @@ def test_script_adder():
 
     t2.script = "echo 'bit1'"
     t2.script += "echo 'bit2'"
-    t2.script = "echo 'bit3'"  ## n.b. assignment
+    t2.script = "echo 'bit3'"  # n.b. assignment
 
     assert "echo 'bit1'\necho 'bit2'\necho 'bit3'" in t1.script.value
 
@@ -42,8 +42,8 @@ def test_script_lists():
     t2.script += ["echo 'bit5'", "echo 'bit6'"]
 
     checkscript = os.linesep.join(
-        l
-        for l in textwrap.dedent(
+        line
+        for line in textwrap.dedent(
             """
         echo 'bit1'
         echo 'bit2'
@@ -53,7 +53,7 @@ def test_script_lists():
         echo 'bit6'
     """
         ).splitlines()
-        if l
+        if line
     )
 
     assert t1.script.value == checkscript
@@ -154,8 +154,8 @@ def test_python_script():
             t = pyflow.Task("t", script=[s1, s2, s3, s4, s5])
 
     checkscript = os.linesep.join(
-        l
-        for l in textwrap.dedent(
+        line
+        for line in textwrap.dedent(
             """
         echo 'bit1'
         python3 -u - <<EOS
@@ -170,7 +170,7 @@ def test_python_script():
         echo 'bit3'
     """
         ).splitlines()
-        if l
+        if line
     )
 
     assert checkscript == t.script.value
@@ -209,13 +209,13 @@ def test_template_script():
     # n.b. we can nest these...
 
     with pyflow.Suite("s", VARIABLE1=1234) as s:
-        with pyflow.Family("f") as f:
-            l = pyflow.Label("A_LABEL", "lll")
-            v = pyflow.Variable("VARIABLE2", "v2")
+        with pyflow.Family("f"):
+            lab = pyflow.Label("A_LABEL", "lll")
+            var = pyflow.Variable("VARIABLE2", "v2")
 
-            t = pyflow.Task("t")
+            task = pyflow.Task("t")
 
-    t.script = pyflow.TemplateScript(
+    task.script = pyflow.TemplateScript(
         pyflow.PythonScript(
             textwrap.dedent(
                 """
@@ -230,9 +230,9 @@ def test_template_script():
             python=3,
         ),
         TEXT_STRING="some text",
-        TEMPLATE_VARIABLE=v,
+        TEMPLATE_VARIABLE=var,
         ANOTHER_VARIABLE=s.VARIABLE1,
-        LABEL=l,
+        LABEL=lab,
     )
 
     checkscript = textwrap.dedent(
@@ -248,7 +248,7 @@ def test_template_script():
     """
     )[1:-1]
 
-    assert t.script.value == checkscript
+    assert task.script.value == checkscript
 
 
 def test_variable_detection_script():

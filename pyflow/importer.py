@@ -18,7 +18,7 @@ except ImportError:
             )
             if os.path.exists(python_dir):
                 sys.path.insert(0, python_dir)
-                import ecflow
+                import ecflow  # noqa: F401
 
                 found = True
                 break

@@ -142,12 +142,12 @@ def test_find_node():
     with Suite("sss") as s:
         with Family("f1") as f1:
             with Family("f2") as f2:
-                t1 = Task("t1")
+                Task("t1")
                 t2 = Task("t2")
-        with Family("f3") as f3:
-            with Family("f4") as f4:
+        with Family("f3"):
+            with Family("f4"):
                 t3 = Task("t3")
-                t4 = Task("t4")
+                Task("t4")
 
     # Test relative paths from the root node
 

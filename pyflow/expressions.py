@@ -2,7 +2,6 @@ from __future__ import absolute_import
 
 import functools
 import operator
-import types
 
 
 class Overloaded:
@@ -243,17 +242,15 @@ class BinOp(Expression):
         self._priority = priority
 
     def generate_expression(self, parent=None):
-        # return "%s(%s, %s)" % (self._op, self._left.generate_expression(parent), self._right.generate_expression(parent))
-
-        l = self._left.generate_expression(parent)
+        expr1 = self._left.generate_expression(parent)
         if self._priority >= self._left._priority:
-            l = "(%s)" % l
+            expr1 = "(%s)" % expr1
 
-        r = self._right.generate_expression(parent)
+        expr2 = self._right.generate_expression(parent)
         if self._priority >= self._right._priority:
-            r = "(%s)" % r
+            expr2 = "(%s)" % expr2
 
-        return "%s %s %s" % (l, self._op, r)
+        return "%s %s %s" % (expr1, self._op, expr2)
 
     def __repr__(self):
         return "(%r %s %r)" % (self._left, self._op, self._right)

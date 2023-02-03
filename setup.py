@@ -1,5 +1,6 @@
 import io
 import os
+from sys import _version_info
 
 from setuptools import find_packages, setup
 
@@ -14,7 +15,7 @@ exec(open("pyflow/version.py").read())
 
 setup(
     name="pyflow",
-    version=__version__,
+    version=_version_info,
     author="European Centre for Medium-Range Weather Forecasts (ECMWF)",
     author_email="software.support@ecmwf.int",
     license="Apache 2.0",

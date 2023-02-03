@@ -197,7 +197,7 @@ class FileSystem(Deployment):
             try:
                 os.makedirs(path)
                 print("Create directory: {}".format(path))
-            except:
+            except Exception:
                 print("WARNING: Couldn't create directory: {}".format(path))
 
     def check(self, target):

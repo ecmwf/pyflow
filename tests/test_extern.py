@@ -110,7 +110,7 @@ def test_extern_attributes():
 def test_extern_safety():
     externs = []
 
-    with Suite("s") as s:
+    with Suite("s"):
         externs.append(ExternTask("/a/b/c/d"))
         externs.append(ExternFamily("/e/f/g/h"))
 

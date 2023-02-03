@@ -60,11 +60,8 @@ def test_host_task():
 
     # Test job commands
 
-    # job_cmd1 = "export ECF_PORT=%ECF_PORT%; export ECF_HOST=%ECF_HOST%; export ECF_NAME=%ECF_NAME%; export ECF_PASS=%ECF_PASS%; export ECF_TRYNO=%ECF_TRYNO%; (ssh -v a-user@a-host bash -s < %ECF_JOB% > %ECF_JOBOUT% 2>&1&& ecflow_client --complete|| ecflow_client --abort) & ecflow_client --init=$!"
-    # job_cmd1 = "export ECF_PORT=%ECF_PORT%; export ECF_HOST=%ECF_HOST%; export ECF_NAME=%ECF_NAME%; export ECF_PASS=%ECF_PASS%; export ECF_TRYNO=%ECF_TRYNO%; (ssh -o StrictHostKeyChecking=no a-user@a-host bash -s < %ECF_JOB% > %ECF_JOBOUT% 2>&1&& ecflow_client --complete|| ecflow_client --abort) & ecflow_client --init=$!"
-    # job_cmd2 = "export ECF_PORT=%ECF_PORT%; export ECF_HOST=%ECF_HOST%; export ECF_NAME=%ECF_NAME%; export ECF_PASS=%ECF_PASS%; export ECF_TRYNO=%ECF_TRYNO%; (%ECF_JOB% 1> %ECF_JOBOUT% 2>&1&& ecflow_client --complete|| ecflow_client --abort) & ecflow_client --init=$!"
-    job_cmd1 = "bash -c 'export ECF_PORT=%ECF_PORT%; export ECF_HOST=%ECF_HOST%; export ECF_NAME=%ECF_NAME%; export ECF_PASS=%ECF_PASS%; export ECF_TRYNO=%ECF_TRYNO%; export PATH=/usr/local/bin:$PATH; ecflow_client --init=\"$$\" && ssh -v -o StrictHostKeyChecking=no a-user@a-host bash -s < %ECF_JOB%&& ecflow_client --complete || ecflow_client --abort ' 1> %ECF_JOBOUT% 2>&1 &"
-    job_cmd2 = "bash -c 'export ECF_PORT=%ECF_PORT%; export ECF_HOST=%ECF_HOST%; export ECF_NAME=%ECF_NAME%; export ECF_PASS=%ECF_PASS%; export ECF_TRYNO=%ECF_TRYNO%; export PATH=/usr/local/bin:$PATH; ecflow_client --init=\"$$\" && %ECF_JOB% && ecflow_client --complete || ecflow_client --abort ' 1> %ECF_JOBOUT% 2>&1 &"
+    job_cmd1 = "bash -c 'export ECF_PORT=%ECF_PORT%; export ECF_HOST=%ECF_HOST%; export ECF_NAME=%ECF_NAME%; export ECF_PASS=%ECF_PASS%; export ECF_TRYNO=%ECF_TRYNO%; export PATH=/usr/local/bin:$PATH; ecflow_client --init=\"$$\" && ssh -v -o StrictHostKeyChecking=no a-user@a-host bash -s < %ECF_JOB%&& ecflow_client --complete || ecflow_client --abort ' 1> %ECF_JOBOUT% 2>&1 &"  # noqa: E501
+    job_cmd2 = "bash -c 'export ECF_PORT=%ECF_PORT%; export ECF_HOST=%ECF_HOST%; export ECF_NAME=%ECF_NAME%; export ECF_PASS=%ECF_PASS%; export ECF_TRYNO=%ECF_TRYNO%; export PATH=/usr/local/bin:$PATH; ecflow_client --init=\"$$\" && %ECF_JOB% && ecflow_client --complete || ecflow_client --abort ' 1> %ECF_JOBOUT% 2>&1 &"  # noqa: E501
 
     assert not hasattr(t1, "ECF_JOB_CMD")
 
@@ -175,7 +172,7 @@ def test_default_host():
     assert t.host.hostname == "default"
     assert (
         t.host.job_cmd
-        == "bash -c 'export ECF_PORT=%ECF_PORT%; export ECF_HOST=%ECF_HOST%; export ECF_NAME=%ECF_NAME%; export ECF_PASS=%ECF_PASS%; export ECF_TRYNO=%ECF_TRYNO%; export PATH=/usr/local/bin:$PATH; ecflow_client --init=\"$$\" && %ECF_JOB% && ecflow_client --complete || ecflow_client --abort ' 1> %ECF_JOBOUT% 2>&1 &"
+        == "bash -c 'export ECF_PORT=%ECF_PORT%; export ECF_HOST=%ECF_HOST%; export ECF_NAME=%ECF_NAME%; export ECF_PASS=%ECF_PASS%; export ECF_TRYNO=%ECF_TRYNO%; export PATH=/usr/local/bin:$PATH; ecflow_client --init=\"$$\" && %ECF_JOB% && ecflow_client --complete || ecflow_client --abort ' 1> %ECF_JOBOUT% 2>&1 &"  # noqa: E501
     )
     assert t.host.kill_cmd == "pkill -15 -P %ECF_RID%"
 
@@ -217,11 +214,11 @@ def test_host_kill_cmd(class_name):
     if class_name == "LocalHost" or class_name == "SSHHost":
         expected_kill_cmd = "pkill -15 -P %ECF_RID%"
     elif class_name == "SLURMHost":
-        expected_kill_cmd = """export ECF_PORT=%ECF_PORT%; export ECF_HOST=%ECF_HOST%; export ECF_NAME=%ECF_NAME%; export ECF_PASS=%ECF_PASS%; export ECF_TRYNO=%ECF_TRYNO%; ssh -v -o StrictHostKeyChecking=no {}@{} "sh -l -c 'scancel "\\$(grep Submitted '%ECF_JOBOUT%.jobfile.sub' | cut -d' ' -f4)"'" && ecflow_client --abort""".format(
+        expected_kill_cmd = """export ECF_PORT=%ECF_PORT%; export ECF_HOST=%ECF_HOST%; export ECF_NAME=%ECF_NAME%; export ECF_PASS=%ECF_PASS%; export ECF_TRYNO=%ECF_TRYNO%; ssh -v -o StrictHostKeyChecking=no {}@{} "sh -l -c 'scancel "\\$(grep Submitted '%ECF_JOBOUT%.jobfile.sub' | cut -d' ' -f4)"'" && ecflow_client --abort""".format(  # noqa: E501
             username, hostname
         )
     elif class_name == "PBSHost":
-        expected_kill_cmd = """export ECF_PORT=%ECF_PORT%; export ECF_HOST=%ECF_HOST%; export ECF_NAME=%ECF_NAME%; export ECF_PASS=%ECF_PASS%; export ECF_TRYNO=%ECF_TRYNO%; ssh -v -o StrictHostKeyChecking=no {}@{} qdel "\\$(cat '%ECF_JOBOUT%.jobfile.sub')" && ecflow_client --abort""".format(
+        expected_kill_cmd = """export ECF_PORT=%ECF_PORT%; export ECF_HOST=%ECF_HOST%; export ECF_NAME=%ECF_NAME%; export ECF_PASS=%ECF_PASS%; export ECF_TRYNO=%ECF_TRYNO%; ssh -v -o StrictHostKeyChecking=no {}@{} qdel "\\$(cat '%ECF_JOBOUT%.jobfile.sub')" && ecflow_client --abort""".format(  # noqa: E501
             username, hostname
         )
     else:

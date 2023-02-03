@@ -45,7 +45,7 @@ def test_workdir():
     s3 = "\n".join(t3.generate_script()[0])
 
     assert "mkdir" not in s1
-    assert not '[[ -d "/var/tmp/testing" ]] && rm -rf "/var/tmp/testing"' in s2
+    assert '[[ -d "/var/tmp/testing" ]] && rm -rf "/var/tmp/testing"' not in s2
     assert (
         '[[ -d "/var/tmp/testing" ]] || mkdir -p "/var/tmp/testing"\ncd "/var/tmp/testing"'
         in s2

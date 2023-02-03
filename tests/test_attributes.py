@@ -99,7 +99,7 @@ def test_add_limits():
 def test_variable_script_expansions():
     with pyflow.Suite("s", SUITE_VAR="s") as s:
         pyflow.Variable("V", 1234)
-        with pyflow.Family("f", FAMILY_VAR="f") as f:
+        with pyflow.Family("f", FAMILY_VAR="f"):
             t = pyflow.Task("t", TASK_VAR="t")
             t.IAM_AVAR = 4321
 
@@ -266,7 +266,7 @@ def test_date():
     """
     with pyflow.Suite("s") as s:
         with pyflow.Task("t1") as t1:
-            d = pyflow.Date("*.*.3")
+            pyflow.Date("*.*.3")
             # d = pyflow.Date(datetime(year='*', month='*', day=5))
             # d = pyflow.Date(datetime(year=2018, month=1, day=5), datetime(year=2018, month=2, day=6))
 
@@ -482,7 +482,7 @@ class TestRepeats:
         s.check_definition()
 
     def test_date_repeat_script_expansions(self):
-        with pyflow.Suite("s") as s:
+        with pyflow.Suite("s"):
             with pyflow.Task("t1") as t1:
                 pyflow.RepeatDate("DATE_REPEAT", date(2018, 1, 1), date(2019, 12, 31))
             with pyflow.Task("t2") as t2:

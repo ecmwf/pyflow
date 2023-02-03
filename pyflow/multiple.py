@@ -1,5 +1,4 @@
 from .attributes import Attribute, Event, InLimit, Limit
-from .base import Unscoped
 from .nodes import Family, Node, Suite, Task
 
 

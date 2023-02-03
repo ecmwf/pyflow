@@ -91,8 +91,6 @@ class Resource(Task):
         """
         n.b. If a resource does not need to save data at deployment time, it should not do so (e.g. WebResource)
         """
-        install_path = target.files_install_path()
-
         # Install path is for the suite, so we don't need to include the suite name
         assert self.fullname.count("/") > 1
         subpath = self.fullname[self.fullname.find("/", 1) + 1 :]

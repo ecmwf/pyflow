@@ -17,7 +17,7 @@ def definition_to_html(d):
         )
 
         n = re.sub(
-            r"^(\s*)(suite|family|task|endsuite|endfamily|defstatus|meter|edit|trigger|complete|aborted|repeat \w+|cron|label|event|limit|inlimit|autocancel|day|date)\b",
+            r"^(\s*)(suite|family|task|endsuite|endfamily|defstatus|meter|edit|trigger|complete|aborted|repeat \w+|cron|label|event|limit|inlimit|autocancel|day|date)\b",  # noqa: E501
             r'\1<span style="text-weight: bold; color: green">\2</span>',
             n,
         )
