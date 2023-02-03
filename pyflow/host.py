@@ -26,8 +26,9 @@ POSTAMBLE_SUBMITTED_JOBS = """
 # -------------------------- ECFLOW STATUS FOR SUBMITTED JOBS ------------------------,
 
 wait                      # wait for background process to stop
-ecflow_client --complete  # Notify ecFlow of a normal end
+exit_hook                 # calling custom exit/cleaning code
 trap 0                    # Remove all traps
+ecflow_client --complete  # Notify ecFlow of a normal end
 exit 0
 """
 
@@ -59,6 +60,8 @@ class Host:
         user(str): The user running the script. May be used to determine paths, or for login details. Defaults to
             current user.
         ecflow_path(str): The directory containing the `ecflow_client` executable.
+        server_ecfvars(bool): If true, don't define ECF_JOB_CMD, ECF_KILL_CMD, ECF_STATUS_CMD and ECF_OUT variables
+            and use defaults from server
 
     Example::
 
@@ -83,6 +86,7 @@ class Host:
         label_host=True,
         user=getpass.getuser(),
         ecflow_path=None,
+        server_ecfvars=False,
     ):
         self.name = name
         self.hostname = hostname or name
@@ -116,6 +120,8 @@ class Host:
             ecflow_path = os.path.dirname(shutil.which("ecflow_client"))
         self.ecflow_path = ecflow_path
 
+        self.server_ecfvars = server_ecfvars
+
     def __str__(self):
         return "{}({})".format(self.__class__.__name__, self.hostname)
 
@@ -125,12 +131,16 @@ class Host:
     @property
     def ecflow_variables(self):
         """*dict*: The variables that must be set on relevant nodes to run on this host."""
-        vars = {
-            "ECF_JOB_CMD": self.job_cmd,
-            "ECF_KILL_CMD": self.kill_cmd,
-            "ECF_STATUS_CMD": self.status_cmd,
-            "ECF_OUT": self.log_directory,
-        }
+        if self.server_ecfvars:
+            vars = {}
+        else:
+            vars = {
+                "ECF_JOB_CMD": self.job_cmd,
+                "ECF_KILL_CMD": self.kill_cmd,
+                "ECF_STATUS_CMD": self.status_cmd,
+                "ECF_CHECK_CMD": self.check_cmd,
+                "ECF_OUT": self.log_directory,
+            }
         vars.update(self.extra_variables)
         return vars
 
@@ -159,11 +169,15 @@ class Host:
         """*str*: The **ecflow** status command."""
         return "true"
 
+    @property
+    def check_cmd(self):
+        """*str*: The **ecflow** check command."""
+        return "true"
+
     def run_simple_command(self, cmd):
         raise NotImplementedError
 
-    @property
-    def preamble(self):
+    def preamble(self, exit_hook=None):
         """*list*: The host-specific preamble script for jobs."""
         preamble = SET_ECF_VARIABLES.split("\n")
         if self.extra_paths:
@@ -171,7 +185,7 @@ class Host:
         for var, val in self.environment_variables.items():
             preamble.append('export {}="{}"'.format(var, val))
 
-        specific_preamble = self.host_preamble
+        specific_preamble = self.host_preamble(exit_hook)
         if specific_preamble:
             preamble += specific_preamble
         if self.extra_preamble:
@@ -179,8 +193,7 @@ class Host:
             preamble += self.extra_preamble
         return preamble
 
-    @property
-    def host_preamble(self):
+    def host_preamble(self, exit_hook=None):
         """*list*: The host-specific implementation of preamble script, always empty."""
         return []
 
@@ -269,7 +282,7 @@ class Host:
 
         return script
 
-    def preamble_error_function(self, ecflowpath, additional_commands=[]):
+    def preamble_error_function(self, ecflowpath, exit_hook=None):
         """
         Returns the host-specific error function for jobs.
 
@@ -280,48 +293,52 @@ class Host:
         Returns:
             *str*: The error function script.
         """
+        script = ""
 
-        script = textwrap.dedent(
+        script += textwrap.dedent(
             """
-        # ----------------------------- TRAPS FOR SUBMITTED JOBS ----------------------------
-
-        # Define a error handler
-        ERROR() {
-        """
+            # custom exit/cleanup code
+            exit_hook () {
+                echo "cleaning up ...."
+            """
         )
+        if exit_hook: 
+            for line in exit_hook:
+                script += f"    {line}\n"
+        script += "}\n\n"
 
-        for line in additional_commands:
-            script += "  {}\n".format(line)
+        script += textwrap.dedent(
+            (
+            """
+            # ----------------------------- TRAPS FOR SUBMITTED JOBS ----------------------------
 
-        script += (
-            textwrap.dedent(
-                """
-        #
-          export PATH=%(ecf_path)s:$PATH
-          set +e                      # Clear -e flag, so we don't fail
-          wait                        # wait for background process to stop
-          ecflow_client --abort=trap  # Notify ecFlow that something went wrong, using 'trap' as the reason
-          trap 0                      # Remove the trap
-          exit 1                      # End the script with error
-        }
+            # Define a error handler
+            ERROR() {
+                export PATH=%(ecf_path)s:$PATH
+                set +eu                     # Clear -eu flag, so we don't fail
+                wait                        # wait for background process to stop
+                exit_hook                   # calling custom exit/cleaning code
+                ecflow_client --abort=trap  # Notify ecFlow that something went wrong, using 'trap' as the reason
+                trap 0                      # Remove the trap
+                exit 1                      # End the script with error
+            }
 
-        # Trap any calls to exit and errors caught by the -e flag
-        trap ERROR 0
+            # Trap any calls to exit and errors caught by the -e flag
+            trap ERROR 0
 
-        # Trap any signal that may cause the script to fail
-        trap '{ echo "Killed by a signal"; ERROR ; }' 1 2 3 4 5 6 7 8 10 12 13 15
-        """
+            # Trap any signal that may cause the script to fail
+            trap '{ echo "Killed by a signal"; ERROR ; }' 1 2 3 4 5 6 7 8 10 12 13 15
+            """
             )
             % {"ecf_path": ecflowpath}
         )
         return script
 
-    @property
-    def job_preamble(self):
+    def job_preamble(self, exit_hook=None):
         """*list*: The host-specific preamble for jobs."""
         return self.preamble_init(self.ecflow_path).split(
             "\n"
-        ) + self.preamble_error_function(self.ecflow_path).split("\n")
+        ) + self.preamble_error_function(self.ecflow_path, exit_hook).split("\n")
 
 
 class NullHost(Host):
@@ -345,6 +362,8 @@ class NullHost(Host):
         label_host(bool): Whether to create an `exec_host` label on nodes where this host is freshly set.
         user(str): The user running the script. May be used to determine paths. Defaults to current user.
         ecflow_path(str): The directory containing the `ecflow_client` executable.
+        server_ecfvars(bool): If true, don't define ECF_JOB_CMD, ECF_KILL_CMD, ECF_STATUS_CMD and ECF_OUT variables
+            and use defaults from server
 
     Example::
 
@@ -361,8 +380,7 @@ class NullHost(Host):
         """*dict*: The variables that must be set on relevant nodes to run on this host, always empty."""
         return {}
 
-    @property
-    def host_preamble(self):
+    def host_preamble(self, exit_hook=None):
         """
         The host-specific implementation of preamble script, always raises an error.
 
@@ -409,6 +427,8 @@ class LocalHost(Host):
         label_host(bool): Whether to create an `exec_host` label on nodes where this host is freshly set.
         user(str): The user running the script. May be used to determine paths. Defaults to current user.
         ecflow_path(str): The directory containing the `ecflow_client` executable.
+        server_ecfvars(bool): If true, don't define ECF_JOB_CMD, ECF_KILL_CMD, ECF_STATUS_CMD and ECF_OUT variables
+            and use defaults from server
 
     Example::
 
@@ -529,6 +549,8 @@ class SSHHost(Host):
         purge_models(bool): Whether to run the `module purge` command, before loading any environment modules.
         label_host(bool): Whether to create an `exec_host` label on nodes where this host is freshly set.
         ecflow_path(str): The directory containing the `ecflow_client` executable.
+        server_ecfvars(bool): If true, don't define ECF_JOB_CMD, ECF_KILL_CMD, ECF_STATUS_CMD and ECF_OUT variables
+            and use defaults from server
 
     Example::
 
@@ -700,9 +722,8 @@ class SimpleSSHHost(Host):
     def run_simple_command(self, cmd):
         return "ssh {} {}".format(self.host, cmd)
 
-    @property
-    def host_preamble(self):
-        return self.job_preamble
+    def host_preamble(self, exit_hook=None):
+        return self.job_preamble(exit_hook)
 
     @property
     def host_postamble(self):
@@ -732,6 +753,8 @@ class SLURMHost(SSHHost):
         purge_models(bool): Whether to run the `module purge` command, before loading any environment modules.
         label_host(bool): Whether to create an `exec_host` label on nodes where this host is freshly set.
         ecflow_path(str): The directory containing the `ecflow_client` executable.
+        server_ecfvars(bool): If true, don't define ECF_JOB_CMD, ECF_KILL_CMD, ECF_STATUS_CMD and ECF_OUT variables
+            and use defaults from server
 
     Example::
 
@@ -789,10 +812,9 @@ class SLURMHost(SSHHost):
             + " && ecflow_client --abort"
         )
 
-    @property
-    def host_preamble(self):
+    def host_preamble(self, exit_hook=None):
         """*list*: The host-specific implementation of preamble script."""
-        return self.job_preamble
+        return self.job_preamble(exit_hook)
 
     @property
     def host_postamble(self):
@@ -823,6 +845,8 @@ class PBSHost(SSHHost):
         purge_models(bool): Whether to run the `module purge` command, before loading any environment modules.
         label_host(bool): Whether to create an `exec_host` label on nodes where this host is freshly set.
         ecflow_path(str): The directory containing the `ecflow_client` executable.
+        server_ecfvars(bool): If true, don't define ECF_JOB_CMD, ECF_KILL_CMD, ECF_STATUS_CMD and ECF_OUT variables
+            and use defaults from server
 
     Example::
 
@@ -880,10 +904,9 @@ class PBSHost(SSHHost):
 
         return args
 
-    @property
-    def host_preamble(self):
+    def host_preamble(self, exit_hook=None):
         """*list*: The host-specific implementation of preamble script."""
-        return self.job_preamble
+        return self.job_preamble(exit_hook)
 
     @property
     def host_postamble(self):
@@ -912,6 +935,8 @@ class TroikaHost(Host):
         purge_models(bool): Whether to run the `module purge` command, before loading any environment modules.
         label_host(bool): Whether to create an `exec_host` label on nodes where this host is freshly set.
         ecflow_path(str): The directory containing the `ecflow_client` executable.
+        server_ecfvars(bool): If true, don't define ECF_JOB_CMD, ECF_KILL_CMD, ECF_STATUS_CMD and ECF_OUT variables
+            and use defaults from server
 
     Example::
 
@@ -919,11 +944,10 @@ class TroikaHost(Host):
             pass
     """
 
-    def __init__(self, hostname, user, **kwargs):
+    def __init__(self, name, user, **kwargs):
         self.troika_exec = kwargs.pop("troika_exec", "troika")
         self.troika_config = kwargs.pop("troika_config", "")
-
-        super().__init__(hostname, user=user, **kwargs)
+        super().__init__(name, user=user, **kwargs)
 
     def troika_command(self, command):
         cmd = " ".join(
@@ -955,8 +979,12 @@ class TroikaHost(Host):
         return self.troika_command("monitor") + " {} %ECF_JOB%".format(self.hostname)
 
     @property
-    def host_preamble(self):
-        return self.job_preamble
+    def check_cmd(self):
+        """*str*: The **ecflow** check command."""
+        return self.troika_command("check") + " {} %ECF_JOB%".format(self.hostname)
+
+    def host_preamble(self, exit_hook=None):
+        return self.job_preamble(exit_hook)
 
     @property
     def host_postamble(self):

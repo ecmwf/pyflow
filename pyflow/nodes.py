@@ -150,7 +150,7 @@ class Node(Base):
             variables(Variable_): An attribute for setting an **ecFlow** variable.
             zombies(Zombies_): An attribute that defines how a zombie should be handled in an automated fashion.
             events(Event_): An attribute for declaring an action that a task can trigger while it is running.
-            **kwargs(dict): Accept extra keyword arguments as variables to be set on the node.
+            **kwargs(str): Accept extra keyword arguments as variables to be set on the node.
         """
 
         super().__init__(name)
@@ -805,7 +805,7 @@ class Family(Node):
             variables(Variable_): An attribute for setting an **ecFlow** variable.
             zombies(Zombies_): An attribute that defines how a zombie should be handled in an automated fashion.
             events(Event_): An attribute for declaring an action that a task can trigger while it is running.
-            **kwargs(dict): Accept extra keyword arguments as variables to be set on the family.
+            **kwargs(str): Accept extra keyword arguments as variables to be set on the family.
 
         Example::
 
@@ -887,7 +887,7 @@ class AnchorFamily(AnchorMixin, Family):
             variables(Variable_): An attribute for setting an **ecFlow** variable.
             zombies(Zombies_): An attribute that defines how a zombie should be handled in an automated fashion.
             events(Event_): An attribute for declaring an action that a task can trigger while it is running.
-            **kwargs(dict): Accept extra keyword arguments as variables to be set on the anchor family.
+            **kwargs(str): Accept extra keyword arguments as variables to be set on the anchor family.
 
         Example::
 
@@ -944,7 +944,7 @@ class Suite(AnchorMixin, Node):
             variables(Variable_): An attribute for setting an **ecFlow** variable.
             zombies(Zombies_): An attribute that defines how a zombie should be handled in an automated fashion.
             events(Event_): An attribute for declaring an action that a task can trigger while it is running.
-            **kwargs(dict): Accept extra keyword arguments as variables to be set on the suite.
+            **kwargs(str): Accept extra keyword arguments as variables to be set on the suite.
 
         Example::
 
@@ -1052,7 +1052,7 @@ class Task(Node):
     SHELLVAR = re.compile("\\$\\{?([A-Z_][A-Z0-9_]*)")
 
     def __init__(
-        self, name, autolimit=True, submit_arguments=None, clean_workdir=False, **kwargs
+        self, name, autolimit=True, submit_arguments=None, exit_hook=None, clean_workdir=False, **kwargs
     ):
         """
         Describes what should be carried out as one executable unit within an **ecFlow** suite.
@@ -1060,6 +1060,7 @@ class Task(Node):
         Parameters:
             autolimit(bool): Whether to automatically add the task to the executing hosts limit, if it has one.
             submit_arguments(dict): Parameters to encode into the script to make the scheduler happy.
+            exit_hook(str,list): a script containing some commands to be called at exit time.
             clean_workdir(bool): Whether to ensure that the working directory is empty.+
             script(str,list): The script command or the list of script commands associated with the task.
             json(dict): Parsed JSON for creation of the children node(s).
@@ -1093,7 +1094,7 @@ class Task(Node):
             variables(Variable_): An attribute for setting an **ecFlow** variable.
             zombies(Zombies_): An attribute that defines how a zombie should be handled in an automated fashion.
             events(Event_): An attribute for declaring an action that a task can trigger while it is running.
-            **kwargs(dict): Accept extra keyword arguments as variables to be set on the task.
+            **kwargs(str): Accept extra keyword arguments as variables to be set on the task.
 
         Example::
 
@@ -1104,6 +1105,7 @@ class Task(Node):
         self.script = kwargs.pop("script", Script())
         self._clean_workdir = clean_workdir
         self._submit_arguments = submit_arguments or {}
+        self._exit_hook = ([exit_hook] if isinstance(exit_hook, str) else exit_hook) or []
         super().__init__(name, **kwargs)
 
         # Get the host object, and attempt to add this task to its limits automatically.
@@ -1272,7 +1274,7 @@ class Task(Node):
             "",
         ]
 
-        lines += self.host.preamble
+        lines += self.host.preamble(self._exit_hook)
 
         module_lines = []
         if self.host.module_source:
