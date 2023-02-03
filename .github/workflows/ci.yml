@@ -26,6 +26,11 @@ jobs:
         clang-12@macos-10.15
       build_package_inputs: |
         self_build: false
+        dependencies: |
+          ecmwf/ecbuild
+          ecmwf/ecflow
+        dependency_branch: develop
+
     secrets:
       pypi_username: ${{ secrets.PYPI_USERNAME }}
       pypi_password: ${{ secrets.PYPI_PASSWORD }}
