@@ -5,10 +5,8 @@ import pyflow
 
 
 def test_script_adder():
-
     with pyflow.Suite("s"):
         with pyflow.Family("f"):
-
             t1 = pyflow.Task("t1")
             t2 = pyflow.Task("t2")
 
@@ -28,7 +26,6 @@ def test_script_adder():
 
 
 def test_script_lists():
-
     with pyflow.Suite("s"):
         with pyflow.Family("f"):
             t1 = pyflow.Task("t1")
@@ -64,10 +61,8 @@ def test_script_lists():
 
 
 def test_script_objects():
-
     with pyflow.Suite("s"):
         with pyflow.Family("f"):
-
             s1 = pyflow.Script("echo 'bit1'")
             s2 = pyflow.Script("echo 'bit2'")
             s3 = pyflow.Script("echo 'bit3'")
@@ -97,9 +92,7 @@ def test_lazy_generation():
             return ["derived", "{}".format(obj)]
 
     with pyflow.Suite("s"):
-
         with pyflow.Family("f"):
-
             # A derived script in the middle
 
             t = pyflow.Task("t")
@@ -133,7 +126,6 @@ def test_lazy_generation():
 
 
 def test_filescript():
-
     with pyflow.Suite("s"):
         with pyflow.Family("f"):
             scriptfile = os.path.join(
@@ -151,10 +143,8 @@ def test_filescript():
 
 
 def test_python_script():
-
     with pyflow.Suite("s"):
         with pyflow.Family("f"):
-
             s1 = pyflow.Script("echo 'bit1'")
             s2 = pyflow.PythonScript('print "I am in Python (default)"')
             s3 = pyflow.PythonScript('print "I am a Python 2.7 script"', python=2.7)
@@ -187,7 +177,6 @@ def test_python_script():
 
 
 def test_script_exportables():
-
     with pyflow.Suite("s"):
         v1 = pyflow.Variable("VARIABLE1", "1234")
         with pyflow.Family("f", VARIABLE2=4321) as f:
@@ -263,7 +252,6 @@ def test_template_script():
 
 
 def test_variable_detection_script():
-
     s_vars = {"S_FOO": "hello", "S_BAR": 1, "S_FOO_S_BAR": "3"}
     with pyflow.Suite("s", variables=s_vars):
         t_vars = {"T_FOO": "salut", "T_BAR": 2, "T_FOO_T_BAR": "4"}
@@ -312,7 +300,6 @@ def test_variable_detection_script():
 
 
 if __name__ == "__main__":
-
     from os import path
 
     import pytest

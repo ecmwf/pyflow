@@ -538,7 +538,6 @@ class SSHHost(Host):
     def __init__(
         self, name, user=None, indirect_host=None, indirect_user=None, **kwargs
     ):
-
         if user is None:
             try:
                 user, name = name.split("@")
@@ -741,7 +740,6 @@ class SLURMHost(SSHHost):
     """
 
     def __init__(self, name, **kwargs):
-
         passwd = pwd.getpwuid(os.getuid())
         username = passwd.pw_name
         group = grp.getgrgid(passwd.pw_gid).gr_name
@@ -833,7 +831,6 @@ class PBSHost(SSHHost):
     """
 
     def __init__(self, name, **kwargs):
-
         passwd = pwd.getpwuid(os.getuid())
         username = passwd.pw_name
 
@@ -923,7 +920,6 @@ class TroikaHost(Host):
     """
 
     def __init__(self, hostname, user, **kwargs):
-
         self.troika_exec = kwargs.pop("troika_exec", "troika")
         self.troika_config = kwargs.pop("troika_config", "")
 

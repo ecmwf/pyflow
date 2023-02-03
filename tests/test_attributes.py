@@ -75,7 +75,6 @@ def test_add_node_attributes():
         l2 = pyflow.Limit("l2", 4)
 
         with pyflow.Task("t") as t:
-
             t.inlimits += l1
             t.inlimits += l2
 
@@ -88,7 +87,6 @@ def test_add_limits():
     ECFLOW-1252: += operator on limits only works once
     """
     with pyflow.Suite("s"):
-
         f = pyflow.Family("f")
 
         f.limits += ("name1", 3)
@@ -159,7 +157,6 @@ def test_restricted_variables():
 
     for var in variables:
         with pyflow.Suite("s", **toplevel_complete):
-
             with pytest.raises(RuntimeError):
                 with pyflow.Family("f1", **{var: "bar"}):
                     pass
@@ -183,7 +180,6 @@ def test_restricted_variables():
         toplevel_reduced = {k: v for k, v in toplevel_complete.items() if k != var}
 
         with pyflow.Suite("s", **toplevel_reduced):
-
             with pyflow.Family("f1", **{var: "bar"}):
                 pass
             with pyflow.Family("f2") as f2:

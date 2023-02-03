@@ -65,7 +65,6 @@ def test_manual(tmpdir):
 
 
 def test_unique_scripts(tmpdir):
-
     basedir = str(tmpdir)
 
     # Identical scripts with the same name are allowed

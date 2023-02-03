@@ -139,7 +139,6 @@ def test_suite_builtin_triggers():
 
 
 def test_find_node():
-
     with Suite("sss") as s:
         with Family("f1") as f1:
             with Family("f2") as f2:

@@ -21,7 +21,6 @@ import pyflow
 
 
 class BaseConfiguration(pyflow.FileConfiguration):
-
     # argument specifies the command line argument which will be used to select the
     # particular configuration.
 
@@ -31,7 +30,6 @@ class BaseConfiguration(pyflow.FileConfiguration):
     config_dir = os.path.join(os.path.dirname(__file__), "example_configurations")
 
     def __init__(self, args, value="default"):
-
         # This is the place to put in place checks that the relevant parameters have
         # been passed in, and are the correct type
         assert isinstance(value, str)
@@ -81,7 +79,6 @@ class Configurator(pyflow.Configurator):
 
 
 if __name__ == "__main__":
-
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
 
     # Command line arguments to control the configurator can be suggested by it.

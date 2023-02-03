@@ -4,11 +4,9 @@ import re
 
 
 def definition_to_html(d):
-
     result = []
 
     for n in d.split("\n"):
-
         n = re.sub(r'(".*?")', r'<span style="color: red">\1</span>', n)
         n = re.sub(r"('.*?')", r'<span style="color: red">\1</span>', n)
 
@@ -56,14 +54,12 @@ class HTMLWrapper:
 
 
 def script_to_html(d):
-
     result = []
 
     if isinstance(d, str):
         d = d.split("\n")
 
     for n in d:
-
         n = re.sub(r"&", r"&amp;", n)
         n = re.sub(r"<", r"&lt;", n)
         n = re.sub(r">", r"&gt;", n)

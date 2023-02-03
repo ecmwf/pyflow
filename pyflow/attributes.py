@@ -55,7 +55,6 @@ class Attribute(Base):
 
         # Check if the relative path is invalid. Valid paths end in a node name.
         if rel_path.endswith("."):
-
             if rel_path.endswith(".."):
                 # If the relative path ended in ".." we need to go up 2 levels
                 # to reference the node correctly:
@@ -441,7 +440,6 @@ class RepeatInteger(Exportable):
         self._increment = increment
 
     def _build(self, ecflow_parent):
-
         start = self._start(self) if callable(self._start) else self._start
         end = self._end(self) if callable(self._end) else self._end
         increment = (
@@ -482,7 +480,6 @@ class RepeatDate(Exportable):
         self._increment = increment
 
     def _build(self, ecflow_parent):
-
         start = self._start(self) if callable(self._start) else self._start
         end = self._end(self) if callable(self._end) else self._end
         increment = (
@@ -589,7 +586,6 @@ def is_variable(name):
 
 
 def make_variable(node, name, value):
-
     # Certain ecFlow variables may only be set on the Suite
     if (
         (name in {"ECF_HOME", "ECF_FILES", "ECF_INCLUDE"} and node.suite is not node)
@@ -599,7 +595,6 @@ def make_variable(node, name, value):
         raise RuntimeError("{} can only be set at the suite level".format(name))
 
     with node:
-
         if isinstance(value, (tuple, list)):
             if len(value) in [2, 3]:
                 if is_date(value[0]) and is_date(value[1]):
@@ -761,7 +756,6 @@ class InLimit(Attribute):
         super().__init__("_" + str(value), value)
 
     def _build(self, ecflow_parent):
-
         value = self.value
         if NO_INLIMIT:
             return
@@ -821,7 +815,6 @@ class Meter(Attribute):
             self._threshold = threshold
 
     def _build(self, ecflow_parent):
-
         min = self._min(self) if callable(self._min) else self._min
         max = self._max(self) if callable(self._max) else self._max
         threshold = (

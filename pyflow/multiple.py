@@ -10,7 +10,6 @@ class MultipleNode(Node):
         self._kwargs = kwargs
 
     def _build(self, ecflow_parent):
-
         for n in self._names:
             node = self._class(n, **self._kwargs)
             node._nodes.update(self._nodes)

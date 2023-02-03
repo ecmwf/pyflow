@@ -243,7 +243,6 @@ class BinOp(Expression):
         self._priority = priority
 
     def generate_expression(self, parent=None):
-
         # return "%s(%s, %s)" % (self._op, self._left.generate_expression(parent), self._right.generate_expression(parent))
 
         l = self._left.generate_expression(parent)
@@ -304,7 +303,6 @@ class Or(BinOp):
         super().__init__("or", left, right, 0)
 
     def _simplify(self):
-
         (l, r) = (self._left.evaluate(), self._right.evaluate())
 
         if l is not UNDEFINED and r is not UNDEFINED:
@@ -332,7 +330,6 @@ class And(BinOp):
         super().__init__("and", left, right, 0)
 
     def _simplify(self):
-
         (l, r) = (self._left.evaluate(), self._right.evaluate())
 
         if l is not UNDEFINED and r is not UNDEFINED:
@@ -457,7 +454,6 @@ class Not(Atom):
 
 
 def make_expression(e):
-
     if isinstance(e, str):
         return NodeStatus(e)
 

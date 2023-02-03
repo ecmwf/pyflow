@@ -490,7 +490,6 @@ class Node(Base):
         return "/".join([""] + self.path_list)
 
     def _relative_path(self, node):
-
         if self.suite is not node.suite:
             return self.fullname
 
@@ -613,7 +612,6 @@ class Node(Base):
         return NodeAdder(self, cls, multiple)
 
     def _set_accessor(self, cls, value, multiple=True):
-
         if value is None:
             return self
 
@@ -640,7 +638,6 @@ class Node(Base):
         return self.__setattr__(key, value)
 
     def __getitem__(self, key):
-
         if isinstance(key, slice) and key == slice(None):
             return self.children
 
@@ -1052,7 +1049,6 @@ class Suite(AnchorMixin, Node):
 
 
 class Task(Node):
-
     SHELLVAR = re.compile("\\$\\{?([A-Z_][A-Z0-9_]*)")
 
     def __init__(
