@@ -1,4 +1,4 @@
-jinja
+jinja2
 requests
 pytest
 graphviz
