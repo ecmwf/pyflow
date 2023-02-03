@@ -25,7 +25,7 @@ jobs:
         clang-9@ubuntu-18.04
         clang-12@macos-10.15
       build_package_inputs: |
-        self_build: false
+        self_build: true
         dependencies: |
           ecmwf/ecbuild
           ecmwf/ecflow
