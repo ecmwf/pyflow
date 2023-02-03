@@ -302,14 +302,14 @@ class Host:
                 echo "cleaning up ...."
             """
         )
-        if exit_hook: 
+        if exit_hook:
             for line in exit_hook:
                 script += f"    {line}\n"
         script += "}\n\n"
 
         script += textwrap.dedent(
             (
-            """
+                """
             # ----------------------------- TRAPS FOR SUBMITTED JOBS ----------------------------
 
             # Define a error handler

@@ -1052,7 +1052,13 @@ class Task(Node):
     SHELLVAR = re.compile("\\$\\{?([A-Z_][A-Z0-9_]*)")
 
     def __init__(
-        self, name, autolimit=True, submit_arguments=None, exit_hook=None, clean_workdir=False, **kwargs
+        self,
+        name,
+        autolimit=True,
+        submit_arguments=None,
+        exit_hook=None,
+        clean_workdir=False,
+        **kwargs
     ):
         """
         Describes what should be carried out as one executable unit within an **ecFlow** suite.
@@ -1105,7 +1111,9 @@ class Task(Node):
         self.script = kwargs.pop("script", Script())
         self._clean_workdir = clean_workdir
         self._submit_arguments = submit_arguments or {}
-        self._exit_hook = ([exit_hook] if isinstance(exit_hook, str) else exit_hook) or []
+        self._exit_hook = (
+            [exit_hook] if isinstance(exit_hook, str) else exit_hook
+        ) or []
         super().__init__(name, **kwargs)
 
         # Get the host object, and attempt to add this task to its limits automatically.
