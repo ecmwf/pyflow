@@ -30,6 +30,8 @@ jobs:
           ecmwf/ecbuild
           ecmwf/ecflow
         dependency_branch: develop
+        dependency_cmake_options: |
+          ecmwf/ecflow: "-DENABLE_UI=OFF"
 
     secrets:
       pypi_username: ${{ secrets.PYPI_USERNAME }}
