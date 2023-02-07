@@ -12,23 +12,12 @@ jobs:
     name: qa
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-
-    - uses: actions/setup-python@v4
-
-    - name: Install Python Dependencies
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install black flake8 isort
-
-    - name: Check isort
-      run: isort --check .
-
-    - name: Check black
-      run: black --check .
-
-    - name: Check flake8
-      run: flake8 .
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v4
+      - run: python -m pip install black flake8 isort
+      - run: isort --check .
+      - run: black --check .
+      - run: flake8 .
 
   setup:
     name: setup
@@ -36,8 +25,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
-      - run: pip install -r requirements.txt
-      - run: pip install .
+      - run: python -m pip install -r requirements.txt
+      - run: python -m pip install .
   
   test:
     name: pytest
@@ -50,18 +39,10 @@ jobs:
           environment-file: environment.yml
           python-version: 3.8
           auto-activate-base: false
-      - shell: bash -l {0}
-        run: |
-          conda info
-          conda list
-      - name: Install pyflow
-        run: |
-          python -m pip install .
-      - name: Run pytest
-        shell: bash -l {0}
-        run: |
-            conda install pytest
-            pytest
+      - run: conda info
+      - run: conda list
+      - run: python -m pip install .
+      - run: pytest
 
   notify:
     name: notify
