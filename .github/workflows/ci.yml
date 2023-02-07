@@ -39,10 +39,16 @@ jobs:
           environment-file: environment.yml
           python-version: 3.8
           auto-activate-base: false
-      - run: conda info
-      - run: conda list
-      - run: pip install .
-      - run: pytest
+      - name: Conda check
+        shell: bash -l {0}
+        run: |
+          conda info
+          conda list
+      - name: Install and test
+        shell: bash -l {0}
+        run: |
+          pip install .
+          pytest
 
   notify:
     name: notify
