@@ -169,10 +169,7 @@ jobs:
 
   test:
     name: pytest ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-        matrix:
-            os: ubuntu-20.04
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - uses: conda-incubator/setup-miniconda@v2
