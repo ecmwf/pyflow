@@ -273,10 +273,6 @@ jobs:
         dependency_cmake_options: |
           ecmwf/ecflow: "-DENABLE_UI=OFF"
 
-      if: steps.check-version.outputs.is-new-release == 'true'
-      uses: ecmwf-actions/build-package@v2
-      with: ${{ fromJSON(needs.setup.outputs.inputs-for-ubuntu) }}
-
     - name: Build & Install
       if: steps.check-version.outputs.is-new-release == 'true'
       shell: bash -eux {0}
