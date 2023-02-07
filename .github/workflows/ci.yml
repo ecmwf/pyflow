@@ -168,135 +168,28 @@ jobs:
         echo inputs-for-ubuntu=$(echo "${{ inputs.build_package_inputs || '{}' }}" | yq eval '. * {"os":"ubuntu-20.04","compiler":"gnu-10","compiler_cc":"gcc-10","compiler_cxx":"g++-10","compiler_fc":"gfortran-10"}' --output-format json --indent 0 -) >> $GITHUB_OUTPUT
 
   test:
-    name: test
-    needs:
-    - qa
-    - setup
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
+    name: pytest ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    strategy:
+        matrix:
+            os: ubuntu-20.04
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v3
-      with:
-        repository: ${{ inputs.repository }}
-        ref: ${{ inputs.ref }}
-
-    - name: Set up Homebrew
-      id: set-up-homebrew
-      uses: Homebrew/actions/setup-homebrew@master
-
-    - name: Install boost
-      run: |
-        brew install boost
-
-    - name: Install Dependencies
-      id: install-dependencies
-      uses: ecmwf-actions/build-package@v2
-      with: ${{ fromJSON(needs.setup.outputs.inputs) }}
-
-    - name: Setup Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ inputs.python_version }}
-
-    - name: Install Python Dependencies
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install pytest pytest-cov
-        python -m pip install -r requirements.txt
-
-    - name: Verify Source Distribution
-      shell: bash -eux {0}
-      run: |
-        python setup.py sdist
-        python -m pip install dist/*
-
-    - name: Run Tests with Repository Code
-      env:
-        LD_LIBRARY_PATH: ${{ steps.install-dependencies.outputs.lib_path }}
-      shell: bash -eux {0}
-      run: |
-        DYLD_LIBRARY_PATH=${{ env.LD_LIBRARY_PATH }} python -m pytest --cov=./ --cov-report=xml
-        python -m coverage report
-
-    - name: Codecov Upload
-      if: inputs.codecov_upload && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop')
-      uses: codecov/codecov-action@v3
-
-  deploy:
-    name: deploy
-    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
-    needs:
-    - qa
-    - setup
-    - test
-    runs-on: ubuntu-20.04
-    steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v3
-      with:
-        repository: ${{ inputs.repository }}
-        ref: ${{ inputs.ref }}
-
-    - name: Setup Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ inputs.python_version }}
-
-    - name: Setup Python Environment
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install setuptools wheel twine pytest
-
-    # Checks if the release version matches version declared in the package.
-    - name: Check Version
-      id: check-version
-      shell: bash -eux {0}
-      run: |
-        release=${GITHUB_REF##*/}
-        version=$(python setup.py --version)
-        echo is-new-release=$([ "$release" == "$version" ] && echo true) >> $GITHUB_OUTPUT
-
-    - name: Install Dependencies
-      id: install-dependencies
-      uses: ecmwf-actions/build-package@v2
-      with:
-        self_coverage: true
-        force_build: true
-        cache_suffix: "${{ matrix.build_type }}-${{ env.CACHE_SUFFIX }}"
-        recreate_cache: ${{ matrix.caching == false }}
-        dependencies: |
-          ecmwf/ecbuild
-          ecmwf/ecflow
-        dependency_branch: develop
-        dependency_cmake_options: |
-          ecmwf/ecflow: "-DENABLE_UI=OFF"
-
-    - name: Build & Install
-      if: steps.check-version.outputs.is-new-release == 'true'
-      shell: bash -eux {0}
-      run: |
-        python setup.py sdist
-        python -m pip install dist/*
-
-    - name: Run Tests with Installed Module
-      if: steps.check-version.outputs.is-new-release == 'true'
-      env:
-        LD_LIBRARY_PATH: ${{ steps.install-dependencies.outputs.lib_path }}
-      shell: bash -eux {0}
-      working-directory: tests
-      run: |
-        DYLD_LIBRARY_PATH=${{ env.LD_LIBRARY_PATH }} python -m pytest
-
-    - name: Publish on PyPI
-      if: steps.check-version.outputs.is-new-release == 'true'
-      env:
-        TWINE_USERNAME: ${{ secrets.pypi_username }}
-        TWINE_PASSWORD: ${{ secrets.pypi_password }}
-      shell: bash -eux {0}
-      run: twine upload dist/*
+      - uses: actions/checkout@v2
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: test
+          environment-file: environment.yml
+          python-version: 3.8
+          auto-activate-base: false
+      - shell: bash -l {0}
+        run: |
+          conda info
+          conda list
+      - name: Run pytest
+        shell: bash -l {0}
+        run: |
+            conda install pytest
+            pytest
 
   notify:
     name: notify
@@ -305,7 +198,6 @@ jobs:
     - qa
     - setup
     - test
-    - deploy
     if: always() && inputs.notify_teams && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop')
     steps:
     - name: Notify Teams
