@@ -7,7 +7,6 @@ now = datetime.datetime.now()
 
 def test_follow():
     with Suite("s") as s:
-
         t1 = Task("t1", YMD=(now, now))
         t2 = Task("t2")
         Task("t3")

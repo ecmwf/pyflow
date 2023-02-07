@@ -163,7 +163,7 @@ class Script:
                 if isinstance(val, list):
                     lines += Script.generate_list_scripts(val)
                 else:
-                    lines += [l.rstrip() for l in str(val).split("\n")]
+                    lines += [line.rstrip() for line in str(val).split("\n")]
         return lines
 
     def __iadd__(self, other):

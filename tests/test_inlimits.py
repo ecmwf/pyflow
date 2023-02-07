@@ -8,7 +8,7 @@ def test_inlimits():
     """
     with Suite("s") as s:
         Limits("tlimit", "t2limit", value=3)
-        Tasks("t", "t2", inlimits=lambda l: "{}limit".format(l.parent.name))
+        Tasks("t", "t2", inlimits=lambda lim: "{}limit".format(lim.parent.name))
 
     s.check_definition()
     s.generate_node()

@@ -79,7 +79,6 @@ class NodeAdder:
         return result
 
     def add(self, other):
-
         # Some attribute types have values that can be added to. Others do not.
         # Select the case where we are adding a non-node value to an existing attribute, and
         # try and add the value (using __iadd__ rather than __add__).

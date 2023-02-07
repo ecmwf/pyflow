@@ -42,7 +42,6 @@ class Resource(Task):
     """
 
     def __init__(self, name, hosts):
-
         super().__init__(name, script=DelegatingScript(self))
 
         self._server_filename = None
@@ -92,8 +91,6 @@ class Resource(Task):
         """
         n.b. If a resource does not need to save data at deployment time, it should not do so (e.g. WebResource)
         """
-        install_path = target.files_install_path()
-
         # Install path is for the suite, so we don't need to include the suite name
         assert self.fullname.count("/") > 1
         subpath = self.fullname[self.fullname.find("/", 1) + 1 :]
@@ -161,7 +158,6 @@ class DataResource(Resource):
     """
 
     def __init__(self, name, hosts, source_data):
-
         self._data = source_data
 
         super().__init__(name, hosts)
@@ -210,7 +206,6 @@ class FileResource(Resource):
     """
 
     def __init__(self, name, hosts, source_file):
-
         self._source = source_file
 
         super().__init__(name, hosts)
@@ -269,7 +264,6 @@ class WebResource(Resource):
     """
 
     def __init__(self, name, hosts, url, md5=None):
-
         self._url = url
         self._md5 = md5
         super().__init__(name, hosts)
@@ -284,7 +278,6 @@ class WebResource(Resource):
         """
 
         if not self._md5:
-
             md5_url = "{}.md5".format(self._url)
             print("Getting MD5 from: {}".format(md5_url))
 

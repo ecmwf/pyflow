@@ -75,7 +75,6 @@ def test_add_node_attributes():
         l2 = pyflow.Limit("l2", 4)
 
         with pyflow.Task("t") as t:
-
             t.inlimits += l1
             t.inlimits += l2
 
@@ -88,7 +87,6 @@ def test_add_limits():
     ECFLOW-1252: += operator on limits only works once
     """
     with pyflow.Suite("s"):
-
         f = pyflow.Family("f")
 
         f.limits += ("name1", 3)
@@ -101,7 +99,7 @@ def test_add_limits():
 def test_variable_script_expansions():
     with pyflow.Suite("s", SUITE_VAR="s") as s:
         pyflow.Variable("V", 1234)
-        with pyflow.Family("f", FAMILY_VAR="f") as f:
+        with pyflow.Family("f", FAMILY_VAR="f"):
             t = pyflow.Task("t", TASK_VAR="t")
             t.IAM_AVAR = 4321
 
@@ -159,7 +157,6 @@ def test_restricted_variables():
 
     for var in variables:
         with pyflow.Suite("s", **toplevel_complete):
-
             with pytest.raises(RuntimeError):
                 with pyflow.Family("f1", **{var: "bar"}):
                     pass
@@ -183,7 +180,6 @@ def test_restricted_variables():
         toplevel_reduced = {k: v for k, v in toplevel_complete.items() if k != var}
 
         with pyflow.Suite("s", **toplevel_reduced):
-
             with pyflow.Family("f1", **{var: "bar"}):
                 pass
             with pyflow.Family("f2") as f2:
@@ -270,7 +266,7 @@ def test_date():
     """
     with pyflow.Suite("s") as s:
         with pyflow.Task("t1") as t1:
-            d = pyflow.Date("*.*.3")
+            pyflow.Date("*.*.3")
             # d = pyflow.Date(datetime(year='*', month='*', day=5))
             # d = pyflow.Date(datetime(year=2018, month=1, day=5), datetime(year=2018, month=2, day=6))
 
@@ -486,7 +482,7 @@ class TestRepeats:
         s.check_definition()
 
     def test_date_repeat_script_expansions(self):
-        with pyflow.Suite("s") as s:
+        with pyflow.Suite("s"):
             with pyflow.Task("t1") as t1:
                 pyflow.RepeatDate("DATE_REPEAT", date(2018, 1, 1), date(2019, 12, 31))
             with pyflow.Task("t2") as t2:

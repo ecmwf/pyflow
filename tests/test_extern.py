@@ -23,9 +23,7 @@ now = datetime.datetime.now()
 
 
 def test_extern():
-
     with Suite("s") as s:
-
         t1 = Task("t1", YMD=(now, now))
 
         et = ExternTask("/a/b/c/d")
@@ -68,9 +66,7 @@ def test_extern():
 
 
 def test_extern_attributes():
-
     with Suite("s") as s:
-
         eymd = ExternYMD("/a/b/c/d:YMD")
         eevent = ExternEvent("/e/f/g/h:ev")
         emeter = ExternMeter("/g/h/i/j:mt")
@@ -112,11 +108,9 @@ def test_extern_attributes():
 
 
 def test_extern_safety():
-
     externs = []
 
-    with Suite("s") as s:
-
+    with Suite("s"):
         externs.append(ExternTask("/a/b/c/d"))
         externs.append(ExternFamily("/e/f/g/h"))
 

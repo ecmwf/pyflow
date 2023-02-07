@@ -6,11 +6,8 @@ import pyflow
 
 
 def test_generate_variables():
-
     with pyflow.Suite("s", VARIABLE1="variable1"):
-
         with pyflow.Family("f", VARIABLE2="variable2"):
-
             t = pyflow.Task(
                 "t1",
                 VARIABLE3="variable3",
@@ -36,9 +33,7 @@ def test_generate_variables():
 
 
 def test_workdir():
-
     with pyflow.Suite("s", VARIABLE="/another/directory") as s:
-
         t1 = pyflow.Task("t1", script="test script")
         t2 = pyflow.Task("t2", workdir="/var/tmp/testing", script="test script")
         t3 = pyflow.Task(
@@ -50,7 +45,7 @@ def test_workdir():
     s3 = "\n".join(t3.generate_script()[0])
 
     assert "mkdir" not in s1
-    assert not '[[ -d "/var/tmp/testing" ]] && rm -rf "/var/tmp/testing"' in s2
+    assert '[[ -d "/var/tmp/testing" ]] && rm -rf "/var/tmp/testing"' not in s2
     assert (
         '[[ -d "/var/tmp/testing" ]] || mkdir -p "/var/tmp/testing"\ncd "/var/tmp/testing"'
         in s2
@@ -68,17 +63,14 @@ def test_includes():
         tail = 'echa "a tail"'
 
     class Family2(pyflow.Family):
-
         head = 'echo "FAMILY2-HEAD"'
         tail = 'echo "FAMILY2-TAIL"'
 
     class Family3(pyflow.Family):
-
         head = 'echo "FAMILY3-HEAD"\necho "SECOND LINE"'
         tail = 'echo "FAMILY3-TAIL"'
 
     with MySuite("s"):
-
         t1 = pyflow.Task("t1", script="echo t1")
 
         with pyflow.Family("f1"):
@@ -273,7 +265,6 @@ def test_disable_ecflow_keywords():
 
 
 def test_modules():
-
     h1 = pyflow.LocalHost()
     h2 = pyflow.LocalHost(modules=["mod1/123", "-mod2/321", "mod3/33"])
     h3 = pyflow.LocalHost(

@@ -97,7 +97,6 @@ class FileConfiguration(Configuration):
 
     @classmethod
     def build_configuration_object(cls, args, choice=None, **kwargs):
-
         # We can manually supply the argument, or get it from the commandline arguments.
         # This is mostly useful if we are iterating through the available choices...
         if choice is None:
@@ -137,7 +136,6 @@ class ConfigurationList(Configuration):
     """
 
     def __init__(self, argument, configuration_class):
-
         assert issubclass(configuration_class, FileConfiguration)
 
         self._configuration_class = configuration_class
@@ -154,7 +152,6 @@ class ConfigurationList(Configuration):
         return ["all"] + self._configuration_class.available_choices()
 
     def build_configuration_object(self, args, **kwargs):
-
         keyword = self.argument
         choices = getattr(args, keyword)
 
@@ -179,9 +176,7 @@ class Configurator:
     """
 
     def __init__(self, args, **kwargs):
-
         for attr_name, configuration_class in self.configurations():
-
             setattr(
                 self,
                 attr_name,

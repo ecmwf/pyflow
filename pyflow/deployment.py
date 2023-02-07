@@ -47,7 +47,6 @@ class Deployment:
         return self._files
 
     def deploy_uniqueness_check(self, source, target):
-
         m = hashlib.md5()
         assert isinstance(source, (str, bytes))
         m.update(source.encode("utf-8") if isinstance(source, str) else source)
@@ -193,13 +192,12 @@ class FileSystem(Deployment):
         return path
 
     def create_directory(self, path):
-
         path = self.patch_path(path)
         if not os.path.exists(path):
             try:
                 os.makedirs(path)
                 print("Create directory: {}".format(path))
-            except:
+            except Exception:
                 print("WARNING: Couldn't create directory: {}".format(path))
 
     def check(self, target):

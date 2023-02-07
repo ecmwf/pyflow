@@ -5,10 +5,8 @@ import pyflow
 
 
 def test_script_adder():
-
     with pyflow.Suite("s"):
         with pyflow.Family("f"):
-
             t1 = pyflow.Task("t1")
             t2 = pyflow.Task("t2")
 
@@ -18,7 +16,7 @@ def test_script_adder():
 
     t2.script = "echo 'bit1'"
     t2.script += "echo 'bit2'"
-    t2.script = "echo 'bit3'"  ## n.b. assignment
+    t2.script = "echo 'bit3'"  # n.b. assignment
 
     assert "echo 'bit1'\necho 'bit2'\necho 'bit3'" in t1.script.value
 
@@ -28,7 +26,6 @@ def test_script_adder():
 
 
 def test_script_lists():
-
     with pyflow.Suite("s"):
         with pyflow.Family("f"):
             t1 = pyflow.Task("t1")
@@ -45,8 +42,8 @@ def test_script_lists():
     t2.script += ["echo 'bit5'", "echo 'bit6'"]
 
     checkscript = os.linesep.join(
-        l
-        for l in textwrap.dedent(
+        line
+        for line in textwrap.dedent(
             """
         echo 'bit1'
         echo 'bit2'
@@ -56,7 +53,7 @@ def test_script_lists():
         echo 'bit6'
     """
         ).splitlines()
-        if l
+        if line
     )
 
     assert t1.script.value == checkscript
@@ -64,10 +61,8 @@ def test_script_lists():
 
 
 def test_script_objects():
-
     with pyflow.Suite("s"):
         with pyflow.Family("f"):
-
             s1 = pyflow.Script("echo 'bit1'")
             s2 = pyflow.Script("echo 'bit2'")
             s3 = pyflow.Script("echo 'bit3'")
@@ -97,9 +92,7 @@ def test_lazy_generation():
             return ["derived", "{}".format(obj)]
 
     with pyflow.Suite("s"):
-
         with pyflow.Family("f"):
-
             # A derived script in the middle
 
             t = pyflow.Task("t")
@@ -133,7 +126,6 @@ def test_lazy_generation():
 
 
 def test_filescript():
-
     with pyflow.Suite("s"):
         with pyflow.Family("f"):
             scriptfile = os.path.join(
@@ -151,10 +143,8 @@ def test_filescript():
 
 
 def test_python_script():
-
     with pyflow.Suite("s"):
         with pyflow.Family("f"):
-
             s1 = pyflow.Script("echo 'bit1'")
             s2 = pyflow.PythonScript('print "I am in Python (default)"')
             s3 = pyflow.PythonScript('print "I am a Python 2.7 script"', python=2.7)
@@ -164,8 +154,8 @@ def test_python_script():
             t = pyflow.Task("t", script=[s1, s2, s3, s4, s5])
 
     checkscript = os.linesep.join(
-        l
-        for l in textwrap.dedent(
+        line
+        for line in textwrap.dedent(
             """
         echo 'bit1'
         python3 -u - <<EOS
@@ -180,14 +170,13 @@ def test_python_script():
         echo 'bit3'
     """
         ).splitlines()
-        if l
+        if line
     )
 
     assert checkscript == t.script.value
 
 
 def test_script_exportables():
-
     with pyflow.Suite("s"):
         v1 = pyflow.Variable("VARIABLE1", "1234")
         with pyflow.Family("f", VARIABLE2=4321) as f:
@@ -220,13 +209,13 @@ def test_template_script():
     # n.b. we can nest these...
 
     with pyflow.Suite("s", VARIABLE1=1234) as s:
-        with pyflow.Family("f") as f:
-            l = pyflow.Label("A_LABEL", "lll")
-            v = pyflow.Variable("VARIABLE2", "v2")
+        with pyflow.Family("f"):
+            lab = pyflow.Label("A_LABEL", "lll")
+            var = pyflow.Variable("VARIABLE2", "v2")
 
-            t = pyflow.Task("t")
+            task = pyflow.Task("t")
 
-    t.script = pyflow.TemplateScript(
+    task.script = pyflow.TemplateScript(
         pyflow.PythonScript(
             textwrap.dedent(
                 """
@@ -241,9 +230,9 @@ def test_template_script():
             python=3,
         ),
         TEXT_STRING="some text",
-        TEMPLATE_VARIABLE=v,
+        TEMPLATE_VARIABLE=var,
         ANOTHER_VARIABLE=s.VARIABLE1,
-        LABEL=l,
+        LABEL=lab,
     )
 
     checkscript = textwrap.dedent(
@@ -259,11 +248,10 @@ def test_template_script():
     """
     )[1:-1]
 
-    assert t.script.value == checkscript
+    assert task.script.value == checkscript
 
 
 def test_variable_detection_script():
-
     s_vars = {"S_FOO": "hello", "S_BAR": 1, "S_FOO_S_BAR": "3"}
     with pyflow.Suite("s", variables=s_vars):
         t_vars = {"T_FOO": "salut", "T_BAR": 2, "T_FOO_T_BAR": "4"}
@@ -312,7 +300,6 @@ def test_variable_detection_script():
 
 
 if __name__ == "__main__":
-
     from os import path
 
     import pytest

@@ -78,7 +78,7 @@ class Base(Overloaded):
     def __repr__(self):
         try:
             return "%s(%s)" % (type(self).__name__, self.fullname)
-        except:
+        except Exception:
             return "%s(%s)" % (type(self).__name__, self.name)
 
     @property
