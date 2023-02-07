@@ -182,6 +182,9 @@ jobs:
         run: |
           conda info
           conda list
+      - name: Install pyflow
+        run: |
+          python -m pip install .
       - name: Run pytest
         shell: bash -l {0}
         run: |
