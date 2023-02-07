@@ -44,8 +44,8 @@ jobs:
         run: |
           conda info
           conda list
-      - name: Install and test
-        shell: bash -l {0}
+      - name: Install pyflow and test
+        shell: bash -l {0}  # required to load conda I think
         run: |
           python -m pip install .
           pytest
