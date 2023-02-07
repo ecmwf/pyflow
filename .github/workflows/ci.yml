@@ -28,6 +28,7 @@ jobs:
         self_build: false
         dependencies: |
           ecmwf/ecbuild
+          boostorg/boost@refs/tags/boost-1.81.0
           ecmwf/ecflow
         dependency_branch: develop
         dependency_cmake_options: |
