@@ -67,7 +67,6 @@ def test_executable_children():
 
 
 def test_files_locations():
-
     with Suite("S", files="/a/base/path"):
         t1 = Task("t1")
         with Family("f1"):

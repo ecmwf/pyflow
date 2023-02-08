@@ -9,7 +9,6 @@ class Configuration(BaseConfiguration):
         return "(first) {}".format(super().__str__())
 
     def __init__(self, args):
-
         # Any imports that are required in the __init__ function should be here, not globally
         # to circumvent globals() confusion with execfile()
 

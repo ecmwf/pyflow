@@ -19,7 +19,6 @@ from pyflow import (
 
 def test_suite():
     with Suite("s", FOO=12, BAR=23, YMD=99999) as s:
-
         Limit("foo", 1)
         Limit("bar", 2)
 
@@ -29,7 +28,6 @@ def test_suite():
             Task("t3").triggers = (s.f.t1 == "complete") | "2 < 8"
 
         with Family("g") as g:
-
             InLimit("foo")
 
             g.QUUX = [1, 2]

@@ -8,7 +8,6 @@ from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 from pyflow.importer import ecflow
 
 if __name__ == "__main__":
-
     # Argument parsing
 
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
@@ -80,12 +79,10 @@ if __name__ == "__main__":
         ("files", base_vars["ECF_FILES"]),
         ("include", base_vars["ECF_INCLUDE"]),
     ):
-
         local_path = os.path.join(repo_path, local, filesystem_family_path)
         remote_path = os.path.join(remote, filesystem_family_path)
 
         if os.path.exists(local_path):
-
             cmd = [
                 "rsync",
                 "--recursive",
@@ -97,7 +94,6 @@ if __name__ == "__main__":
             ]
 
             if args.deploy_files:
-
                 print("Command: {}".format(cmd))
                 subprocess.check_call(cmd)
 

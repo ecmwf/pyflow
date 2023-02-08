@@ -1,5 +1,4 @@
 from .attributes import Attribute, Event, InLimit, Limit
-from .base import Unscoped
 from .nodes import Family, Node, Suite, Task
 
 
@@ -10,7 +9,6 @@ class MultipleNode(Node):
         self._kwargs = kwargs
 
     def _build(self, ecflow_parent):
-
         for n in self._names:
             node = self._class(n, **self._kwargs)
             node._nodes.update(self._nodes)

@@ -60,7 +60,6 @@ def _parse(m, first, last):
 
 
 def _expand(y):
-
     if y is None:
         return None
 
@@ -133,7 +132,7 @@ class Crontab:
                 hour = _expand(hour)
 
             ts = set()
-            for (h, m) in itertools.product(hour, minute):
+            for h, m in itertools.product(hour, minute):
                 ts.add((h, m))
 
             assert len(ts) > 0
@@ -168,7 +167,6 @@ class Crontab:
         return ecflow.Time(self._timeseries)
 
     def generate_cron(self):
-
         cron = ecflow.Cron()
 
         if self._day_of_week is not None:

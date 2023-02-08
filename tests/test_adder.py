@@ -42,7 +42,6 @@ def test_families():
 
 
 def test_triggers():
-
     with Suite("s") as s:
         s.tasks += ["t1", "t2", "t3", "t4"]
 

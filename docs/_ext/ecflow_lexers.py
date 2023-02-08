@@ -1,4 +1,4 @@
-from pygments.lexer import RegexLexer, bygroups, include, inherit, using
+from pygments.lexer import RegexLexer, bygroups, inherit, using
 from pygments.lexers.shell import BashLexer
 from pygments.token import Comment, Keyword, Literal, Name, Punctuation, String, Text
 
@@ -17,7 +17,7 @@ class EcflowDefLexer(RegexLexer):
             ),
             (r"^\s*(?:endsuite|endfamily)", Keyword),
             (
-                r"^(\s*(?:edit|label|event|limit|inlimit|meter))(\s+-[a-z])?(\s+(?:[A-Za-z0-9_][A-Za-z0-9_\.]*))(\s(?:.*?))",
+                r"^(\s*(?:edit|label|event|limit|inlimit|meter))(\s+-[a-z])?(\s+(?:[A-Za-z0-9_][A-Za-z0-9_\.]*))(\s(?:.*?))",  # noqa: E501
                 bygroups(Keyword, String, Name.Variable, String),
             ),
             (

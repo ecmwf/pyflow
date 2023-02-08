@@ -150,7 +150,7 @@ class Node(Base):
             variables(Variable_): An attribute for setting an **ecFlow** variable.
             zombies(Zombies_): An attribute that defines how a zombie should be handled in an automated fashion.
             events(Event_): An attribute for declaring an action that a task can trigger while it is running.
-            **kwargs(dict): Accept extra keyword arguments as variables to be set on the node.
+            **kwargs(str): Accept extra keyword arguments as variables to be set on the node.
         """
 
         super().__init__(name)
@@ -490,7 +490,6 @@ class Node(Base):
         return "/".join([""] + self.path_list)
 
     def _relative_path(self, node):
-
         if self.suite is not node.suite:
             return self.fullname
 
@@ -506,7 +505,7 @@ class Node(Base):
 
         try:
             f = self._relative_path(node)
-        except:
+        except Exception:
             raise RuntimeError(
                 "Cannot determine relative path between {} and {}".format(self, node)
             )
@@ -613,7 +612,6 @@ class Node(Base):
         return NodeAdder(self, cls, multiple)
 
     def _set_accessor(self, cls, value, multiple=True):
-
         if value is None:
             return self
 
@@ -640,7 +638,6 @@ class Node(Base):
         return self.__setattr__(key, value)
 
     def __getitem__(self, key):
-
         if isinstance(key, slice) and key == slice(None):
             return self.children
 
@@ -720,13 +717,13 @@ class Node(Base):
     def _tree(self, dot):
         try:
             dot.edge(self.parent, self)
-        except:
+        except Exception:
             pass
         for n in self._nodes.values():
             if n.name[0] != "_":
                 try:
                     n._tree(dot)
-                except:
+                except Exception:
                     pass
 
     ################################################
@@ -808,7 +805,7 @@ class Family(Node):
             variables(Variable_): An attribute for setting an **ecFlow** variable.
             zombies(Zombies_): An attribute that defines how a zombie should be handled in an automated fashion.
             events(Event_): An attribute for declaring an action that a task can trigger while it is running.
-            **kwargs(dict): Accept extra keyword arguments as variables to be set on the family.
+            **kwargs(str): Accept extra keyword arguments as variables to be set on the family.
 
         Example::
 
@@ -890,7 +887,7 @@ class AnchorFamily(AnchorMixin, Family):
             variables(Variable_): An attribute for setting an **ecFlow** variable.
             zombies(Zombies_): An attribute that defines how a zombie should be handled in an automated fashion.
             events(Event_): An attribute for declaring an action that a task can trigger while it is running.
-            **kwargs(dict): Accept extra keyword arguments as variables to be set on the anchor family.
+            **kwargs(str): Accept extra keyword arguments as variables to be set on the anchor family.
 
         Example::
 
@@ -947,7 +944,7 @@ class Suite(AnchorMixin, Node):
             variables(Variable_): An attribute for setting an **ecFlow** variable.
             zombies(Zombies_): An attribute that defines how a zombie should be handled in an automated fashion.
             events(Event_): An attribute for declaring an action that a task can trigger while it is running.
-            **kwargs(dict): Accept extra keyword arguments as variables to be set on the suite.
+            **kwargs(str): Accept extra keyword arguments as variables to be set on the suite.
 
         Example::
 
@@ -1052,11 +1049,16 @@ class Suite(AnchorMixin, Node):
 
 
 class Task(Node):
-
     SHELLVAR = re.compile("\\$\\{?([A-Z_][A-Z0-9_]*)")
 
     def __init__(
-        self, name, autolimit=True, submit_arguments=None, clean_workdir=False, **kwargs
+        self,
+        name,
+        autolimit=True,
+        submit_arguments=None,
+        exit_hook=None,
+        clean_workdir=False,
+        **kwargs
     ):
         """
         Describes what should be carried out as one executable unit within an **ecFlow** suite.
@@ -1064,6 +1066,7 @@ class Task(Node):
         Parameters:
             autolimit(bool): Whether to automatically add the task to the executing hosts limit, if it has one.
             submit_arguments(dict): Parameters to encode into the script to make the scheduler happy.
+            exit_hook(str,list): a script containing some commands to be called at exit time.
             clean_workdir(bool): Whether to ensure that the working directory is empty.+
             script(str,list): The script command or the list of script commands associated with the task.
             json(dict): Parsed JSON for creation of the children node(s).
@@ -1097,7 +1100,7 @@ class Task(Node):
             variables(Variable_): An attribute for setting an **ecFlow** variable.
             zombies(Zombies_): An attribute that defines how a zombie should be handled in an automated fashion.
             events(Event_): An attribute for declaring an action that a task can trigger while it is running.
-            **kwargs(dict): Accept extra keyword arguments as variables to be set on the task.
+            **kwargs(str): Accept extra keyword arguments as variables to be set on the task.
 
         Example::
 
@@ -1108,6 +1111,9 @@ class Task(Node):
         self.script = kwargs.pop("script", Script())
         self._clean_workdir = clean_workdir
         self._submit_arguments = submit_arguments or {}
+        self._exit_hook = (
+            [exit_hook] if isinstance(exit_hook, str) else exit_hook
+        ) or []
         super().__init__(name, **kwargs)
 
         # Get the host object, and attempt to add this task to its limits automatically.
@@ -1276,7 +1282,7 @@ class Task(Node):
             "",
         ]
 
-        lines += self.host.preamble
+        lines += self.host.preamble(self._exit_hook)
 
         module_lines = []
         if self.host.module_source:
@@ -1401,7 +1407,7 @@ def _set_accessor(cls):
 def _get_doc(cls):
     doc = cls.__doc__
 
-    if doc == None:
+    if doc is None:
         return None
 
     return "%s_: %s" % (

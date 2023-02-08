@@ -8,7 +8,6 @@ class AnchorMixin:
     """
 
     def __init__(self, *args, **kwargs):
-
         variables = {}
         variables.update(kwargs)
 

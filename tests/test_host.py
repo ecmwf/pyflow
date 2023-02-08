@@ -4,7 +4,6 @@ import pyflow
 
 
 def test_host_task():
-
     host1 = pyflow.SSHHost(
         "a-host", user="a-user", scratch_directory="/tmp", ecflow_path="/usr/local/bin"
     )
@@ -12,13 +11,11 @@ def test_host_task():
     host2 = pyflow.LocalHost(scratch_directory="/tmp2", ecflow_path="/usr/local/bin")
 
     with pyflow.Suite("s") as s:
-
         with pyflow.Family("limits"):
             host1.build_limits()
             host2.build_limits()
 
         with pyflow.Family("f"):
-
             t1 = pyflow.Task("t1")
 
             t2 = pyflow.Task(
@@ -30,7 +27,6 @@ def test_host_task():
             )
 
         with pyflow.Family("f2", host=host1) as f2:
-
             t4 = pyflow.Task(
                 "t4", script='echo "boom"', workdir=host1.scratch_directory
             )
@@ -44,7 +40,6 @@ def test_host_task():
             )
 
         with pyflow.Family("f3", host=host2) as f3:
-
             t7 = pyflow.Task(
                 "t7", script='echo "boom"', workdir=host2.scratch_directory
             )
@@ -65,11 +60,8 @@ def test_host_task():
 
     # Test job commands
 
-    # job_cmd1 = "export ECF_PORT=%ECF_PORT%; export ECF_HOST=%ECF_HOST%; export ECF_NAME=%ECF_NAME%; export ECF_PASS=%ECF_PASS%; export ECF_TRYNO=%ECF_TRYNO%; (ssh -v a-user@a-host bash -s < %ECF_JOB% > %ECF_JOBOUT% 2>&1&& ecflow_client --complete|| ecflow_client --abort) & ecflow_client --init=$!"
-    # job_cmd1 = "export ECF_PORT=%ECF_PORT%; export ECF_HOST=%ECF_HOST%; export ECF_NAME=%ECF_NAME%; export ECF_PASS=%ECF_PASS%; export ECF_TRYNO=%ECF_TRYNO%; (ssh -o StrictHostKeyChecking=no a-user@a-host bash -s < %ECF_JOB% > %ECF_JOBOUT% 2>&1&& ecflow_client --complete|| ecflow_client --abort) & ecflow_client --init=$!"
-    # job_cmd2 = "export ECF_PORT=%ECF_PORT%; export ECF_HOST=%ECF_HOST%; export ECF_NAME=%ECF_NAME%; export ECF_PASS=%ECF_PASS%; export ECF_TRYNO=%ECF_TRYNO%; (%ECF_JOB% 1> %ECF_JOBOUT% 2>&1&& ecflow_client --complete|| ecflow_client --abort) & ecflow_client --init=$!"
-    job_cmd1 = "bash -c 'export ECF_PORT=%ECF_PORT%; export ECF_HOST=%ECF_HOST%; export ECF_NAME=%ECF_NAME%; export ECF_PASS=%ECF_PASS%; export ECF_TRYNO=%ECF_TRYNO%; export PATH=/usr/local/bin:$PATH; ecflow_client --init=\"$$\" && ssh -v -o StrictHostKeyChecking=no a-user@a-host bash -s < %ECF_JOB%&& ecflow_client --complete || ecflow_client --abort ' 1> %ECF_JOBOUT% 2>&1 &"
-    job_cmd2 = "bash -c 'export ECF_PORT=%ECF_PORT%; export ECF_HOST=%ECF_HOST%; export ECF_NAME=%ECF_NAME%; export ECF_PASS=%ECF_PASS%; export ECF_TRYNO=%ECF_TRYNO%; export PATH=/usr/local/bin:$PATH; ecflow_client --init=\"$$\" && %ECF_JOB% && ecflow_client --complete || ecflow_client --abort ' 1> %ECF_JOBOUT% 2>&1 &"
+    job_cmd1 = "bash -c 'export ECF_PORT=%ECF_PORT%; export ECF_HOST=%ECF_HOST%; export ECF_NAME=%ECF_NAME%; export ECF_PASS=%ECF_PASS%; export ECF_TRYNO=%ECF_TRYNO%; export PATH=/usr/local/bin:$PATH; ecflow_client --init=\"$$\" && ssh -v -o StrictHostKeyChecking=no a-user@a-host bash -s < %ECF_JOB%&& ecflow_client --complete || ecflow_client --abort ' 1> %ECF_JOBOUT% 2>&1 &"  # noqa: E501
+    job_cmd2 = "bash -c 'export ECF_PORT=%ECF_PORT%; export ECF_HOST=%ECF_HOST%; export ECF_NAME=%ECF_NAME%; export ECF_PASS=%ECF_PASS%; export ECF_TRYNO=%ECF_TRYNO%; export PATH=/usr/local/bin:$PATH; ecflow_client --init=\"$$\" && %ECF_JOB% && ecflow_client --complete || ecflow_client --abort ' 1> %ECF_JOBOUT% 2>&1 &"  # noqa: E501
 
     assert not hasattr(t1, "ECF_JOB_CMD")
 
@@ -130,18 +122,14 @@ def test_host_task():
 
 
 def test_nullhost():
-
     with pyflow.Suite("s") as s1:
-
         t1 = pyflow.Task("t1")
 
         with pyflow.Family("f", host=pyflow.NullHost()) as f:
-
             with pytest.raises(AttributeError):
                 pyflow.Task("t2")
 
     with pyflow.Suite("s2", host=pyflow.NullHost()) as s2:
-
         with pytest.raises(AttributeError):
             pyflow.Task("t3")
 
@@ -161,7 +149,6 @@ def test_nullhost():
 
 
 def test_explicit_hostname():
-
     h1 = pyflow.SSHHost("a-host", user="u")
 
     assert h1.name == "a-host"
@@ -176,7 +163,6 @@ def test_explicit_hostname():
 
 
 def test_default_host():
-
     with pyflow.Suite("s"):
         t = pyflow.Task("t")
 
@@ -186,18 +172,15 @@ def test_default_host():
     assert t.host.hostname == "default"
     assert (
         t.host.job_cmd
-        == "bash -c 'export ECF_PORT=%ECF_PORT%; export ECF_HOST=%ECF_HOST%; export ECF_NAME=%ECF_NAME%; export ECF_PASS=%ECF_PASS%; export ECF_TRYNO=%ECF_TRYNO%; export PATH=/usr/local/bin:$PATH; ecflow_client --init=\"$$\" && %ECF_JOB% && ecflow_client --complete || ecflow_client --abort ' 1> %ECF_JOBOUT% 2>&1 &"
+        == "bash -c 'export ECF_PORT=%ECF_PORT%; export ECF_HOST=%ECF_HOST%; export ECF_NAME=%ECF_NAME%; export ECF_PASS=%ECF_PASS%; export ECF_TRYNO=%ECF_TRYNO%; export PATH=/usr/local/bin:$PATH; ecflow_client --init=\"$$\" && %ECF_JOB% && ecflow_client --complete || ecflow_client --abort ' 1> %ECF_JOBOUT% 2>&1 &"  # noqa: E501
     )
     assert t.host.kill_cmd == "pkill -15 -P %ECF_RID%"
 
 
 def test_label_host():
-
     with pyflow.Suite("s") as s:
-
         # No label on nodes where host is not set by default
         with pyflow.Family("f") as f:
-
             with pyflow.Family("f1", host=pyflow.LocalHost()) as f1:
                 pass
 
@@ -231,11 +214,11 @@ def test_host_kill_cmd(class_name):
     if class_name == "LocalHost" or class_name == "SSHHost":
         expected_kill_cmd = "pkill -15 -P %ECF_RID%"
     elif class_name == "SLURMHost":
-        expected_kill_cmd = """export ECF_PORT=%ECF_PORT%; export ECF_HOST=%ECF_HOST%; export ECF_NAME=%ECF_NAME%; export ECF_PASS=%ECF_PASS%; export ECF_TRYNO=%ECF_TRYNO%; ssh -v -o StrictHostKeyChecking=no {}@{} "sh -l -c 'scancel "\\$(grep Submitted '%ECF_JOBOUT%.jobfile.sub' | cut -d' ' -f4)"'" && ecflow_client --abort""".format(
+        expected_kill_cmd = """export ECF_PORT=%ECF_PORT%; export ECF_HOST=%ECF_HOST%; export ECF_NAME=%ECF_NAME%; export ECF_PASS=%ECF_PASS%; export ECF_TRYNO=%ECF_TRYNO%; ssh -v -o StrictHostKeyChecking=no {}@{} "sh -l -c 'scancel "\\$(grep Submitted '%ECF_JOBOUT%.jobfile.sub' | cut -d' ' -f4)"'" && ecflow_client --abort""".format(  # noqa: E501
             username, hostname
         )
     elif class_name == "PBSHost":
-        expected_kill_cmd = """export ECF_PORT=%ECF_PORT%; export ECF_HOST=%ECF_HOST%; export ECF_NAME=%ECF_NAME%; export ECF_PASS=%ECF_PASS%; export ECF_TRYNO=%ECF_TRYNO%; ssh -v -o StrictHostKeyChecking=no {}@{} qdel "\\$(cat '%ECF_JOBOUT%.jobfile.sub')" && ecflow_client --abort""".format(
+        expected_kill_cmd = """export ECF_PORT=%ECF_PORT%; export ECF_HOST=%ECF_HOST%; export ECF_NAME=%ECF_NAME%; export ECF_PASS=%ECF_PASS%; export ECF_TRYNO=%ECF_TRYNO%; ssh -v -o StrictHostKeyChecking=no {}@{} qdel "\\$(cat '%ECF_JOBOUT%.jobfile.sub')" && ecflow_client --abort""".format(  # noqa: E501
             username, hostname
         )
     else:
