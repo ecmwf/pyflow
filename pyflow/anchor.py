@@ -34,6 +34,12 @@ class AnchorMixin:
         ):
             self.ECF_INCLUDE = self._anchor_new_include_path
 
+        if (
+            "extn" not in kwargs
+            and "ECF_EXTN" not in kwargs
+        ):
+            self.ECF_EXTN = '.ecf'
+
     @property
     def anchor(self):
         """*Anchor*: The anchor object."""

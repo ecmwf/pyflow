@@ -34,7 +34,6 @@ from .attributes import (
     make_variable,
 )
 from .base import STACK, Base, GenerateError
-from .deployment import FileSystem
 from .expressions import Eq, NodeName
 from .graph import Dot
 from .header import InlineCodeHeader
@@ -1025,28 +1024,6 @@ class Suite(AnchorMixin, Node):
 
         return super().find_node(subpath)
 
-    def deploy_suite(self, target=FileSystem, **options):
-        """
-        Deploys suite and its components.
-
-        Parameters:
-            target(Deployment): Deployment target for the suite.
-            **options(dict): Accept extra keyword arguments as deployment options.
-
-        Returns:
-            *Deployment*: Deployment target object.
-        """
-
-        # N.B. Important safety check. Do not remove. Extern nodes must never be played or generated.
-        assert not self._extern, "Attempting to deploy extern node not permitted"
-
-        target = target(self, **options)
-        for t in self.all_tasks:
-            t.install_file_stub(target)
-            t.create_directories(target)
-        target.deploy_headers()
-        return target
-
 
 class Task(Node):
     SHELLVAR = re.compile("\\$\\{?([A-Z_][A-Z0-9_]*)")
@@ -1177,7 +1154,7 @@ class Task(Node):
     @property
     def deploy_extension(self):
         """*str*: The script file extension to be used during deployment of the task."""
-        return self.lookup_variable_value("ECF_EXTN", ".ecf")
+        return self.lookup_variable_value("ECF_EXTN")
 
     def generate_stub(self, nodes):
         """Returns complete script for the current task by combining the fragments.
@@ -1206,27 +1183,6 @@ class Task(Node):
             )
         except ValueError:
             return None
-
-    def install_file_stub(self, target):
-        """
-        Deploys current task to the provided target.
-
-        Parameters:
-            target(Deployment): Deployment target for the task.
-        """
-
-        script, includes = self.generate_script()
-        target.deploy_task(self.deploy_path, script, includes)
-
-    def create_directories(self, target):
-        """
-        Creates task directories for deployment.
-
-        Parameters:
-            target(Deployment): Deployment target for the task.
-        """
-
-        target.create_directories(self.parent.fullname)
 
     def task_modules(self):
         """

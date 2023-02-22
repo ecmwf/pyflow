@@ -3,6 +3,7 @@ from __future__ import print_function
 import hashlib
 import os
 import shutil
+import subprocess
 
 from pyflow.html import FileListHTMLWrapper
 
@@ -121,9 +122,11 @@ class Deployment:
         for inc in self._includes:
             inc.install(where)
 
-    def create_directories(self, path):
-        raise NotImplementedError
-
+    def finalise(self):
+        """
+        Allow derived types to perform an action at the end of the deployment
+        """
+        return
 
 class Notebook(Deployment, FileListHTMLWrapper):
     """
@@ -169,18 +172,12 @@ class Notebook(Deployment, FileListHTMLWrapper):
         super().save(source, target)
         self._content.append((target, source))
 
-    def create_directories(self, path):
-        pass
-
 
 class Dummy:
     def copy(*args):
         pass
 
     def save(*args):
-        pass
-
-    def create_directories(*args):
         pass
 
 
@@ -242,20 +239,19 @@ class FileSystem(Deployment):
         with open(target, "w" if isinstance(output, str) else "wb") as g:
             g.write(output)
 
-    def create_directories(self, path):
-        pass
-        # self.create_directory(self._home + path)
-        # It isn't the job of pyflow to create these.
-        # self.create_directory(self._out + path)
-
 
 class DeployGitRepo(FileSystem):
     """
-    A deployment target for Git repositories, clears target repository and dumps fresh **ecFlow** definitions.
+    A deployment target for Git repositories
+
 
     Parameters:
         suite(Suite_): The suite object to deploy.
-        path(str): The path to Git repository.
+        host(str): The target host.
+        user(str): The user account owning the git repository.
+        message(str): commit message.
+        build_dir(str): The path to the build directory (to stage the file).
+        suite_def(str): The path to the suite definition file.
 
     Example::
 
@@ -263,36 +259,29 @@ class DeployGitRepo(FileSystem):
         pyflow.DeployGitRepo(s, path='/path/to/git')
     """
 
-    def __init__(self, suite, path=None):
+    def __init__(self, suite, host=None, user=None, message=None, build_dir=None, suite_def=None):
         super().__init__(suite)
 
-        assert path is not None
-        self.paths = {
-            self._files: os.path.abspath(os.path.realpath(os.path.join(path, "files"))),
-        }
-        if self._include != self._files:
-            self.paths[self._include] = os.path.abspath(
-                os.path.realpath(os.path.join(path, "include"))
-            )
+        # get hostname and user to rsync the files later
+        self.host = os.path.expandvars("$HOSTNAME") if host is None else host
+        self.user = os.path.expandvars("$USER") if user is None else user
 
-        self._deploy_path = path
+        # create the staging directory "build"
+        self.build_dir = 'build' if build_dir is None else build_dir
+        self.build_dir = os.path.realpath(self.build_dir)
+        self.source_dir = os.path.join(self.build_dir, 'files')
+        self.target_dir = self._files
 
-        print(self._deploy_path)
-        assert os.path.exists(os.path.join(self._deploy_path, ".git"))
-
-        # Cleaning existing deploy directory
-
-        for root, dirs, files in os.walk(self._deploy_path):
-            for f in files:
-                os.unlink(os.path.join(root, f))
-            for d in dirs:
-                if d != ".git":
-                    shutil.rmtree(os.path.join(root, d))
-
-        # Deploy the definitions
-
-        with open(os.path.join(self._deploy_path, "ecflow_defs"), "w") as f:
+        # write definition file in build directory
+        def_file = 'suite.def' if suite_def is None else suite_def
+        source_def = os.path.join(self.build_dir, def_file)
+        with open(source_def, "w") as f:
             f.write(str(suite.ecflow_definition()))
+
+        # git commit message
+        self.message = f"deployed by {user}\n"
+        if message:
+            self.message += message
 
     def patch_path(self, path):
         """
@@ -302,15 +291,56 @@ class DeployGitRepo(FileSystem):
             path(str): The path to patch.
 
         Returns:
-            *str*: The patched path."""
+            *str*: The patched path.
+        """
+        rel_path = os.path.relpath(path, self._files)
+        return os.path.join(self.files_dir, rel_path)
 
-        if path.startswith(self._deploy_path):
-            return path
+    def finalise(self):
+        """
+        Push the build folder with the git repository
+        """
+        # push the files (scripts and definition file) to remote
+        self.sync(self.source_dir, self.target_dir)
 
-        fullpath = os.path.abspath(os.path.realpath(path))
+    def sync(self, src, dest):
+        """
+        Rsync command on remote host
+        """
+        cmd = f"rsync -e 'ssh -o StrictHostKeyChecking=no' -avz --delete {src} {self.user}@{self.host}:{dest}"
+        p = subprocess.Popen(cmd, shell=True)
+        p.wait()
+        yield f"{cmd} Rsync process completed."
 
-        for ecf_path, deploy_path in self.paths.items():
-            if fullpath.startswith(ecf_path):
-                return os.path.join(deploy_path, os.path.relpath(fullpath, ecf_path))
+    def git_commit(self):
+        cmd = f'ssh {self.user}@{self.host} "'
+        cmd += f'cd {self.target_dir};'
+        cmd += 'if [ ! -d .git ]; then git init; fi;'
+        cmd += 'git add .;'
+        cmd += 'git commit -am \'{self.message}\';'
+        cmd += '"'
 
-        assert "Unexpected path: ", path
+
+def deploy_suite(suite, target=FileSystem, **options):
+    """
+    Deploys suite and its components.
+
+    Parameters:
+        suite(Suite): suite to deploy
+        target(Deployment): Deployment target for the suite.
+        **options(dict): Accept extra keyword arguments as deployment options.
+
+    Returns:
+        *Deployment*: Deployment target object.
+    """
+
+    # N.B. Important safety check. Do not remove. Extern nodes must never be played or generated.
+    assert not suite._extern, "Attempting to deploy extern node not permitted"
+
+    target = target(suite, **options)
+    for t in suite.all_tasks:
+        script, includes = t.generate_script()
+        target.deploy_task(t.deploy_path, script, includes)
+    target.deploy_headers()
+    target.finalise()
+    return target
