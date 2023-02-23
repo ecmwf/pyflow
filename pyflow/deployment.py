@@ -194,7 +194,6 @@ class FileSystem(Deployment):
         if not os.path.exists(path):
             try:
                 os.makedirs(path)
-                print("Create directory: {}".format(path))
             except Exception:
                 print("WARNING: Couldn't create directory: {}".format(path))
 
@@ -205,10 +204,7 @@ class FileSystem(Deployment):
             )
         if os.path.exists(target):
             if not self._overwrite:
-                print("File %s exists, not overwriting" % (target,))
                 return False
-            else:
-                print("Overwriting existing file: %s" % (target,))
 
         self.create_directory(os.path.dirname(target))
         return True
@@ -220,8 +216,6 @@ class FileSystem(Deployment):
         if not self.check(target):
             return
 
-        print("Copy %s to %s" % (source, target))
-
         with open(source, "r") as f:
             with open(target, "w") as g:
                 g.write(f.read())
@@ -232,8 +226,6 @@ class FileSystem(Deployment):
 
         if not self.check(target):
             return
-
-        print("Save %s" % (target,))
 
         output = "\n".join(source) if isinstance(source, list) else source
         assert isinstance(output, (str, bytes))
@@ -253,6 +245,7 @@ class DeployGitRepo(FileSystem):
         message(str): commit message.
         build_dir(str): The path to the build directory (to stage the file).
         suite_def(str): The path to the suite definition file.
+        deploy(bool): If True, deploy the suite in the remote location
 
     Example::
 
@@ -261,13 +254,13 @@ class DeployGitRepo(FileSystem):
     """
 
     def __init__(
-        self, suite, host=None, user=None, message=None, build_dir=None, suite_def=None
+        self, suite, host=None, user=None, message=None, build_dir=None, suite_def=None, deploy=True
     ):
         super().__init__(suite)
 
         # get hostname and user to rsync the files later
-        deploy_user = os.path.expandvars("$USER")
-        deploy_host = os.path.expandvars("$HOSTNAME")
+        deploy_user = os.getenv("USER")
+        deploy_host = os.getenv("HOSTNAME")
         self.host = deploy_host if host is None else host
         self.user = deploy_user if user is None else user
 
@@ -282,13 +275,17 @@ class DeployGitRepo(FileSystem):
         # write definition file in build directory
         def_file = "suite.def" if suite_def is None else suite_def
         source_def = os.path.join(self.build_dir, def_file)
-        with open(source_def, "w") as f:
-            f.write(str(suite.ecflow_definition()))
+        suite_def = suite.ecflow_definition()
+        suite_def.check()
+        suite_def.save_as_defs(source_def)
 
         # git commit message
         self.message = f"deployed by {deploy_user} from {deploy_host}:{self.source_dir}\n"
         if message:
             self.message += message
+
+        # if deploy is False, create the scripts in build_dir but don't sync with remote
+        self.deploy = deploy
 
     def patch_path(self, path):
         """
@@ -307,18 +304,18 @@ class DeployGitRepo(FileSystem):
         """
         Push the build folder with the git repository
         """
-        # push the files (scripts and definition file) to remote
-        self.sync(self.source_dir, self.target_dir)
-        
-        # git commit
-        self.git_commit()
+        if self.deploy:
+            # push the files (scripts and definition file) to remote
+            self.sync(self.source_dir, self.target_dir)
+            # git commit
+            self.git_commit()
 
     def sync(self, src, dest):
         """
         Rsync command on remote host
         """
         cmd = f"rsync -e 'ssh -o StrictHostKeyChecking=no' -avz --delete {src}/ {self.user}@{self.host}:{dest}/ --exclude .git"
-        p = subprocess.Popen(cmd, shell=True)
+        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         p.wait()
         print(f"{cmd}\n Rsync process completed.")
 
@@ -329,7 +326,7 @@ class DeployGitRepo(FileSystem):
         cmd += "git add .;"
         cmd += f"git commit -am '{self.message}';"
         cmd += '"'
-        p = subprocess.Popen(cmd, shell=True)
+        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         p.wait()
         print(f"{cmd}\n git commit process completed.")
 
