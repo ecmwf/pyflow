@@ -29,7 +29,7 @@ from .configurator import (
     Configurator,
     FileConfiguration,
 )
-from .deployment import DeployGitRepo, Notebook, FileSystem, deploy_suite
+from .deployment import DeployGitRepo, FileSystem, Notebook, deploy_suite
 from .expressions import Deferred, all_complete, sequence
 from .extern import (
     Extern,

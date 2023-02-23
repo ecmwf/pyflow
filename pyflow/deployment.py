@@ -2,7 +2,6 @@ from __future__ import print_function
 
 import hashlib
 import os
-import shutil
 import subprocess
 
 from pyflow.html import FileListHTMLWrapper
@@ -65,8 +64,9 @@ class Deployment:
 
     def save(self, source, target):
         """
-        Deploys the task script to target path. This method contains functionality needed for all deployments. Should be
-        called in `super()` by all derived classes.
+        Deploys the task script to target path.
+        This method contains functionality needed for all deployments.
+        Should be called in `super()` by all derived classes.
 
         Parameters:
             source(str,bytes,list): The task script to deploy.
@@ -127,6 +127,7 @@ class Deployment:
         Allow derived types to perform an action at the end of the deployment
         """
         return
+
 
 class Notebook(Deployment, FileListHTMLWrapper):
     """
@@ -259,7 +260,9 @@ class DeployGitRepo(FileSystem):
         pyflow.DeployGitRepo(s, path='/path/to/git')
     """
 
-    def __init__(self, suite, host=None, user=None, message=None, build_dir=None, suite_def=None):
+    def __init__(
+        self, suite, host=None, user=None, message=None, build_dir=None, suite_def=None
+    ):
         super().__init__(suite)
 
         # get hostname and user to rsync the files later
@@ -267,13 +270,13 @@ class DeployGitRepo(FileSystem):
         self.user = os.path.expandvars("$USER") if user is None else user
 
         # create the staging directory "build"
-        self.build_dir = 'build' if build_dir is None else build_dir
+        self.build_dir = "build" if build_dir is None else build_dir
         self.build_dir = os.path.realpath(self.build_dir)
-        self.source_dir = os.path.join(self.build_dir, 'files')
+        self.source_dir = os.path.join(self.build_dir, "files")
         self.target_dir = self._files
 
         # write definition file in build directory
-        def_file = 'suite.def' if suite_def is None else suite_def
+        def_file = "suite.def" if suite_def is None else suite_def
         source_def = os.path.join(self.build_dir, def_file)
         with open(source_def, "w") as f:
             f.write(str(suite.ecflow_definition()))
@@ -314,10 +317,10 @@ class DeployGitRepo(FileSystem):
 
     def git_commit(self):
         cmd = f'ssh {self.user}@{self.host} "'
-        cmd += f'cd {self.target_dir};'
-        cmd += 'if [ ! -d .git ]; then git init; fi;'
-        cmd += 'git add .;'
-        cmd += 'git commit -am \'{self.message}\';'
+        cmd += f"cd {self.target_dir};"
+        cmd += "if [ ! -d .git ]; then git init; fi;"
+        cmd += "git add .;"
+        cmd += "git commit -am '{self.message}';"
         cmd += '"'
 
 
