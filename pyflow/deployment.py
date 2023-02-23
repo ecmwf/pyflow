@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import hashlib
 import os
+import shutil
 import subprocess
 
 from pyflow.html import FileListHTMLWrapper
@@ -190,7 +191,6 @@ class FileSystem(Deployment):
         return path
 
     def create_directory(self, path):
-        path = self.patch_path(path)
         if not os.path.exists(path):
             try:
                 os.makedirs(path)
@@ -266,14 +266,18 @@ class DeployGitRepo(FileSystem):
         super().__init__(suite)
 
         # get hostname and user to rsync the files later
-        self.host = os.path.expandvars("$HOSTNAME") if host is None else host
-        self.user = os.path.expandvars("$USER") if user is None else user
+        deploy_user = os.path.expandvars("$USER")
+        deploy_host = os.path.expandvars("$HOSTNAME")
+        self.host = deploy_host if host is None else host
+        self.user = deploy_user if user is None else user
 
         # create the staging directory "build"
         self.build_dir = "build" if build_dir is None else build_dir
-        self.build_dir = os.path.realpath(self.build_dir)
-        self.source_dir = os.path.join(self.build_dir, "files")
+        self.source_dir = os.path.realpath(self.build_dir)
         self.target_dir = self._files
+        if os.path.exists(self.source_dir):
+            shutil.rmtree(self.source_dir)
+        os.mkdir(self.source_dir)
 
         # write definition file in build directory
         def_file = "suite.def" if suite_def is None else suite_def
@@ -282,7 +286,7 @@ class DeployGitRepo(FileSystem):
             f.write(str(suite.ecflow_definition()))
 
         # git commit message
-        self.message = f"deployed by {user}\n"
+        self.message = f"deployed by {deploy_user} from {deploy_host}:{self.source_dir}\n"
         if message:
             self.message += message
 
@@ -297,7 +301,7 @@ class DeployGitRepo(FileSystem):
             *str*: The patched path.
         """
         rel_path = os.path.relpath(path, self._files)
-        return os.path.join(self.files_dir, rel_path)
+        return os.path.join(self.source_dir, rel_path)
 
     def finalise(self):
         """
@@ -305,23 +309,29 @@ class DeployGitRepo(FileSystem):
         """
         # push the files (scripts and definition file) to remote
         self.sync(self.source_dir, self.target_dir)
+        
+        # git commit
+        self.git_commit()
 
     def sync(self, src, dest):
         """
         Rsync command on remote host
         """
-        cmd = f"rsync -e 'ssh -o StrictHostKeyChecking=no' -avz --delete {src} {self.user}@{self.host}:{dest}"
+        cmd = f"rsync -e 'ssh -o StrictHostKeyChecking=no' -avz --delete {src}/ {self.user}@{self.host}:{dest}/ --exclude .git"
         p = subprocess.Popen(cmd, shell=True)
         p.wait()
-        yield f"{cmd} Rsync process completed."
+        print(f"{cmd}\n Rsync process completed.")
 
     def git_commit(self):
         cmd = f'ssh {self.user}@{self.host} "'
         cmd += f"cd {self.target_dir};"
         cmd += "if [ ! -d .git ]; then git init; fi;"
         cmd += "git add .;"
-        cmd += "git commit -am '{self.message}';"
+        cmd += f"git commit -am '{self.message}';"
         cmd += '"'
+        p = subprocess.Popen(cmd, shell=True)
+        p.wait()
+        print(f"{cmd}\n git commit process completed.")
 
 
 def deploy_suite(suite, target=FileSystem, **options):
