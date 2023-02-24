@@ -52,7 +52,7 @@ Copy the following code into a new file called ``hello_pyflow.py``:
    s.check_definition()
    print(s)
 
-   s.deploy_suite(overwrite=True)
+   pf.deploy_suite(s, overwrite=True)
    s.replace_on_server(server_host, server_port)
 
 
