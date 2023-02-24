@@ -4,7 +4,6 @@ import os
 import pytest
 
 import pyflow
-
 from pyflow import (
     Event,
     ExternEvent,

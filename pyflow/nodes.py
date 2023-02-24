@@ -34,7 +34,6 @@ from .attributes import (
     make_variable,
 )
 from .base import STACK, Base, GenerateError
-from .deployment import FileSystem
 from .expressions import Eq, NodeName
 from .graph import Dot
 from .header import InlineCodeHeader

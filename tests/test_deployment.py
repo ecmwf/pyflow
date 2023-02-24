@@ -36,13 +36,17 @@ def test_move_node(tmpdir):
     with pyflow.Suite("s", ECF_FILES=d) as s:
         with pyflow.Family("f1") as f:
             f += t
-    pyflow.deploy_suite(s, )
+    pyflow.deploy_suite(
+        s,
+    )
     assert path.exists(path.join(d, "t.ecf"))
 
     with s:
         with pyflow.Family("f2") as f:
             f += t
-    pyflow.deploy_suite(s, )
+    pyflow.deploy_suite(
+        s,
+    )
     assert path.exists(path.join(d, "t.ecf"))
 
 
@@ -53,7 +57,9 @@ def test_manual(tmpdir):
     d = str(tmpdir)
     with pyflow.Suite("s", ECF_FILES=d) as s:
         Documented("t", script="echo foo")
-    pyflow.deploy_suite(s, )
+    pyflow.deploy_suite(
+        s,
+    )
     p = path.join(d, "t.ecf")
     assert path.exists(p)
     with open(p) as f:
@@ -77,7 +83,9 @@ def test_unique_scripts(tmpdir):
 
     assert t1.deploy_path == os.path.join(basedir, "t.ecf")
     assert t2.deploy_path == os.path.join(basedir, "t.ecf")
-    pyflow.deploy_suite(s, )
+    pyflow.deploy_suite(
+        s,
+    )
     with open(t1.deploy_path, "r") as f:
         assert "abcd" in f.read()
 
@@ -92,7 +100,9 @@ def test_unique_scripts(tmpdir):
     assert t1.deploy_path == os.path.join(basedir, "t.ecf")
     assert t2.deploy_path == os.path.join(basedir, "t.ecf")
     with pytest.raises(RuntimeError):
-        pyflow.deploy_suite(s, )
+        pyflow.deploy_suite(
+            s,
+        )
 
     # This works again when we put Anchor families in
 
@@ -104,7 +114,9 @@ def test_unique_scripts(tmpdir):
 
     assert t1.deploy_path == os.path.join(basedir, "f1/t.ecf")
     assert t2.deploy_path == os.path.join(basedir, "f2/t.ecf")
-    pyflow.deploy_suite(s, )
+    pyflow.deploy_suite(
+        s,
+    )
     with open(t1.deploy_path, "r") as f:
         assert "lmno" in f.read()
     with open(t2.deploy_path, "r") as f:
@@ -124,7 +136,9 @@ def test_unique_scripts(tmpdir):
     assert t2.deploy_path == os.path.join(basedir, "f2/t.ecf")
     assert t3.deploy_path == os.path.join(basedir, "f2/t.ecf")
     with pytest.raises(RuntimeError):
-        pyflow.deploy_suite(s, )
+        pyflow.deploy_suite(
+            s,
+        )
 
 
 if __name__ == "__main__":
