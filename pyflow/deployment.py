@@ -254,7 +254,14 @@ class DeployGitRepo(FileSystem):
     """
 
     def __init__(
-        self, suite, host=None, user=None, message=None, build_dir=None, suite_def=None, deploy=True
+        self,
+        suite,
+        host=None,
+        user=None,
+        message=None,
+        build_dir=None,
+        suite_def=None,
+        deploy=True,
     ):
         super().__init__(suite)
 
@@ -280,7 +287,9 @@ class DeployGitRepo(FileSystem):
         suite_def.save_as_defs(source_def)
 
         # git commit message
-        self.message = f"deployed by {deploy_user} from {deploy_host}:{self.source_dir}\n"
+        self.message = (
+            f"deployed by {deploy_user} from {deploy_host}:{self.source_dir}\n"
+        )
         if message:
             self.message += message
 
@@ -314,8 +323,11 @@ class DeployGitRepo(FileSystem):
         """
         Rsync command on remote host
         """
-        cmd = f"rsync -e 'ssh -o StrictHostKeyChecking=no' -avz --delete {src}/ {self.user}@{self.host}:{dest}/ --exclude .git"
-        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        cmd = f"rsync -e 'ssh -o StrictHostKeyChecking=no' -avz --delete \
+              {src}/ {self.user}@{self.host}:{dest}/ --exclude .git"
+        p = subprocess.Popen(
+            cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
         p.wait()
         print(f"{cmd}\n Rsync process completed.")
 
@@ -326,7 +338,9 @@ class DeployGitRepo(FileSystem):
         cmd += "git add .;"
         cmd += f"git commit -am '{self.message}';"
         cmd += '"'
-        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = subprocess.Popen(
+            cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
         p.wait()
         print(f"{cmd}\n git commit process completed.")
 
