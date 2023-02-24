@@ -1,6 +1,6 @@
 import datetime
 
-from pyflow import Notebook, Suite, Task
+from pyflow import Notebook, Suite, Task, deploy_suite
 
 now = datetime.datetime.now()
 
@@ -17,7 +17,7 @@ def test_follow():
     s.check_definition()
     s.generate_node()
 
-    s.deploy_suite(target=Notebook)
+    deploy_suite(s, target=Notebook)
 
 
 if __name__ == "__main__":

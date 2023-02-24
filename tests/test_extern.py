@@ -3,6 +3,8 @@ import os
 
 import pytest
 
+import pyflow
+
 from pyflow import (
     Event,
     ExternEvent,
@@ -44,7 +46,7 @@ def test_extern():
 
     s.check_definition()
     s.generate_node()
-    s.deploy_suite(target=Notebook)
+    pyflow.deploy_suite(s, target=Notebook)
 
     # Check that externs are correctly added to the nodes
 
@@ -93,7 +95,7 @@ def test_extern_attributes():
 
     s.check_definition()
     s.generate_node()
-    s.deploy_suite(target=Notebook)
+    pyflow.deploy_suite(s, target=Notebook)
 
     # Check that externs are correctly added to the nodes
 
@@ -130,7 +132,7 @@ def test_extern_safety():
             extern.suite.check_definition()
         assert excinfo.value.args == ("Generating extern nodes is not permitted",)
         with pytest.raises(AssertionError) as excinfo:
-            extern.suite.deploy_suite(target=Notebook)
+            pyflow.deploy_suite(extern.suite, target=Notebook)
         assert excinfo.value.args == ("Attempting to deploy extern node not permitted",)
         with pytest.raises(AssertionError) as excinfo:
             extern.suite.replace_on_server("localhost", 31415)
