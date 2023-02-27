@@ -184,10 +184,29 @@ class Dummy:
 
 
 class FileSystem(Deployment):
+    """
+    A filesystem target for suite deployment
+
+    Parameters:
+        suite(Suite_): The suite object to deploy.
+        path(str): The target directory (by default ECF_FILES).
+
+    Example:
+        s = pf.Suite('suite')
+        pyflow.FileSystem(s, path='/path/to/suite/files')
+    """
+
+    def __init__(self, suite, path=None, **kwargs):
+        super().__init__(suite, **kwargs)
+        self.path = path
+
     def patch_path(self, path):
         """
-        Allow derived types to simply modify the storage behaviour
+        Allows to deploy the suite to a different place than ECF_FILES
         """
+        if self.path:
+            rel_path = os.path.relpath(path, self._files)
+            path = os.path.join(self.path, rel_path)
         return path
 
     def create_directory(self, path):
@@ -323,12 +342,8 @@ class DeployGitRepo(FileSystem):
         """
         Rsync command on remote host
         """
-        cmd = f"rsync -e 'ssh -o StrictHostKeyChecking=no' -avz --delete \
-              {src}/ {self.user}@{self.host}:{dest}/ --exclude .git"
-        p = subprocess.Popen(
-            cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-        p.wait()
+        cmd = f"rsync -avz --delete {src}/ {self.user}@{self.host}:{dest}/ --exclude .git"
+        run_cmd(cmd)
         print(f"{cmd}\n Rsync process completed.")
 
     def git_commit(self):
@@ -338,11 +353,23 @@ class DeployGitRepo(FileSystem):
         cmd += "git add .;"
         cmd += f"git commit -am '{self.message}';"
         cmd += '"'
-        p = subprocess.Popen(
-            cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-        p.wait()
+        run_cmd(cmd)
         print(f"{cmd}\n git commit process completed.")
+
+
+class FakeOuput:
+    returncode = 1
+    stderr = 'Timeout! It took more than 300 seconds'
+
+
+def run_cmd(cmd, capture_output=True, timeout=1000, **kwargs):
+    try:
+        value = subprocess.run(cmd, shell=True, capture_output=capture_output, timeout=timeout, **kwargs)
+    except subprocess.TimeoutExpired:
+        value = FakeOuput()
+    if value.returncode > 0:
+        raise Exception(f'ERROR! Command failed!\n{value}')
+    return value
 
 
 def deploy_suite(suite, target=FileSystem, **options):
@@ -359,7 +386,7 @@ def deploy_suite(suite, target=FileSystem, **options):
     """
 
     # N.B. Important safety check. Do not remove. Extern nodes must never be played or generated.
-    assert not suite._extern, "Attempting to deploy extern node not permitted"
+    assert not suite._extern, "Attemptinxg to deploy extern node not permitted"
 
     target = target(suite, **options)
     for t in suite.all_tasks:
