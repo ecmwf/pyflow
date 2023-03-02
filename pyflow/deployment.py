@@ -185,18 +185,33 @@ class Dummy:
 
 
 class FileSystem(Deployment):
+    """
+    A filesystem target for suite deployment
+    Parameters:
+        suite(Suite_): The suite object to deploy.
+        path(str): The target directory (by default ECF_FILES).
+    Example:
+        s = pf.Suite('suite')
+        pyflow.FileSystem(s, path='/path/to/suite/files')
+    """
+
+    def __init__(self, suite, path=None, **kwargs):
+        super().__init__(suite, **kwargs)
+        self.path = path
+
     def patch_path(self, path):
         """
-        Allow derived types to simply modify the storage behaviour
+        Allows to deploy the suite to a different place than ECF_FILES
         """
+        if self.path:
+            rel_path = os.path.relpath(path, self._files)
+            path = os.path.join(self.path, rel_path)
         return path
 
     def create_directory(self, path):
-        path = self.patch_path(path)
         if not os.path.exists(path):
             try:
                 os.makedirs(path)
-                print("Create directory: {}".format(path))
             except Exception:
                 print("WARNING: Couldn't create directory: {}".format(path))
 
@@ -207,10 +222,7 @@ class FileSystem(Deployment):
             )
         if os.path.exists(target):
             if not self._overwrite:
-                print("File %s exists, not overwriting" % (target,))
                 return False
-            else:
-                print("Overwriting existing file: %s" % (target,))
 
         self.create_directory(os.path.dirname(target))
         return True
@@ -222,8 +234,6 @@ class FileSystem(Deployment):
         if not self.check(target):
             return
 
-        print("Copy %s to %s" % (source, target))
-
         with open(source, "r") as f:
             with open(target, "w") as g:
                 g.write(f.read())
@@ -234,8 +244,6 @@ class FileSystem(Deployment):
 
         if not self.check(target):
             return
-
-        print("Save %s" % (target,))
 
         output = "\n".join(source) if isinstance(source, list) else source
         assert isinstance(output, (str, bytes))
