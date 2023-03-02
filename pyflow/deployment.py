@@ -281,7 +281,7 @@ class DeployGitRepo(FileSystem):
         build_dir=None,
         suite_def=None,
         deploy=True,
-    ):
+        ):
         super().__init__(suite)
 
         # get hostname and user to rsync the files later
