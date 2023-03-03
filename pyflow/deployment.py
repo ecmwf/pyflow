@@ -185,6 +185,10 @@ class Dummy:
 
 
 class FileSystem(Deployment):
+    def __init__(self, suite, **options):
+        super().__init__(suite, **options)
+        self._processed = set()
+
     def patch_path(self, path):
         """
         Allow derived types to simply modify the storage behaviour
@@ -206,6 +210,8 @@ class FileSystem(Deployment):
                 "None is not a valid path for deployment. Most likely files/ECF_FILES unspecified"
             )
         if os.path.exists(target):
+            if self.duplicate_write_check(target):
+                return False
             if not self._overwrite:
                 print("File %s exists, not overwriting" % (target,))
                 return False
@@ -214,6 +220,12 @@ class FileSystem(Deployment):
 
         self.create_directory(os.path.dirname(target))
         return True
+
+    def duplicate_write_check(self, target):
+        if target in self._processed:
+            return True
+        self._processed.add(target)
+        return False
 
     def copy(self, source, target):
         target = self.patch_path(target)
