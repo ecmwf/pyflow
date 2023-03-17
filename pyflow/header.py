@@ -35,6 +35,18 @@ class InlineCodeHeader(Header):
         return self.include_name
 
 
+class LegacyHeader(Header):
+    def __init__(self, name, what="head"):
+        super().__init__(name, include_path="", what=what)
+
+    @property
+    def include_name(self):
+        return self._name
+
+    def install(self, target):
+        return self.include_name
+
+
 class FileTail(FileHeader):
     def __init__(self, name, path, home):
         super().__init__(name, path, home, what="tail")
@@ -43,3 +55,8 @@ class FileTail(FileHeader):
 class InlineCodeTail(InlineCodeHeader):
     def __init__(self, name, code):
         super().__init__(name, code, what="tail")
+
+
+class LegacyTail(LegacyHeader):
+    def __init__(self, name):
+        super().__init__(name, what="tail")

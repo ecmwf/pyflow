@@ -40,7 +40,7 @@ from .extern import (
     ExternTask,
     ExternYMD,
 )
-from .header import FileHeader, FileTail, Header, InlineCodeHeader
+from .header import FileHeader, FileTail, Header, InlineCodeHeader, LegacyHeader, LegacyTail
 from .host import Host, LocalHost, NullHost, PBSHost, SLURMHost, SSHHost, TroikaHost
 from .multiple import Events, Families, InLimits, Limits, Tasks
 from .nodes import AnchorFamily, Family, Suite, Task, ecflow_name
