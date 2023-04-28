@@ -67,16 +67,16 @@ jobs:
         user: __token__
         password: ${{ secrets.PYPI_API_TOKEN }}
 
-  notify:
-    runs-on: ubuntu-latest
-    needs:
-    - setup
-    - test
-    - distribution
-    if: always()
-    steps:
-    - name: Notify Teams
-      uses: ecmwf-actions/notify-teams@v1
-      with:
-        incoming_webhook: ${{ secrets.incoming_webhook }}
-        needs_context: ${{ toJSON(needs) }}
+  # notify:
+  #   runs-on: ubuntu-latest
+  #   needs:
+  #   - setup
+  #   - test
+  #   - distribution
+  #   if: always()
+  #   steps:
+  #   - name: Notify Teams
+  #     uses: ecmwf-actions/notify-teams@v1
+  #     with:
+  #       incoming_webhook: ${{ secrets.incoming_webhook }}
+  #       needs_context: ${{ toJSON(needs) }}
