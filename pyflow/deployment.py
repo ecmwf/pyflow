@@ -231,7 +231,7 @@ class FileSystem(Deployment):
             return False
 
         if not self._overwrite:
-            raise ValueError("File %s exists, not overwriting" % (target,))
+            raise ValueError("File %s exists, not overwriting." % (target,))
 
         print("Overwriting existing file: %s" % (target,))
         return True
