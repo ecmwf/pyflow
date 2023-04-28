@@ -70,11 +70,8 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     needs:
-    - pre-commit
-    - unit-tests
-    - type-check
-    - documentation
-    - integration-tests
+    - setup
+    - test
     - distribution
     if: always()
     steps:
