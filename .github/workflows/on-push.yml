@@ -75,8 +75,8 @@ jobs:
     - distribution
     if: always()
     steps:
-    - name: Send Teams notification
+    - name: Notify Teams
       uses: ecmwf-actions/notify-teams@v1
       with:
-        incoming_webhook: ${{ secrets.MS_TEAMS_INCOMING_WEBHOOK }}
+        incoming_webhook: ${{ secrets.incoming_webhook }}
         needs_context: ${{ toJSON(needs) }}
