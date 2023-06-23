@@ -1019,7 +1019,7 @@ class TroikaHost(Host):
             "sthost": "--export=STHOST=",
             "hint": " --hint=",
             "distribution": " --distribution=",
-            "reservation": "--reservation="
+            "reservation": "--reservation=",
         }
 
         for arg in submit_arguments.keys():
