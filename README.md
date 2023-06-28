@@ -5,18 +5,13 @@
 The documentation can be found at <https://pyflow-workflow-generator.readthedocs.io>.
 
 ## Installation
-To install pyflow using conda:
+To install pyflow using conda (including ecflow):
 
     conda env create -n pyflow -f environment.yml
 
-To install pyflow using pip (requires python, ecflow and pip):
+To install pyflow using pip (requires a local installation of ecflow):
 
-    python -m pip install .
-
-Link the pyflow directory in the user site packages
-(recommended for pyflow developers):
-
-    python -m pip install -e .
+    pip install pyflow-workflow-generator
 
 ## Tutorial
 Pyflow tutorials are available in the form of a Jupyter notebook:
