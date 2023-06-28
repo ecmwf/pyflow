@@ -215,40 +215,53 @@ class FileSystem(Deployment):
             except Exception:
                 print("WARNING: Couldn't create directory: {}".format(path))
 
-    def check(self, target):
+    def check(self, target, content):
         if target is None:
             raise RuntimeError(
                 "None is not a valid path for deployment. Most likely files/ECF_FILES unspecified"
             )
-        if os.path.exists(target):
-            if not self._overwrite:
-                return False
 
-        self.create_directory(os.path.dirname(target))
+        if not os.path.exists(target):
+            self.create_directory(os.path.dirname(target))
+            return True
+
+        previous = open(target, "r").read()
+
+        if previous == content:
+            return False
+
+        if not self._overwrite:
+            raise ValueError("File %s exists, not overwriting." % (target,))
+
+        print("Overwriting existing file: %s" % (target,))
         return True
 
     def copy(self, source, target):
         target = self.patch_path(target)
         super().copy(source, target)
 
-        if not self.check(target):
+        content = open(source, "r").read()
+
+        if not self.check(target, content):
             return
 
-        with open(source, "r") as f:
-            with open(target, "w") as g:
-                g.write(f.read())
+        print("Copy %s to %s" % (source, target))
+
+        with open(target, "w") as g:
+            g.write(content)
 
     def save(self, source, target):
         target = self.patch_path(target)
         super().save(source, target)
 
-        if not self.check(target):
+        content = "\n".join(source) if isinstance(source, list) else source
+
+        if not self.check(target, content):
             return
 
-        output = "\n".join(source) if isinstance(source, list) else source
-        assert isinstance(output, (str, bytes))
-        with open(target, "w" if isinstance(output, str) else "wb") as g:
-            g.write(output)
+        assert isinstance(content, (str, bytes))
+        with open(target, "w" if isinstance(content, str) else "wb") as g:
+            g.write(content)
 
     def create_directories(self, path):
         pass
@@ -285,7 +298,6 @@ class DeployGitRepo(FileSystem):
 
         self._deploy_path = path
 
-        print(self._deploy_path)
         assert os.path.exists(os.path.join(self._deploy_path, ".git"))
 
         # Cleaning existing deploy directory
