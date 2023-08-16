@@ -105,7 +105,6 @@ class Deployment:
 
         # None is a valid deploy path for Notebooks
         if deploy_path is not None:
-            assert deploy_path[0] == "/"
             if not deploy_path.startswith(self._files):
                 print("Deploy path: {}".format(deploy_path))
                 print("Suite base path: {}".format(self._files))
