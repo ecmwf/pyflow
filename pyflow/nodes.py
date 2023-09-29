@@ -1278,7 +1278,9 @@ class Task(Node):
         lines += [
             # '',
             'echo "Running on: $(hostname)" || true',
-            "set -uex",
+            "set -x # echo script lines as they are executed",
+            "set -e # stop the shell on first error",
+            "set -u # fail when using an undefined variable",
             "",
         ]
 
