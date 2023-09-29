@@ -31,9 +31,6 @@ exit 0
 """
 
 
-TRAP_
-
-
 SSH_COMMAND = "ssh -v -o StrictHostKeyChecking=no"
 
 
@@ -343,8 +340,8 @@ class Host:
             done
 
             # Trap any calls to exit and errors caught by the -e flag
-            trap "ERROR \$? \"EXIT code \$?\"" 0
-            """
+            trap ERROR 0
+            """  # noqa: E501
             )
             % {"ecf_path": ecflowpath}
         )
