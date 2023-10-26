@@ -332,6 +332,14 @@ class Node(Base):
         result = []
         self._get_nodes(Task, result)
         return result
+    
+    @property
+    def all_families(self):
+        """*list*: The list of all tasks directly contained within a Family_."""
+        result = []
+        self._get_nodes(Family, result)
+        self._get_nodes(AnchorFamily, result)
+        return result
 
     def has_variable(self, name):
         """
@@ -760,6 +768,18 @@ class Node(Base):
     def __str__(self):
         return str(self.generate_node())
 
+    def generate_stub(self, scripts):
+        """Returns complete script by combining the fragments.
+
+        Parameters:
+            scripts(tuple): List of script fragments.
+
+        Returns:
+            *str*: Complete script.
+        """
+
+        return reduce(add, [n.generate_stub() for n in scripts], [])
+
 
 ################################################
 
@@ -837,6 +857,20 @@ class Family(Node):
         """Family_: The family object."""
         return self
 
+    @property
+    def manual_path(self):
+        """*str*: The deployment path of the current task, may be `None`."""
+
+        """
+        n.b. we do permit generating a None deploy path, as this is acceptable when
+        generating and deploying a suite to notebooks. The filesystem mechanism asserts
+        aggressively on this.
+        """
+        try:
+            return os.path.join(self.anchor.files_path, f"{self.name}.man")
+        except ValueError:
+            return None
+        
     def _build(self, ecflow_parent):
         if type(ecflow_parent) == ecflow.Task:
             raise GenerateError(
@@ -1044,6 +1078,12 @@ class Suite(AnchorMixin, Node):
         for t in self.all_tasks:
             script, includes = t.generate_script()
             target.deploy_task(t.deploy_path, script, includes)
+        for f in self.all_families:
+            print(f.manual)
+            manual = self.generate_stub(f.manual)
+            if manual:
+                target.deploy_manual(f.manual_path, manual)
+
         target.deploy_headers()
         return target
 
@@ -1178,18 +1218,6 @@ class Task(Node):
     def deploy_extension(self):
         """*str*: The script file extension to be used during deployment of the task."""
         return self.lookup_variable_value("ECF_EXTN", ".ecf")
-
-    def generate_stub(self, nodes):
-        """Returns complete script for the current task by combining the fragments.
-
-        Parameters:
-            nodes(tuple): List of script fragments.
-
-        Returns:
-            *str*: Complete script for the current task.
-        """
-
-        return reduce(add, [n.generate_stub() for n in nodes], [])
 
     @property
     def deploy_path(self):
