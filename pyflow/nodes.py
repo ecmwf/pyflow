@@ -872,7 +872,7 @@ class Family(Node):
             return None
         
     def _build(self, ecflow_parent):
-        if type(ecflow_parent) == ecflow.Task:
+        if isinstance(ecflow_parent, ecflow.Task):
             raise GenerateError(
                 "Cannot add Family '{}' to Task '{}'".format(
                     self.name, ecflow_parent.name
@@ -1174,7 +1174,7 @@ class Task(Node):
         return ecflow.Task(str(self._name))
 
     def _build(self, ecflow_parent):
-        if type(ecflow_parent) == ecflow.Task:
+        if isinstance(ecflow_parent, ecflow.Task):
             raise GenerateError(
                 "Cannot add '{}' to task '{}'".format(self.name, ecflow_parent.name())
             )
