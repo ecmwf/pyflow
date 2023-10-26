@@ -111,7 +111,7 @@ class Node(Base):
         purge_modules=False,
         extern=False,
         workdir=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Base class for all nodes.
@@ -332,7 +332,7 @@ class Node(Base):
         result = []
         self._get_nodes(Task, result)
         return result
-    
+
     @property
     def all_families(self):
         """*list*: The list of all tasks directly contained within a Family_."""
@@ -839,7 +839,7 @@ class Family(Node):
             modules=modules,
             purge_modules=purge_modules,
             extern=extern,
-            **kwargs
+            **kwargs,
         )
 
     def ecflow_object(self):
@@ -870,7 +870,7 @@ class Family(Node):
             return os.path.join(self.anchor.files_path, f"{self.name}.man")
         except ValueError:
             return None
-        
+
     def _build(self, ecflow_parent):
         if isinstance(ecflow_parent, ecflow.Task):
             raise GenerateError(
@@ -935,7 +935,7 @@ class AnchorFamily(AnchorMixin, Family):
             modules=modules,
             purge_modules=purge_modules,
             extern=extern,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -1098,7 +1098,7 @@ class Task(Node):
         submit_arguments=None,
         exit_hook=None,
         clean_workdir=False,
-        **kwargs
+        **kwargs,
     ):
         """
         Describes what should be carried out as one executable unit within an **ecFlow** suite.
