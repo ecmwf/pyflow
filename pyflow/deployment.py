@@ -105,7 +105,6 @@ class Deployment:
 
         # None is a valid deploy path for Notebooks
         if deploy_path is not None:
-            assert deploy_path[0] == "/"
             if not deploy_path.startswith(self._files):
                 print("Deploy path: {}".format(deploy_path))
                 print("Suite base path: {}".format(self._files))
@@ -185,62 +184,83 @@ class Dummy:
 
 
 class FileSystem(Deployment):
+    """
+    A filesystem target for suite deployment
+    Parameters:
+        suite(Suite_): The suite object to deploy.
+        path(str): The target directory (by default ECF_FILES).
+    Example:
+        s = pf.Suite('suite')
+        pyflow.FileSystem(s, path='/path/to/suite/files')
+    """
+
+    def __init__(self, suite, path=None, **kwargs):
+        super().__init__(suite, **kwargs)
+        self.path = path
+
     def patch_path(self, path):
         """
-        Allow derived types to simply modify the storage behaviour
+        Allows to deploy the suite to a different place than ECF_FILES
         """
+        if self.path:
+            rel_path = os.path.relpath(path, self._files)
+            path = os.path.join(self.path, rel_path)
         return path
 
     def create_directory(self, path):
-        path = self.patch_path(path)
         if not os.path.exists(path):
             try:
                 os.makedirs(path)
-                print("Create directory: {}".format(path))
             except Exception:
                 print("WARNING: Couldn't create directory: {}".format(path))
 
-    def check(self, target):
+    def check(self, target, content):
         if target is None:
             raise RuntimeError(
                 "None is not a valid path for deployment. Most likely files/ECF_FILES unspecified"
             )
-        if os.path.exists(target):
-            if not self._overwrite:
-                print("File %s exists, not overwriting" % (target,))
-                return False
-            else:
-                print("Overwriting existing file: %s" % (target,))
 
-        self.create_directory(os.path.dirname(target))
+        if not os.path.exists(target):
+            self.create_directory(os.path.dirname(target))
+            return True
+
+        previous = open(target, "r").read()
+
+        if previous == content:
+            return False
+
+        if not self._overwrite:
+            raise RuntimeError("File %s exists, not overwriting." % (target,))
+
+        print("Overwriting existing file: %s" % (target,))
         return True
 
     def copy(self, source, target):
         target = self.patch_path(target)
         super().copy(source, target)
 
-        if not self.check(target):
+        content = open(source, "r").read()
+
+        if not self.check(target, content):
             return
 
         print("Copy %s to %s" % (source, target))
 
-        with open(source, "r") as f:
-            with open(target, "w") as g:
-                g.write(f.read())
+        with open(target, "w") as g:
+            g.write(content)
 
     def save(self, source, target):
         target = self.patch_path(target)
         super().save(source, target)
 
-        if not self.check(target):
+        content = "\n".join(source) if isinstance(source, list) else source
+
+        if not self.check(target, content):
             return
 
-        print("Save %s" % (target,))
-
-        output = "\n".join(source) if isinstance(source, list) else source
-        assert isinstance(output, (str, bytes))
-        with open(target, "w" if isinstance(output, str) else "wb") as g:
-            g.write(output)
+        assert isinstance(content, (str, bytes))
+        with open(target, "w" if isinstance(content, str) else "wb") as g:
+            g.write(content)
 
     def create_directories(self, path):
         pass
@@ -277,7 +297,6 @@ class DeployGitRepo(FileSystem):
 
         self._deploy_path = path
 
-        print(self._deploy_path)
         assert os.path.exists(os.path.join(self._deploy_path, ".git"))
 
         # Cleaning existing deploy directory

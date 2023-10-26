@@ -838,7 +838,7 @@ class Family(Node):
         return self
 
     def _build(self, ecflow_parent):
-        if type(ecflow_parent) == ecflow.Task:
+        if isinstance(ecflow_parent, ecflow.Task):
             raise GenerateError(
                 "Cannot add Family '{}' to Task '{}'".format(
                     self.name, ecflow_parent.name
@@ -1042,8 +1042,8 @@ class Suite(AnchorMixin, Node):
 
         target = target(self, **options)
         for t in self.all_tasks:
-            t.install_file_stub(target)
-            t.create_directories(target)
+            script, includes = t.generate_script()
+            target.deploy_task(t.deploy_path, script, includes)
         target.deploy_headers()
         return target
 
@@ -1134,7 +1134,7 @@ class Task(Node):
         return ecflow.Task(str(self._name))
 
     def _build(self, ecflow_parent):
-        if type(ecflow_parent) == ecflow.Task:
+        if isinstance(ecflow_parent, ecflow.Task):
             raise GenerateError(
                 "Cannot add '{}' to task '{}'".format(self.name, ecflow_parent.name())
             )
@@ -1206,27 +1206,6 @@ class Task(Node):
             )
         except ValueError:
             return None
-
-    def install_file_stub(self, target):
-        """
-        Deploys current task to the provided target.
-
-        Parameters:
-            target(Deployment): Deployment target for the task.
-        """
-
-        script, includes = self.generate_script()
-        target.deploy_task(self.deploy_path, script, includes)
-
-    def create_directories(self, target):
-        """
-        Creates task directories for deployment.
-
-        Parameters:
-            target(Deployment): Deployment target for the task.
-        """
-
-        target.create_directories(self.parent.fullname)
 
     def task_modules(self):
         """
