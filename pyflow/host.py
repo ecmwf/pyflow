@@ -312,6 +312,7 @@ class Host:
             ERROR() {
                 export PATH=%(ecf_path)s:$PATH
                 set +eu  # Clear -eu flag, so we don't fail
+                ecflow_client --abort="$errmsg"  # Notify ecFlow that something went wrong
                 wait  # wait for background process to stop
                 # print error message
                 errmsg="$2"
@@ -319,7 +320,6 @@ class Host:
                     errmsg="CANCELLED or TIMED OUT"
                 fi
                 exit_hook  # calling custom exit/cleaning code
-                ecflow_client --abort="$errmsg"  # Notify ecFlow that something went wrong
                 trap - 0 $SIGNAL_LIST  # Remove the traps
                 echo "The environment was:"
                 printenv | sort
