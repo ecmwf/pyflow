@@ -307,7 +307,7 @@ class Host:
             (
                 """
             # ----------------------------- TRAPS FOR SUBMITTED JOBS ----------------------------
-
+            set +x
             # Define a error handler
             ERROR() {
                 export PATH=%(ecf_path)s:$PATH
@@ -324,11 +324,7 @@ class Host:
                 echo "The environment was:"
                 printenv | sort
                 # End the script
-                if [ $1 -eq 0 ]; then
-                    exit -1
-                else
-                    exit $1
-                fi
+                exit 1
             }
 
             # Trap any signal that may cause the script to fail
@@ -341,6 +337,7 @@ class Host:
 
             # Trap any calls to exit and errors caught by the -e flag
             trap ERROR 0
+            set -x
             """  # noqa: E501
             )
             % {"ecf_path": ecflowpath}
