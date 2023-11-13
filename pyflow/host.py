@@ -319,7 +319,7 @@ class Host:
                     errmsg="CANCELLED or TIMED OUT"
                 fi
                 exit_hook  # calling custom exit/cleaning code
-                ecflow_client --abort="$errmsg"  # Notify ecFlow that something went wrong
+                ecflow_client --abort=trap  # Notify ecFlow that something went wrong, using 'trap' as the reason
                 trap - 0 $SIGNAL_LIST  # Remove the traps
                 echo "The environment was:"
                 printenv | sort
