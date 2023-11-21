@@ -1045,10 +1045,12 @@ class TroikaHost(Host):
         }
 
         if not TROIKA_0_2_2:
-            slurm_resources.update({
-                "distribution": "--distribution=",
-                "reservation": "--reservation=",
-            })
+            slurm_resources.update(
+                {
+                    "distribution": "--distribution=",
+                    "reservation": "--reservation=",
+                }
+            )
 
         def _translate_hint(val):
             if val == "multithread":
