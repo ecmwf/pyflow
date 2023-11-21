@@ -1014,35 +1014,68 @@ class TroikaHost(Host):
         """
         Accepted submit arguments:
         """
+
+        TROIKA_0_2_2 = False
+
         resources = {
-            "queue": "--qos=",
-            "job_name": "--job-name=",
-            "tasks": "--ntasks=",
-            "nodes": "--nodes=",
-            "threads_per_task": "--cpus-per-task=",
-            "tasks_per_node": "--ntasks-per-node=",
-            "hyperthreads": "--threads-per-core=",
-            "memory_per_task": "--mem-per-cpu=",
-            "accounting": "--account=",
-            "working_dir": "--chdir=",
-            "time": "--time=",
-            "output": "--output=",
-            "error": "--error=",
-            "priority": "--priority=",
-            "tmpdir": "--gres=ssdtmp:",
-            "sthost": "--export=STHOST=",
-            "hint": " --hint=",
-            "distribution": " --distribution=",
-            "reservation": "--reservation=",
+            "queue": "queue",
+            "job_name": "job_name",
+            "tasks": "total_tasks",
+            "nodes": "total_nodes",
+            "threads_per_task": "cpus_per_task",
+            "tasks_per_node": "tasks_per_node",
+            "hyperthreads": "threads_per_core",
+            "memory_per_task": "memory_per_cpu",
+            "accounting": "billing_account",
+            "working_dir": "working_dir",
+            "time": "time",
+            "output": "output",
+            "error": "error",
+            "priority": "priority",
+            "tmpdir": "tmpdir_size",
+            "enable_hyperthreading": "enable_hyperthreading",
+            "distribution": "distribution",  # XXX: troika >=0.2.2
+            "reservation": "reservation",  # XXX: troika >=0.2.2
         }
 
-        for arg in submit_arguments.keys():
-            if arg not in resources.keys():
-                raise KeyError(f"Submit argument {arg} not supported!")
+        slurm_resources = {
+            "tmpdir": "--gres=ssdtmp:",  # XXX: ECMWF-specific
+            "sthost": "--export=STHOST=",  # XXX: ECMWF-specific
+            "hint": " --hint=",
+        }
+
+        if not TROIKA_0_2_2:
+            slurm_resources.update({
+                "distribution": "--distribution=",
+                "reservation": "--reservation=",
+            })
+
+        def _translate_hint(val):
+            if val == "multithread":
+                return "enable_hyperthreading", "yes"
+            elif val == "nomultithread":
+                return "enable_hyperthreading", "no"
+            else:
+                return "hint", val
+
+        special = {
+            "hint": _translate_hint,
+        }
 
         args = []
-        for key, resource in resources.items():
-            if key in submit_arguments and resource is not None:
-                args.append("#SBATCH {}{}".format(resource, submit_arguments[key]))
+        for arg, val in submit_arguments.items():
+            if arg in special:
+                arg, val = special[arg](val)
+
+            if arg in slurm_resources:
+                resource = slurm_resources[arg]
+                if resource is not None:
+                    args.append("#SBATCH {}{}".format(resource, val))
+            elif arg in resources:
+                resource = resources[arg]
+                if resource is not None:
+                    args.append("#TROIKA {}={}".format(resource, val))
+            else:
+                raise KeyError(f"Submit argument {arg} not supported!")
 
         return args
