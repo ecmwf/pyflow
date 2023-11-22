@@ -957,6 +957,7 @@ class TroikaHost(Host):
     def __init__(self, name, user, **kwargs):
         self.troika_exec = kwargs.pop("troika_exec", "troika")
         self.troika_config = kwargs.pop("troika_config", "")
+        self.troika_0_2_2 = kwargs.pop("troika_0_2_2", False)
         super().__init__(name, user=user, **kwargs)
 
     def troika_command(self, command):
@@ -1015,8 +1016,6 @@ class TroikaHost(Host):
         Accepted submit arguments:
         """
 
-        TROIKA_0_2_2 = False
-
         resources = {
             "queue": "queue",
             "job_name": "job_name",
@@ -1044,7 +1043,7 @@ class TroikaHost(Host):
             "hint": " --hint=",
         }
 
-        if not TROIKA_0_2_2:
+        if not self.troika_0_2_2:
             slurm_resources.update(
                 {
                     "distribution": "--distribution=",
