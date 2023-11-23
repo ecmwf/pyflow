@@ -1033,13 +1033,13 @@ class TroikaHost(Host):
             "priority": "priority",
             "tmpdir": "tmpdir_size",
             "enable_hyperthreading": "enable_hyperthreading",
+            "export": "export_vars",
             "distribution": "distribution",  # XXX: troika >=0.2.2
             "reservation": "reservation",  # XXX: troika >=0.2.2
         }
 
         slurm_resources = {
             "tmpdir": "--gres=ssdtmp:",  # XXX: ECMWF-specific
-            "sthost": "--export=STHOST=",  # XXX: ECMWF-specific
             "hint": " --hint=",
         }
 
@@ -1059,8 +1059,12 @@ class TroikaHost(Host):
             else:
                 return "hint", val
 
+        def _translate_sthost(val):
+            return "export", f"STHOST={val}"
+
         special = {
             "hint": _translate_hint,
+            "sthost": _translate_sthost,
         }
 
         args = []
