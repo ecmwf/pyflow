@@ -1034,6 +1034,7 @@ class TroikaHost(Host):
             "tmpdir": "tmpdir_size",
             "enable_hyperthreading": "enable_hyperthreading",
             "export": "export_vars",
+            "partition": "partition",
             "distribution": "distribution",  # XXX: troika >=0.2.2
             "reservation": "reservation",  # XXX: troika >=0.2.2
         }
