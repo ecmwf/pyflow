@@ -1034,6 +1034,8 @@ class TroikaHost(Host):
             "hint": " --hint=",
             "distribution": " --distribution=",
             "reservation": "--reservation=",
+            "partition": "--partition=",
+            "exclusive": "--exclusive",
         }
 
         for arg in submit_arguments.keys():
