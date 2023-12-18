@@ -46,7 +46,7 @@ def test_move_node(tmpdir):
     assert path.exists(path.join(d, "t.ecf"))
 
 
-def test_manual(tmpdir):
+def test_manual_task(tmpdir):
     class Documented(pyflow.Task):
         """This is a task with a manual"""
 
@@ -62,6 +62,23 @@ def test_manual(tmpdir):
         assert "This is a task with a manual" in lines
         assert "%end" in lines
         assert "echo foo" in lines
+
+
+def test_manual_family(tmpdir):
+    class Documented(pyflow.Family):
+        """This is a family with a manual"""
+
+    d = str(tmpdir)
+    with pyflow.Suite("s", ECF_FILES=d) as s:
+        Documented("f")
+    s.deploy_suite()
+    p = path.join(d, "f.man")
+    assert path.exists(p)
+    with open(p) as f:
+        lines = f.read()
+        assert "%manual" in lines
+        assert "This is a family with a manual" in lines
+        assert "%end" in lines
 
 
 def test_unique_scripts(tmpdir):

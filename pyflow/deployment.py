@@ -112,6 +112,24 @@ class Deployment:
 
         self.save(full_script, deploy_path)
 
+    def deploy_manual(self, deploy_path, full_script):
+        """
+        Deploys the manual to target path.
+
+        Parameters:
+            deploy_path(str): The deployment path.
+            full_script(str,list): The full script of the manual.
+        """
+
+        # None is a valid deploy path for Notebooks
+        if deploy_path is not None:
+            if not deploy_path.startswith(self._files):
+                print("Deploy path: {}".format(deploy_path))
+                print("Suite base path: {}".format(self._files))
+                raise RuntimeError("Paths must be subpaths of the suite ECF_FILES path")
+
+        self.save(full_script, deploy_path)
+
     def deploy_headers(self):
         """Installs all required header files."""
 
