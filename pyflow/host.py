@@ -248,10 +248,11 @@ class Host:
 
     def script_submit_arguments(self, submit_arguments):
         if len(submit_arguments) > 0:
-             warnings.formatwarning = lambda mess, *args, **kwargs: "%s" % mess
-             warnings.warn(f'Host {self.__class__.__name__} does not support scheduler submission arguments. '
-                  'They will be ignore for script generation'
-             )
+            warnings.formatwarning = lambda mess, *args, **kwargs: "%s" % mess
+            warnings.warn(
+                f"Host {self.__class__.__name__} does not support scheduler submission arguments. "
+                "They will be ignore for script generation"
+            )
         return []
 
     def preamble_init(self, ecflowpath):

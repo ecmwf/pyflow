@@ -241,7 +241,7 @@ class FileSystem(Deployment):
             raise RuntimeError(
                 "None is not a valid path for deployment. Most likely files/ECF_FILES unspecified"
             )
-        
+
         # if script with same content already deployed, skip
         if os.path.exists(target):
             if self.duplicate_write_check(target):
@@ -259,7 +259,7 @@ class FileSystem(Deployment):
             return
 
         print("Copy %s to %s" % (source, target))
-        
+
         with open(source, "r") as f:
             with open(target, "w") as g:
                 g.write(f.read())
@@ -270,17 +270,17 @@ class FileSystem(Deployment):
 
         if not self.check(target):
             return
-        
+
         output = "\n".join(source) if isinstance(source, list) else source
         assert isinstance(output, (str, bytes))
         with open(target, "w" if isinstance(output, str) else "wb") as g:
             g.write(output)
 
     def duplicate_write_check(self, target):
-         if target in self._processed:
-             return True
-         self._processed.add(target)
-         return False
+        if target in self._processed:
+            return True
+        self._processed.add(target)
+        return False
 
 
 class DeployGitRepo(FileSystem):
