@@ -7,6 +7,7 @@ import os
 import pwd
 import shutil
 import textwrap
+import warnings
 
 from .attributes import Label, Limit
 from .base import STACK
@@ -246,7 +247,11 @@ class Host:
             return Label("exec_host", self.hostname)
 
     def script_submit_arguments(self, submit_arguments):
-        assert len(submit_arguments) == 0
+        if len(submit_arguments) > 0:
+             warnings.formatwarning = lambda mess, *args, **kwargs: "%s" % mess
+             warnings.warn(f'Host {self.__class__.__name__} does not support scheduler submission arguments. '
+                  'They will be ignore for script generation'
+             )
         return []
 
     def preamble_init(self, ecflowpath):
