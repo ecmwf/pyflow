@@ -12,17 +12,15 @@ class DeploymentError(RuntimeError):
 
 
 class Deployment:
-    def __init__(self, suite, headers=True, overwrite=False):
+    def __init__(self, suite, headers=True):
         """
         Base class for all deployments.
 
         Parameters:
             suite(Suite_): The suite object to deploy.
             headers(bool): Whether to deploy the headers.
-            overwrite(bool): Whether to overwrite existing target.
         """
 
-        self._overwrite = overwrite
         self._headers = headers
         self._includes = set()
 
@@ -138,9 +136,6 @@ class Deployment:
         for inc in self._includes:
             inc.install(where)
 
-    def create_directories(self, path):
-        raise NotImplementedError
-
 
 class Notebook(Deployment, FileListHTMLWrapper):
     """
@@ -186,18 +181,12 @@ class Notebook(Deployment, FileListHTMLWrapper):
         super().save(source, target)
         self._content.append((target, source))
 
-    def create_directories(self, path):
-        pass
-
 
 class Dummy:
     def copy(*args):
         pass
 
     def save(*args):
-        pass
-
-    def create_directories(*args):
         pass
 
 
@@ -215,6 +204,7 @@ class FileSystem(Deployment):
     def __init__(self, suite, path=None, **kwargs):
         super().__init__(suite, **kwargs)
         self.path = path
+        self._processed = set()
 
     def patch_path(self, path):
         """
@@ -232,59 +222,65 @@ class FileSystem(Deployment):
             except Exception:
                 print("WARNING: Couldn't create directory: {}".format(path))
 
-    def check(self, target, content):
+    def check(self, target):
+        """
+        Check if the target should be deployed.
+        Returns False if target has already been deployed, True otherwise.
+
+        Parameters
+        ----------
+        target : str
+            The target path for deployment.
+
+        Returns
+        -------
+        bool
+            True if the target path is valid for deployment, False otherwise.
+        """
         if target is None:
             raise RuntimeError(
                 "None is not a valid path for deployment. Most likely files/ECF_FILES unspecified"
             )
 
-        if not os.path.exists(target):
+        # if script with same content already deployed, skip
+        if os.path.exists(target):
+            if self.duplicate_write_check(target):
+                return False
+        else:
             self.create_directory(os.path.dirname(target))
-            return True
 
-        previous = open(target, "r").read()
-
-        if previous == content:
-            return False
-
-        if not self._overwrite:
-            raise RuntimeError("File %s exists, not overwriting." % (target,))
-
-        print("Overwriting existing file: %s" % (target,))
         return True
 
     def copy(self, source, target):
         target = self.patch_path(target)
         super().copy(source, target)
 
-        content = open(source, "r").read()
-
-        if not self.check(target, content):
+        if not self.check(target):
             return
 
         print("Copy %s to %s" % (source, target))
 
-        with open(target, "w") as g:
-            g.write(content)
+        with open(source, "r") as f:
+            with open(target, "w") as g:
+                g.write(f.read())
 
     def save(self, source, target):
         target = self.patch_path(target)
         super().save(source, target)
 
-        content = "\n".join(source) if isinstance(source, list) else source
-
-        if not self.check(target, content):
+        if not self.check(target):
             return
 
-        assert isinstance(content, (str, bytes))
-        with open(target, "w" if isinstance(content, str) else "wb") as g:
-            g.write(content)
+        output = "\n".join(source) if isinstance(source, list) else source
+        assert isinstance(output, (str, bytes))
+        with open(target, "w" if isinstance(output, str) else "wb") as g:
+            g.write(output)
 
-    def create_directories(self, path):
-        pass
-        # self.create_directory(self._home + path)
-        # It isn't the job of pyflow to create these.
-        # self.create_directory(self._out + path)
+    def duplicate_write_check(self, target):
+        if target in self._processed:
+            return True
+        self._processed.add(target)
+        return False
 
 
 class DeployGitRepo(FileSystem):
