@@ -111,7 +111,7 @@ class Node(Base):
         purge_modules=False,
         extern=False,
         workdir=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Base class for all nodes.
@@ -331,6 +331,14 @@ class Node(Base):
         """*list*: The list of all tasks directly contained within a Family_."""
         result = []
         self._get_nodes(Task, result)
+        return result
+
+    @property
+    def all_families(self):
+        """*list*: The list of all tasks directly contained within a Family_."""
+        result = []
+        self._get_nodes(Family, result)
+        self._get_nodes(AnchorFamily, result)
         return result
 
     def has_variable(self, name):
@@ -760,6 +768,18 @@ class Node(Base):
     def __str__(self):
         return str(self.generate_node())
 
+    def generate_stub(self, scripts):
+        """Returns complete script by combining the fragments.
+
+        Parameters:
+            scripts(tuple): List of script fragments.
+
+        Returns:
+            *str*: Complete script.
+        """
+
+        return reduce(add, [n.generate_stub() for n in scripts], [])
+
 
 ################################################
 
@@ -819,7 +839,7 @@ class Family(Node):
             modules=modules,
             purge_modules=purge_modules,
             extern=extern,
-            **kwargs
+            **kwargs,
         )
 
     def ecflow_object(self):
@@ -837,8 +857,22 @@ class Family(Node):
         """Family_: The family object."""
         return self
 
+    @property
+    def manual_path(self):
+        """*str*: The deployment path of the current task, may be `None`."""
+
+        """
+        n.b. we do permit generating a None deploy path, as this is acceptable when
+        generating and deploying a suite to notebooks. The filesystem mechanism asserts
+        aggressively on this.
+        """
+        try:
+            return os.path.join(self.anchor.files_path, f"{self.name}.man")
+        except ValueError:
+            return None
+
     def _build(self, ecflow_parent):
-        if type(ecflow_parent) == ecflow.Task:
+        if isinstance(ecflow_parent, ecflow.Task):
             raise GenerateError(
                 "Cannot add Family '{}' to Task '{}'".format(
                     self.name, ecflow_parent.name
@@ -901,7 +935,7 @@ class AnchorFamily(AnchorMixin, Family):
             modules=modules,
             purge_modules=purge_modules,
             extern=extern,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -1042,8 +1076,14 @@ class Suite(AnchorMixin, Node):
 
         target = target(self, **options)
         for t in self.all_tasks:
-            t.install_file_stub(target)
-            t.create_directories(target)
+            script, includes = t.generate_script()
+            target.deploy_task(t.deploy_path, script, includes)
+        for f in self.all_families:
+            print(f.manual)
+            manual = self.generate_stub(f.manual)
+            if manual:
+                target.deploy_manual(f.manual_path, manual)
+
         target.deploy_headers()
         return target
 
@@ -1058,7 +1098,7 @@ class Task(Node):
         submit_arguments=None,
         exit_hook=None,
         clean_workdir=False,
-        **kwargs
+        **kwargs,
     ):
         """
         Describes what should be carried out as one executable unit within an **ecFlow** suite.
@@ -1134,7 +1174,7 @@ class Task(Node):
         return ecflow.Task(str(self._name))
 
     def _build(self, ecflow_parent):
-        if type(ecflow_parent) == ecflow.Task:
+        if isinstance(ecflow_parent, ecflow.Task):
             raise GenerateError(
                 "Cannot add '{}' to task '{}'".format(self.name, ecflow_parent.name())
             )
@@ -1179,18 +1219,6 @@ class Task(Node):
         """*str*: The script file extension to be used during deployment of the task."""
         return self.lookup_variable_value("ECF_EXTN", ".ecf")
 
-    def generate_stub(self, nodes):
-        """Returns complete script for the current task by combining the fragments.
-
-        Parameters:
-            nodes(tuple): List of script fragments.
-
-        Returns:
-            *str*: Complete script for the current task.
-        """
-
-        return reduce(add, [n.generate_stub() for n in nodes], [])
-
     @property
     def deploy_path(self):
         """*str*: The deployment path of the current task, may be `None`."""
@@ -1206,27 +1234,6 @@ class Task(Node):
             )
         except ValueError:
             return None
-
-    def install_file_stub(self, target):
-        """
-        Deploys current task to the provided target.
-
-        Parameters:
-            target(Deployment): Deployment target for the task.
-        """
-
-        script, includes = self.generate_script()
-        target.deploy_task(self.deploy_path, script, includes)
-
-    def create_directories(self, target):
-        """
-        Creates task directories for deployment.
-
-        Parameters:
-            target(Deployment): Deployment target for the task.
-        """
-
-        target.create_directories(self.parent.fullname)
 
     def task_modules(self):
         """
@@ -1278,7 +1285,9 @@ class Task(Node):
         lines += [
             # '',
             'echo "Running on: $(hostname)" || true',
-            "set -uex",
+            "set -x # echo script lines as they are executed",
+            "set -e # stop the shell on first error",
+            "set -u # fail when using an undefined variable",
             "",
         ]
 

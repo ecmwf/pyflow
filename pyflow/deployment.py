@@ -12,17 +12,15 @@ class DeploymentError(RuntimeError):
 
 
 class Deployment:
-    def __init__(self, suite, headers=True, overwrite=False):
+    def __init__(self, suite, headers=True):
         """
         Base class for all deployments.
 
         Parameters:
             suite(Suite_): The suite object to deploy.
             headers(bool): Whether to deploy the headers.
-            overwrite(bool): Whether to overwrite existing target.
         """
 
-        self._overwrite = overwrite
         self._headers = headers
         self._includes = set()
 
@@ -105,7 +103,24 @@ class Deployment:
 
         # None is a valid deploy path for Notebooks
         if deploy_path is not None:
-            assert deploy_path[0] == "/"
+            if not deploy_path.startswith(self._files):
+                print("Deploy path: {}".format(deploy_path))
+                print("Suite base path: {}".format(self._files))
+                raise RuntimeError("Paths must be subpaths of the suite ECF_FILES path")
+
+        self.save(full_script, deploy_path)
+
+    def deploy_manual(self, deploy_path, full_script):
+        """
+        Deploys the manual to target path.
+
+        Parameters:
+            deploy_path(str): The deployment path.
+            full_script(str,list): The full script of the manual.
+        """
+
+        # None is a valid deploy path for Notebooks
+        if deploy_path is not None:
             if not deploy_path.startswith(self._files):
                 print("Deploy path: {}".format(deploy_path))
                 print("Suite base path: {}".format(self._files))
@@ -120,9 +135,6 @@ class Deployment:
 
         for inc in self._includes:
             inc.install(where)
-
-    def create_directories(self, path):
-        raise NotImplementedError
 
 
 class Notebook(Deployment, FileListHTMLWrapper):
@@ -169,9 +181,6 @@ class Notebook(Deployment, FileListHTMLWrapper):
         super().save(source, target)
         self._content.append((target, source))
 
-    def create_directories(self, path):
-        pass
-
 
 class Dummy:
     def copy(*args):
@@ -180,39 +189,66 @@ class Dummy:
     def save(*args):
         pass
 
-    def create_directories(*args):
-        pass
-
 
 class FileSystem(Deployment):
+    """
+    A filesystem target for suite deployment
+    Parameters:
+        suite(Suite_): The suite object to deploy.
+        path(str): The target directory (by default ECF_FILES).
+    Example:
+        s = pf.Suite('suite')
+        pyflow.FileSystem(s, path='/path/to/suite/files')
+    """
+
+    def __init__(self, suite, path=None, **kwargs):
+        super().__init__(suite, **kwargs)
+        self.path = path
+        self._processed = set()
+
     def patch_path(self, path):
         """
-        Allow derived types to simply modify the storage behaviour
+        Allows to deploy the suite to a different place than ECF_FILES
         """
+        if self.path:
+            rel_path = os.path.relpath(path, self._files)
+            path = os.path.join(self.path, rel_path)
         return path
 
     def create_directory(self, path):
-        path = self.patch_path(path)
         if not os.path.exists(path):
             try:
                 os.makedirs(path)
-                print("Create directory: {}".format(path))
             except Exception:
                 print("WARNING: Couldn't create directory: {}".format(path))
 
     def check(self, target):
+        """
+        Check if the target should be deployed.
+        Returns False if target has already been deployed, True otherwise.
+
+        Parameters
+        ----------
+        target : str
+            The target path for deployment.
+
+        Returns
+        -------
+        bool
+            True if the target path is valid for deployment, False otherwise.
+        """
         if target is None:
             raise RuntimeError(
                 "None is not a valid path for deployment. Most likely files/ECF_FILES unspecified"
             )
-        if os.path.exists(target):
-            if not self._overwrite:
-                print("File %s exists, not overwriting" % (target,))
-                return False
-            else:
-                print("Overwriting existing file: %s" % (target,))
 
-        self.create_directory(os.path.dirname(target))
+        # if script with same content already deployed, skip
+        if os.path.exists(target):
+            if self.duplicate_write_check(target):
+                return False
+        else:
+            self.create_directory(os.path.dirname(target))
+
         return True
 
     def copy(self, source, target):
@@ -235,18 +271,16 @@ class FileSystem(Deployment):
         if not self.check(target):
             return
 
-        print("Save %s" % (target,))
-
         output = "\n".join(source) if isinstance(source, list) else source
         assert isinstance(output, (str, bytes))
         with open(target, "w" if isinstance(output, str) else "wb") as g:
             g.write(output)
 
-    def create_directories(self, path):
-        pass
-        # self.create_directory(self._home + path)
-        # It isn't the job of pyflow to create these.
-        # self.create_directory(self._out + path)
+    def duplicate_write_check(self, target):
+        if target in self._processed:
+            return True
+        self._processed.add(target)
+        return False
 
 
 class DeployGitRepo(FileSystem):
@@ -277,7 +311,6 @@ class DeployGitRepo(FileSystem):
 
         self._deploy_path = path
 
-        print(self._deploy_path)
         assert os.path.exists(os.path.join(self._deploy_path, ".git"))
 
         # Cleaning existing deploy directory

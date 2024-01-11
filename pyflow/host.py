@@ -7,6 +7,7 @@ import os
 import pwd
 import shutil
 import textwrap
+import warnings
 
 from .attributes import Label, Limit
 from .base import STACK
@@ -246,7 +247,12 @@ class Host:
             return Label("exec_host", self.hostname)
 
     def script_submit_arguments(self, submit_arguments):
-        assert len(submit_arguments) == 0
+        if len(submit_arguments) > 0:
+            warnings.formatwarning = lambda mess, *args, **kwargs: "%s" % mess
+            warnings.warn(
+                f"Host {self.__class__.__name__} does not support scheduler submission arguments. "
+                "They will be ignore for script generation"
+            )
         return []
 
     def preamble_init(self, ecflowpath):
@@ -307,24 +313,38 @@ class Host:
             (
                 """
             # ----------------------------- TRAPS FOR SUBMITTED JOBS ----------------------------
-
+            set +x
             # Define a error handler
             ERROR() {
                 export PATH=%(ecf_path)s:$PATH
-                set +eu                     # Clear -eu flag, so we don't fail
-                wait                        # wait for background process to stop
-                exit_hook                   # calling custom exit/cleaning code
+                set +eu  # Clear -eu flag, so we don't fail
+                wait  # wait for background process to stop
+                # print error message
+                errmsg="$2"
+                if [ $1 -eq 0 ]; then
+                    errmsg="CANCELLED or TIMED OUT"
+                fi
+                exit_hook  # calling custom exit/cleaning code
                 ecflow_client --abort=trap  # Notify ecFlow that something went wrong, using 'trap' as the reason
-                trap 0                      # Remove the trap
-                exit 1                      # End the script with error
+                trap - 0 $SIGNAL_LIST  # Remove the traps
+                echo "The environment was:"
+                printenv | sort
+                # End the script
+                exit 1
             }
+
+            # Trap any signal that may cause the script to fail
+            # Note: don't trap SIGTERM/SIGCONT for Slurm to properly reach shell children on cancel/timeout
+            export SIGNAL_LIST='1 2 3 4 5 6 7 8 10 11 13 24 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64'
+
+            for signal in $SIGNAL_LIST; do
+                trap "ERROR $signal \\"Signal $(kill -l $signal) ($signal) received \\"" $signal
+            done
 
             # Trap any calls to exit and errors caught by the -e flag
             trap ERROR 0
-
-            # Trap any signal that may cause the script to fail
-            trap '{ echo "Killed by a signal"; ERROR ; }' 1 2 3 4 5 6 7 8 10 12 13 15
-            """
+            set -x
+            """  # noqa: E501
             )
             % {"ecf_path": ecflowpath}
         )
@@ -1020,6 +1040,8 @@ class TroikaHost(Host):
             "hint": " --hint=",
             "distribution": " --distribution=",
             "reservation": "--reservation=",
+            "partition": "--partition=",
+            "exclusive": "--exclusive",
         }
 
         for arg in submit_arguments.keys():
