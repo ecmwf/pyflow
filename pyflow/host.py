@@ -319,11 +319,6 @@ class Host:
                 export PATH=%(ecf_path)s:$PATH
                 set +eu  # Clear -eu flag, so we don't fail
                 wait  # wait for background process to stop
-                # print error message
-                errmsg="$2"
-                if [ $1 -eq 0 ]; then
-                    errmsg="CANCELLED or TIMED OUT"
-                fi
                 exit_hook  # calling custom exit/cleaning code
                 ecflow_client --abort=trap  # Notify ecFlow that something went wrong, using 'trap' as the reason
                 trap - 0 $SIGNAL_LIST  # Remove the traps
