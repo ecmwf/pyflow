@@ -15,7 +15,6 @@ This is likely to be more illuminating than an examination of the source code.
 **********************************************************************************************
 """
 
-
 import inspect
 import os
 from collections import namedtuple
