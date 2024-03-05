@@ -1079,7 +1079,6 @@ class Suite(AnchorMixin, Node):
             script, includes = t.generate_script()
             target.deploy_task(t.deploy_path, script, includes)
         for f in self.all_families:
-            print(f.manual)
             manual = self.generate_stub(f.manual)
             if manual:
                 target.deploy_manual(f.manual_path, manual)
