@@ -56,7 +56,7 @@ class Deployment:
                     old_content = f.read()
                     diff = difflib.unified_diff(old_content.splitlines(), source.splitlines(), lineterm='')
                     diff_str = '\n'.join(diff)
-                    print(f"Differences between source and old_content:\n{diff_str}")
+                    print(f"\nERROR! Differences between already-deployed script and current one:\n{diff_str}")
                 raise RuntimeError(
                     "Scripts deployed with the same name must be unique within one AnchorFamily or Suite: {}".format(
                         target
