@@ -544,7 +544,7 @@ for dow, day in enumerate(
     setattr(RepeatDate, day, property(lambda self: Eq(self.day_of_week, dow)))
 
 
-class RepeatDateTime(RepeatDate):
+class RepeatDateTime(Exportable):
     """
     An attribute that allows a node to be repeated by a date+time value.
 
@@ -575,7 +575,10 @@ class RepeatDateTime(RepeatDate):
         end,
         increment=datetime.timedelta(hours=24, minutes=0, seconds=0),
     ):
-        super().__init__(name, start, end, increment)
+        super().__init__(name)
+        self._start = start
+        self._end = end
+        self._increment = increment
 
     def _build(self, ecflow_parent):
         start = self._start(self) if callable(self._start) else self._start
@@ -592,6 +595,15 @@ class RepeatDateTime(RepeatDate):
         )
 
         ecflow_parent.add_repeat(repeat)
+
+    def __add__(self, other):
+        return Add(self, other)
+
+    def __sub__(self, other):
+        return Sub(self, other)
+
+    def settings(self):
+        return self._start, self._end, self._increment
 
     def _delta_to_string(self, delta):
         # there is no strftime for timedelta so we make our own
