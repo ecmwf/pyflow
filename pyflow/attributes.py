@@ -552,7 +552,7 @@ class RepeatDateTime(Exportable):
         name(str): The name of the repeat attribute.
         start(datetime): The start date of the repeat attribute.
         end(datetime): The end date of the repeat attribute.
-        increment(timedelta): The increment used to update the date.
+        increment(timedelta): The increment used to update the datetime.
 
     Example::
 
@@ -614,22 +614,22 @@ class RepeatDateTime(Exportable):
 
     @property
     def second(self):
-        """*int*: The second of the repeat date."""
+        """*int*: The second of the repeat datetime."""
         return Mod(self, 60)
 
     @property
     def minute(self):
-        """*int*: The minute of the repeat date."""
+        """*int*: The minute of the repeat datetime."""
         return Mod(Div(self, 60), 60)
 
     @property
     def hour(self):
-        """*int*: The hour of the repeat date."""
+        """*int*: The hour of the repeat datetime."""
         return Mod(Div(self, 3600), 24)
 
     @property
     def day_of_week(self):
-        """*int*: The day of the week of the repeat date."""
+        """*int*: The day of the week of the repeat datetime."""
         return Mod(Add(Div(self, 86400), 4), 7)
 
 
