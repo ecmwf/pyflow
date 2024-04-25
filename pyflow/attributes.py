@@ -612,6 +612,26 @@ class RepeatDateTime(Exportable):
         minutes, seconds = divmod(remainder, 60)
         return "{:02d}:{:02d}:{:02d}".format(hours, minutes, seconds)
 
+    @property
+    def second(self):
+        """*int*: The second of the repeat date."""
+        return Mod(self, 60)
+
+    @property
+    def minute(self):
+        """*int*: The minute of the repeat date."""
+        return Mod(Div(self, 60), 60)
+
+    @property
+    def hour(self):
+        """*int*: The hour of the repeat date."""
+        return Mod(Div(self, 3600), 24)
+
+    @property
+    def day_of_week(self):
+        """*int*: The day of the week of the repeat date."""
+        return Mod(Add(Div(self, 86400), 4), 7)
+
 
 def string_or_enumerated(name, value):
     if all(isinstance(v, int) for v in value):
