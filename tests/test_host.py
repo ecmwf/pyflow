@@ -1,4 +1,5 @@
 import pytest
+import unittest
 
 import pyflow
 
@@ -227,8 +228,71 @@ def test_host_kill_cmd(class_name):
     assert host.kill_cmd == expected_kill_cmd
 
 
-# def test_pre_post_amble():
-#     assert False
+# class TestTroikaHost(unittest.TestCase):
+#     def setUp(self):
+#         self.troika_host = pyflow.TroikaHost(
+#             name='test_host',
+#             user='test_user',
+#             hostname='test_hostname',
+#             scratch_directory='/scratch',
+#             log_directory='/log',
+#             resources_directory='/resources',
+#             limit=10,
+#             extra_paths=['/usr/bin', '/bin'],
+#             extra_variables={'VAR1': 'value1'},
+#             environment_variables={'ENV1': 'env_value1'},
+#             module_source='module.sh',
+#             modules=['python', 'gcc'],
+#             purge_models=True,
+#             label_host=False,
+#             ecflow_path='/ecflow',
+#             server_ecfvars=False
+#         )
+
+#     def test_initialization(self):
+#         self.assertEqual(self.troika_host.name, 'test_host')
+#         self.assertEqual(self.troika_host.user, 'test_user')
+#         self.assertEqual(self.troika_host.hostname, 'test_hostname')
+#         self.assertEqual(self.troika_host.scratch_directory, '/scratch/test_user')
+#         self.assertEqual(self.troika_host.log_directory, '/log/test_user')
+#         self.assertEqual(self.troika_host.limit, 10)
+#         self.assertListEqual(self.troika_host.extra_paths, ['/usr/bin', '/bin'])
+#         self.assertDictEqual(self.troika_host.extra_variables, {'VAR1': 'value1'})
+#         self.assertDictEqual(self.troika_host.environment_variables, {'ENV1': 'env_value1'})
+#         self.assertEqual(self.troika_host.module_source, 'module.sh')
+#         self.assertListEqual(self.troika_host.modules, ['python', 'gcc'])
+#         self.assertTrue(self.troika_host.purge_models)
+#         self.assertFalse(self.troika_host.label_host)
+#         self.assertEqual(self.troika_host.ecflow_path, '/ecflow')
+#         self.assertFalse(self.troika_host.server_ecfvars)
+
+#     def test_troika_command(self):
+#         command = self.troika_host.troika_command('test_command')
+#         expected_command = '%TROIKA:troika% -vv -c %TROIKA_CONFIG:% -u test_user test_command -u test_user'
+#         self.assertEqual(command, expected_command)
+
+#     def test_job_command_property(self):
+#         self.assertIn('submit', self.troika_host.job_cmd)
+#         self.assertIn('test_hostname', self.troika_host.job_cmd)
+
+#     def test_kill_command_property(self):
+#         self.assertIn('kill', self.troika_host.kill_cmd)
+#         self.assertIn('test_hostname', self.troika_host.kill_cmd)
+
+#     def test_status_command_property(self):
+#         self.assertIn('monitor', self.troika_host.status_cmd)
+#         self.assertIn('test_hostname', self.troika_host.status_cmd)
+
+#     def test_check_command_property(self):
+#         self.assertIn('check', self.troika_host.check_cmd)
+#         self.assertIn('test_hostname', self.troika_host.check_cmd)
+
+#     def test_script_submit_arguments(self):
+#         submit_args = {'tasks': 2, 'sthost': 'test', 'tmpdir': '500', 'hint': 'nomultithread'}
+#         results = self.troika_host.script_submit_arguments(submit_args)
+#         self.assertIn('export STHOST=test', results)
+#         self.assertIn('--gres=ssdtmp:500', results)
+#         self.assertIn('--hint=nomultithread', results)
 
 
 if __name__ == "__main__":

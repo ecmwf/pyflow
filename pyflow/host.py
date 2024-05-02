@@ -957,15 +957,15 @@ class TroikaHost(Host):
     def __init__(self, name, user, **kwargs):
         self.troika_exec = kwargs.pop("troika_exec", "troika")
         self.troika_config = kwargs.pop("troika_config", "")
-        self.troika_0_2_2 = kwargs.pop("troika_0_2_2", False)
+        self.troika_version = tuple(kwargs.pop("troika_version", "0.2.1").split("."))
         super().__init__(name, user=user, **kwargs)
 
     def troika_command(self, command):
         cmd = " ".join(
             [
-                f"{self.troika_exec}",
+                f"%TROIKA:{self.troika_exec}%",
                 "-vv",
-                f"-c {self.troika_config}" if self.troika_config else "",
+                f"-c %TROIKA_CONFIG:{self.troika_config}%" if self.troika_config else "",
                 f"{command}",
                 f"-u {self.user}",
             ]
@@ -1016,9 +1016,7 @@ class TroikaHost(Host):
         Accepted submit arguments:
         """
 
-        resources = {
-            "queue": "queue",
-            "job_name": "job_name",
+        deprecated = {
             "tasks": "total_tasks",
             "nodes": "total_nodes",
             "threads_per_task": "cpus_per_task",
@@ -1027,16 +1025,8 @@ class TroikaHost(Host):
             "memory_per_task": "memory_per_cpu",
             "accounting": "billing_account",
             "working_dir": "working_dir",
-            "time": "time",
-            "output": "output",
-            "error": "error",
-            "priority": "priority",
             "tmpdir": "tmpdir_size",
-            "enable_hyperthreading": "enable_hyperthreading",
             "export": "export_vars",
-            "partition": "partition",
-            "distribution": "distribution",  # XXX: troika >=0.2.2
-            "reservation": "reservation",  # XXX: troika >=0.2.2
         }
 
         slurm_resources = {
@@ -1044,7 +1034,7 @@ class TroikaHost(Host):
             "hint": " --hint=",
         }
 
-        if not self.troika_0_2_2:
+        if self.troika_version < (0, 2, 2):
             slurm_resources.update(
                 {
                     "distribution": "--distribution=",
@@ -1077,11 +1067,14 @@ class TroikaHost(Host):
                 resource = slurm_resources[arg]
                 if resource is not None:
                     args.append("#SBATCH {}{}".format(resource, val))
-            elif arg in resources:
-                resource = resources[arg]
-                if resource is not None:
-                    args.append("#TROIKA {}={}".format(resource, val))
+            elif arg == "RAW_PRAGMA":
+                for pragma in val:
+                    args.append(pragma)
             else:
-                raise KeyError(f"Submit argument {arg} not supported!")
+                if arg in deprecated:
+                    print(f"WARNING! '{arg}' is deprecated, use '{deprecated[arg]}' instead")
+                    arg = deprecated[arg]
+                if arg is not None:
+                    args.append("#TROIKA {}={}".format(arg, val))
 
         return args
