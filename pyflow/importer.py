@@ -1,6 +1,14 @@
 import os
 import sys
 
+
+try:
+    import ecmwflibs as findlibs
+except ImportError:
+    import findlibs
+
+library_path = findlibs.find("eccodes")
+
 try:
     import ecflow
 except ImportError:

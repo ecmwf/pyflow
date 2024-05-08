@@ -11,6 +11,8 @@ dependencies:
   - requests
   - pytest
   - pygraphviz
+  - pip:
+    - findlibs
 
 variables:
   QT_MAC_WANTS_LAYER: 1
