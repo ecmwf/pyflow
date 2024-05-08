@@ -1,4 +1,5 @@
 dependencies: |
+  ecmwf/ecbuild
   ecmwf/ecflow
 dependency_branch: develop
 parallelism_factor: 8
