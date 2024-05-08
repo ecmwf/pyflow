@@ -1,6 +1,9 @@
 build:
   modules:
+    - boost
     - ninja
+    - python3
+    - qt
   dependencies:
     - ecmwf/ecbuild@develop
     - ecmwf/ecflow@develop
