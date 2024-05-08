@@ -1,7 +1,6 @@
 import os
 import sys
 
-
 try:
     import ecmwflibs as findlibs
 except ImportError:
