@@ -1,0 +1,6 @@
+build:
+  modules:
+    - ninja
+  dependencies:
+    - ecmwf/ecflow@develop
+  parallel: 64
