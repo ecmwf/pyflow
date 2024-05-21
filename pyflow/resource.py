@@ -80,30 +80,7 @@ class Resource(Task):
 
         return []
 
-    def install_file_stub(self, target):
-        """
-        Installs any data associated with the resource object that is going to be deployed from the **ecFlow** server.
-
-        Parameters:
-            target(Deployment): The target deployment where the resource data should be installed.
-        """
-
-        """
-        n.b. If a resource does not need to save data at deployment time, it should not do so (e.g. WebResource)
-        """
-        # Install path is for the suite, so we don't need to include the suite name
-        assert self.fullname.count("/") > 1
-        subpath = self.fullname[self.fullname.find("/", 1) + 1 :]
-
-        self._server_filename = os.path.join(
-            target.files_install_path(), subpath, self.name
-        )
-
-        super().install_file_stub(target)
-
-        self.save_data(target, self._server_filename)
-
-    def build_script(self):
+    def generate_script(self):
         """
         Returns the installer script for the data resource.
 
@@ -128,7 +105,7 @@ class Resource(Task):
         for h in self._hosts:
             lines += h.copy_file_to(self._server_filename, self.location()).split("\n")
 
-        return lines
+        return lines, []
 
     def location(self):
         """
@@ -206,9 +183,8 @@ class FileResource(Resource):
     """
 
     def __init__(self, name, hosts, source_file):
-        self._source = source_file
-
         super().__init__(name, hosts)
+        self._server_filename = source_file
 
     def md5(self):
         """
@@ -230,7 +206,7 @@ class FileResource(Resource):
             The resource data.
         """
 
-        with open(self._source, "rb") as f:
+        with open(self._server_filename, "rb") as f:
             return f.read()
 
     def save_data(self, target, filename):
