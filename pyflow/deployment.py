@@ -3,7 +3,7 @@ from __future__ import print_function
 import hashlib
 import os
 import shutil
-
+import difflib
 from pyflow.html import FileListHTMLWrapper
 
 
@@ -52,6 +52,11 @@ class Deployment:
 
         if target in self.scripts_map:
             if self.scripts_map[target] != source_hash:
+                with open(target, "r") as f:
+                    old_content = f.read()
+                    diff = difflib.unified_diff(old_content.splitlines(), source.splitlines(), lineterm='')
+                    diff_str = '\n'.join(diff)
+                    print(f"\nERROR! Differences between already-deployed script and current one:\n{diff_str}")
                 raise RuntimeError(
                     "Scripts deployed with the same name must be unique within one AnchorFamily or Suite: {}".format(
                         target
