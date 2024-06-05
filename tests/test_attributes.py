@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 import pytest
 
@@ -494,6 +494,41 @@ class TestRepeats:
         assert repr(t1.DATE_REPEAT) == "%DATE_REPEAT%"
         assert str(t2.DATE_REPEAT) == "$DATE_REPEAT"
         assert repr(t2.DATE_REPEAT) == "%DATE_REPEAT%"
+
+    def test_repeat_datetime(self):
+        start = datetime(year=2019, month=1, day=1, hour=12)
+        end = datetime(year=2020, month=12, day=31, hour=12)
+        increment = timedelta(days=1, hours=12, minutes=1, seconds=5)
+
+        input_tests = (
+            ("REPEAT_DATETIME", start, end),
+            ("REPEAT_DATETIME", start, end, increment),
+            ("REPEAT_DATETIME", "20200101T120000", "20201231T120000", "12:00:00"),
+            ("REPEAT_DATETIME", "20200101T13", "20201231T1400", "13:00"),
+            ("REPEAT_DATETIME", "20200102", "20201231T080102", "12:00:00"),
+            ("REPEAT_DATETIME", "20200102", end, "18:10:20"),
+            ("REPEAT_DATETIME", "20200102", "20200103", "18:10"),
+        )
+
+        with pyflow.Suite("s") as s:
+            for i, args in enumerate(input_tests):
+                with pyflow.Task(str(i)):
+                    pyflow.RepeatDateTime(*args)
+
+        asserts = (
+            "repeat datetime REPEAT_DATETIME 20190101T120000 20201231T120000 24:00:00",
+            "repeat datetime REPEAT_DATETIME 20190101T120000 20201231T120000 36:01:05",
+            "repeat datetime REPEAT_DATETIME 20200101T120000 20201231T120000 12:00:00",
+            "repeat datetime REPEAT_DATETIME 20200101T130000 20201231T140000 13:00:00",
+            "repeat datetime REPEAT_DATETIME 20200102T000000 20201231T080102 12:00:00",
+            "repeat datetime REPEAT_DATETIME 20200102T000000 20201231T120000 18:10:20",
+            "repeat datetime REPEAT_DATETIME 20200102T000000 20200103T000000 18:10:00",
+        )
+
+        for a in asserts:
+            assert a in str(s.ecflow_definition())
+
+        s.check_definition()
 
 
 if __name__ == "__main__":
