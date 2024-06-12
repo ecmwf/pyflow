@@ -1030,7 +1030,6 @@ class TroikaHost(Host):
         }
 
         slurm_resources = {
-            "tmpdir": "--gres=ssdtmp:",  # XXX: ECMWF-specific
             "hint": " --hint=",
         }
 
