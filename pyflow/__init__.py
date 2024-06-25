@@ -3,6 +3,7 @@
 from __future__ import absolute_import
 
 from .attributes import (
+    Aviso,
     Complete,
     Cron,
     Crons,

@@ -1255,3 +1255,53 @@ class Late(Attribute):
             adder(ecflow.TimeSlot(hour, mins), rel)
         else:
             adder(ecflow.TimeSlot(hour, mins))
+
+
+###################################################################
+
+
+class Aviso(Attribute):
+    """
+    An attribute that allows a node to be triggered by an external Aviso notification.
+
+    Parameters:
+        name(str): The name of the attribute.
+        listener(str): The listener configuration.
+        url(str): The URL to the Aviso server.
+        schema(str): The schema used to process Aviso notifications.
+        polling(str, int): The time interval used to poll the Aviso server.
+        auth(str): The path to the Aviso authentication credentials file.
+
+    Example::
+
+        pyflow.Aviso("AVISO_NOTIFICATION",
+                     r'{ "event": "mars", "request": { "class": "od"} }',
+                    "https://aviso.ecm:8888/v1",
+                    "/path/to/schema.json"
+                    60,
+                    "/path/to/auth.json")
+
+    """
+
+    def __init__(self, name, listener, url, schema, polling, auth):
+        super().__init__(name)
+        self.listener = str(listener)
+        self.url = str(url)
+        self.schema = str(schema)
+        self.polling = str(polling)
+        self.auth = str(auth)
+
+    def _build(self, ecflow_parent):
+        # The listener configuration must be provided as a single-quoted JSON string
+        quoted_listener_cfg = "'{}'".format(self.listener)
+
+        aviso = ecflow.AvisoAttr(
+            self.name,
+            quoted_listener_cfg,
+            self.url,
+            self.schema,
+            self.polling,
+            self.auth,
+        )
+
+        ecflow_parent.add_aviso(aviso)

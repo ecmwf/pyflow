@@ -1,3 +1,5 @@
+import json
+import os
 from datetime import date, datetime, timedelta
 
 import pytest
@@ -529,6 +531,88 @@ class TestRepeats:
             assert a in str(s.ecflow_definition())
 
         s.check_definition()
+
+
+class TestAviso:
+    """A set of tests for Aviso attributes."""
+
+    def test_create_aviso_from_strings(self):
+        name = "AVISO_ATTRIBUTE"
+        listener = "{}"
+        url = "https://aviso.ecm:8888/v1"
+        schema = "/path/to/schema.json"
+        polling = "%ECFLOW_AVISO_POLLING%"
+        auth = "/path/to/auth.json"
+
+        attr = pyflow.Aviso(name, listener, url, schema, polling, auth)
+
+        assert attr.name == name
+        assert attr.listener == listener
+        assert attr.url == url
+        assert attr.schema == schema
+        assert attr.polling == polling
+        assert attr.auth == auth
+
+    def test_create_aviso_from_objects(self):
+        name = "AVISO_ATTRIBUTE"
+        listener = json.loads(r'{ "event": "mars", "request": { "class": "od"} }')
+        url = "https://aviso.ecm:8888/v1"
+        schema = os.path.join(os.path.dirname(__file__), "schema.json")
+        polling = 60
+        auth = os.path.join(os.path.dirname(__file__), "auth.json")
+
+        attr = pyflow.Aviso(name, listener, url, schema, polling, auth)
+
+        assert attr.name == name
+        assert attr.listener == str(listener)
+        assert attr.url == url
+        assert attr.schema == str(schema)
+        assert attr.polling == str(polling)
+        assert attr.auth == str(auth)
+
+    def test_create_aviso_on_task(self):
+        with pyflow.Suite("s") as s:
+            assert "s" == s.name
+            with pyflow.Family("f") as f:
+                assert "f" == f.name
+                with pyflow.Task("t") as t:
+                    assert "t" == t.name
+                    name = "AVISO_ATTRIBUTE"
+                    listener = r'{ "event": "mars", "request": { "class": "od"} }'
+                    url = "https://aviso.ecm:8888/v1"
+                    schema = "/path/to/schema.json"
+                    polling = "60"
+                    auth = "/path/to/auth.json"
+
+                    pyflow.Aviso(name, listener, url, schema, polling, auth)
+
+        s.check_definition()
+
+    def test_definitions_content_with_aviso_attribute(self):
+        with pyflow.Suite("s") as s:
+            assert "s" == s.name
+            with pyflow.Family("f") as f:
+                assert "f" == f.name
+                with pyflow.Task("t") as t:
+                    assert "t" == t.name
+                    name = "AVISO_ATTRIBUTE"
+                    listener = r'{ "event": "mars", "request": { "class": "od"} }'
+                    url = "https://aviso.ecm:8888/v1"
+                    schema = "/path/to/schema.json"
+                    polling = "60"
+                    auth = "/path/to/auth.json"
+
+                    pyflow.Aviso(name, listener, url, schema, polling, auth)
+
+        defs = s.ecflow_definition()
+
+        assert "aviso --name AVISO_ATTRIBUTE" in str(defs)
+        assert '--listener \'{ "event": "mars", "request": { "class": "od"} }\'' in str(
+            defs
+        )
+        assert "--url https://aviso.ecm:8888/v1" in str(defs)
+        assert "--schema /path/to/schema.json" in str(defs)
+        assert "--auth /path/to/auth.json" in str(defs)
 
 
 if __name__ == "__main__":
