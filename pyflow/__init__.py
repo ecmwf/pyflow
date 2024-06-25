@@ -17,6 +17,7 @@ from .attributes import (
     Late,
     Limit,
     Meter,
+    Mirror,
     RepeatDate,
     RepeatDateTime,
     RepeatEnumerated,

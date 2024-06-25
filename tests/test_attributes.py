@@ -615,6 +615,104 @@ class TestAviso:
         assert "--auth /path/to/auth.json" in str(defs)
 
 
+class TestMirror:
+    """A set of tests for Mirror attributes."""
+
+    def test_create_mirror_from_strings(self):
+        name = "MIRROR_ATTRIBUTE"
+        remote_path = "/s/f/t"
+        remote_host = "remote-ecflow-server"
+        remote_port = "3141"
+        polling = "%ECFLOW_MIRROR_POLLING%"
+        ssl = True
+        auth = "/path/to/auth.json"
+
+        attr = pyflow.Mirror(
+            name, remote_path, remote_host, remote_port, polling, ssl, auth
+        )
+
+        assert attr.name == name
+        assert attr.remote_path == remote_path
+        assert attr.remote_host == remote_host
+        assert attr.remote_port == remote_port
+        assert attr.polling == polling
+        assert attr.ssl == ssl
+        assert attr.auth == auth
+
+    def test_create_mirror_from_objects(self):
+        name = "MIRROR_ATTRIBUTE"
+        remote_path = "/s/f/t"
+        remote_host = "remote-ecflow-server"
+        remote_port = 3141
+        polling = 60
+        ssl = True
+        auth = "/path/to/auth.json"
+
+        attr = pyflow.Mirror(
+            name, remote_path, remote_host, remote_port, polling, ssl, auth
+        )
+
+        assert attr.name == name
+        assert attr.remote_path == remote_path
+        assert attr.remote_host == remote_host
+        assert attr.remote_port == str(remote_port)
+        assert attr.polling == str(polling)
+        assert attr.ssl == ssl
+        assert attr.auth == auth
+
+    def test_create_mirror_on_task(self):
+        with pyflow.Suite("s") as s:
+            assert "s" == s.name
+            with pyflow.Family("f") as f:
+                assert "f" == f.name
+                with pyflow.Task("t") as t:
+                    assert "t" == t.name
+
+                    name = "MIRROR_ATTRIBUTE"
+                    remote_path = "/s/f/t"
+                    remote_host = "remote-ecflow-server"
+                    remote_port = 3141
+                    polling = 60
+                    ssl = True
+                    auth = "/path/to/auth.json"
+
+                    pyflow.Mirror(
+                        name, remote_path, remote_host, remote_port, polling, ssl, auth
+                    )
+
+        s.check_definition()
+
+    def test_definitions_content_with_mirror_attribute(self):
+        with pyflow.Suite("s") as s:
+            assert "s" == s.name
+            with pyflow.Family("f") as f:
+                assert "f" == f.name
+                with pyflow.Task("t") as t:
+                    assert "t" == t.name
+
+                    name = "MIRROR_ATTRIBUTE"
+                    remote_path = "/s/f/t"
+                    remote_host = "remote-ecflow-server"
+                    remote_port = 3141
+                    polling = 60
+                    ssl = True
+                    auth = "/path/to/auth.json"
+
+                    pyflow.Mirror(
+                        name, remote_path, remote_host, remote_port, polling, ssl, auth
+                    )
+
+        defs = s.ecflow_definition()
+
+        assert "mirror --name MIRROR_ATTRIBUTE" in str(defs)
+        assert "--remote_path /s/f/t" in str(defs)
+        assert "--remote_host remote-ecflow-server" in str(defs)
+        assert "--remote_port 3141" in str(defs)
+        assert "--polling 60" in str(defs)
+        assert "--ssl" in str(defs)
+        assert "--remote_auth /path/to/auth.json" in str(defs)
+
+
 if __name__ == "__main__":
     from os import path
 
