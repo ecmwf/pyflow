@@ -233,6 +233,16 @@ class Node(Base):
         except KeyError:
             raise AttributeError("Node {} does not exist".format(item))
 
+    def _add_single_node(self, node):
+        if node.name in self._nodes:
+            raise DuplicateNodeError(
+                self.fullname, node.name, self._nodes[node.name].fullname
+            )
+
+        node.parent.remove_node(node)
+        self._nodes[node.name] = node
+        node._parent = self
+
     def add_node(self, node):
         """
         Adds a child to current node.
@@ -249,15 +259,7 @@ class Node(Base):
                 node = self.add_node(n)
             return node
 
-        if node.name in self._nodes:
-            raise DuplicateNodeError(
-                self.fullname, node.name, self._nodes[node.name].fullname
-            )
-
-        node.parent.remove_node(node)
-        self._nodes[node.name] = node
-        node._parent = self
-
+        self._add_single_node(node)
         return node
 
     def clear_type(self, cls):
@@ -786,7 +788,14 @@ class Node(Base):
 
 class Family(Node):
     def __init__(
-        self, name, json=None, modules=None, purge_modules=False, extern=False, **kwargs
+        self,
+        name,
+        json=None,
+        modules=None,
+        purge_modules=False,
+        extern=False,
+        exit_hook=None,
+        **kwargs,
     ):
         """
         Provides both visual and logical grouping of related families and tasks.
@@ -800,6 +809,7 @@ class Family(Node):
                 runtime.
             extern(bool): Whether the family is a shadow node created to satisfy an Extern_, and should not be
                 generated.
+            exit_hook(str,list): a script containing some commands to be called at exit time.
             workdir(string): Working directory for tasks.
             autocancel(Autocancel_): An attribute for automatic removal of the node which has completed.
             completes(Complete_): An attribute for setting a condition for setting the node as complete depending on
@@ -833,6 +843,7 @@ class Family(Node):
                 pass
         """
 
+        self._exit_hook = []
         super().__init__(
             name,
             json=json,
@@ -841,6 +852,8 @@ class Family(Node):
             extern=extern,
             **kwargs,
         )
+        if exit_hook is not None:
+            self._add_exit_hook(exit_hook)
 
     def ecflow_object(self):
         """
@@ -879,6 +892,22 @@ class Family(Node):
                 )
             )
         ecflow_parent.add_family(self.generate_node())
+
+    def _add_single_node(self, node):
+        if isinstance(node, (Family, Task)):
+            node._add_exit_hook(self._exit_hook)
+        super()._add_single_node(node)
+
+    def _add_exit_hook(self, hook):
+        if isinstance(hook, str):
+            hook = [hook]
+        for hk in hook:
+            if hk not in self._exit_hook:
+                self._exit_hook.append(hk)
+        # Check if properly initialised
+        if "_nodes" in self.__dict__:
+            for chld in self.executable_children:
+                chld._add_exit_hook(hook)
 
 
 class AnchorFamily(AnchorMixin, Family):
@@ -1154,10 +1183,12 @@ class Task(Node):
         self.script = kwargs.pop("script", Script())
         self._clean_workdir = clean_workdir
         self._submit_arguments = submit_arguments or {}
-        self._exit_hook = (
-            [exit_hook] if isinstance(exit_hook, str) else exit_hook
-        ) or []
+        self._exit_hook = []
         super().__init__(name, **kwargs)
+        # Setting this here ensures that exit hooks inherited from parents are
+        # ordered first
+        if exit_hook is not None:
+            self._add_exit_hook(exit_hook)
 
         # Get the host object, and attempt to add this task to its limits automatically.
         if autolimit:
@@ -1257,6 +1288,13 @@ class Task(Node):
         """
 
         return self.host.purge_modules or super().task_purge_modules()
+
+    def _add_exit_hook(self, hook: str):
+        if isinstance(hook, str):
+            hook = [hook]
+        for hk in hook:
+            if hk not in self._exit_hook:
+                self._exit_hook.append(hk)
 
     def generate_script(self):
         """
