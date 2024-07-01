@@ -102,7 +102,7 @@ def test_exit_hook():
 
     t5 = Task("t5")
 
-    with Suite("S") as s:
+    with Suite("S"):
         with Family("f", exit_hook="hook_f", tasks=t5) as f:
             Limit("limit1", 15)
             Variable("VARIABLE1", 1234)
@@ -110,6 +110,7 @@ def test_exit_hook():
             with Family("f2", families=f3, exit_hook="hook_f2") as f2:
                 t2 = Task("t2", exit_hook="hook_t2")
 
+    assert f._exit_hook == ["hook_f"]
     assert t1._exit_hook == ["hook_f", "hook_t1"]
     assert f2._exit_hook == ["hook_f", "hook_f2"]
     assert t2._exit_hook == ["hook_f", "hook_f2", "hook_t2"]
