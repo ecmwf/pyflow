@@ -174,6 +174,33 @@ def test_find_node():
         s.find_node("/sss/f4")
 
 
+def test_exit_hook():
+    """
+    Propagate exit hook to children
+    """
+
+    with Family("f2", exit_hook="hook_f2") as f2:
+        t2 = Task("t2", exit_hook="hook_t2")
+        with Family("f3", exit_hook="hook_f3") as f3:
+            t3 = Task("t3", exit_hook="hook_t3")
+            t4 = Task("t4")
+
+    t5 = Task("t5")
+
+    with Suite("S", exit_hook="hook_s", families=f2, tasks=t5):
+        with Family("f", exit_hook="hook_f") as f:
+            t1 = Task("t1", exit_hook="hook_t1")
+
+    assert f._exit_hook == ["hook_s", "hook_f"]
+    assert t1._exit_hook == ["hook_s", "hook_f", "hook_t1"]
+    assert f2._exit_hook == ["hook_f2", "hook_s"]
+    assert t2._exit_hook == ["hook_f2", "hook_t2", "hook_s"]
+    assert f3._exit_hook == ["hook_f2", "hook_f3", "hook_s"]
+    assert t3._exit_hook == ["hook_f2", "hook_f3", "hook_t3", "hook_s"]
+    assert t4._exit_hook == ["hook_f2", "hook_f3", "hook_s"]
+    assert t5._exit_hook == ["hook_s"]
+
+
 @pytest.mark.parametrize("child", [Task, Family])
 def test_generate_error(child):
     with Suite("s") as s:
