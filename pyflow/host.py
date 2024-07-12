@@ -957,7 +957,9 @@ class TroikaHost(Host):
     def __init__(self, name, user, **kwargs):
         self.troika_exec = kwargs.pop("troika_exec", "troika")
         self.troika_config = kwargs.pop("troika_config", "")
-        self.troika_version = tuple(kwargs.pop("troika_version", "0.2.1").split("."))
+        self.troika_version = tuple(
+            map(int, kwargs.pop("troika_version", "0.2.1").split("."))
+        )
         super().__init__(name, user=user, **kwargs)
 
     def troika_command(self, command):
@@ -965,7 +967,11 @@ class TroikaHost(Host):
             [
                 f"%TROIKA:{self.troika_exec}%",
                 "-vv",
-                f"-c %TROIKA_CONFIG:{self.troika_config}%" if self.troika_config else "",
+                (
+                    f"-c %TROIKA_CONFIG:{self.troika_config}%"
+                    if self.troika_config
+                    else ""
+                ),
                 f"{command}",
                 f"-u {self.user}",
             ]
@@ -1071,7 +1077,9 @@ class TroikaHost(Host):
                     args.append(pragma)
             else:
                 if arg in deprecated:
-                    print(f"WARNING! '{arg}' is deprecated, use '{deprecated[arg]}' instead")
+                    print(
+                        f"WARNING! '{arg}' is deprecated, use '{deprecated[arg]}' instead"
+                    )
                     arg = deprecated[arg]
                 if arg is not None:
                     args.append("#TROIKA {}={}".format(arg, val))
