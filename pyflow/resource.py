@@ -105,7 +105,7 @@ class Resource(Task):
         for h in self._hosts:
             lines += h.copy_file_to(self._server_filename, self.location()).split("\n")
 
-        return lines, []
+        return lines, [] 
 
     def location(self):
         """
@@ -159,6 +159,8 @@ class DataResource(Resource):
             target(Deployment): The deployment target.
             filename(str): The filename for the resource data.
         """
+
+        self._server_filename = filename
 
         """
         Resources don't all need to save data at generation time
