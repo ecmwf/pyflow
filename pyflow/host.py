@@ -7,6 +7,7 @@ import os
 import pwd
 import shutil
 import textwrap
+import warnings
 
 from .attributes import Label, Limit
 from .base import STACK
@@ -246,7 +247,12 @@ class Host:
             return Label("exec_host", self.hostname)
 
     def script_submit_arguments(self, submit_arguments):
-        assert len(submit_arguments) == 0
+        if len(submit_arguments) > 0:
+            warnings.formatwarning = lambda mess, *args, **kwargs: "%s" % mess
+            warnings.warn(
+                f"Host {self.__class__.__name__} does not support scheduler submission arguments. "
+                "They will be ignore for script generation"
+            )
         return []
 
     def preamble_init(self, ecflowpath):
@@ -313,11 +319,6 @@ class Host:
                 export PATH=%(ecf_path)s:$PATH
                 set +eu  # Clear -eu flag, so we don't fail
                 wait  # wait for background process to stop
-                # print error message
-                errmsg="$2"
-                if [ $1 -eq 0 ]; then
-                    errmsg="CANCELLED or TIMED OUT"
-                fi
                 exit_hook  # calling custom exit/cleaning code
                 ecflow_client --abort=trap  # Notify ecFlow that something went wrong, using 'trap' as the reason
                 trap - 0 $SIGNAL_LIST  # Remove the traps

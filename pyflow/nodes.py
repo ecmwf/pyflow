@@ -111,7 +111,7 @@ class Node(Base):
         purge_modules=False,
         extern=False,
         workdir=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Base class for all nodes.
@@ -233,6 +233,16 @@ class Node(Base):
         except KeyError:
             raise AttributeError("Node {} does not exist".format(item))
 
+    def _add_single_node(self, node):
+        if node.name in self._nodes:
+            raise DuplicateNodeError(
+                self.fullname, node.name, self._nodes[node.name].fullname
+            )
+
+        node.parent.remove_node(node)
+        self._nodes[node.name] = node
+        node._parent = self
+
     def add_node(self, node):
         """
         Adds a child to current node.
@@ -249,15 +259,7 @@ class Node(Base):
                 node = self.add_node(n)
             return node
 
-        if node.name in self._nodes:
-            raise DuplicateNodeError(
-                self.fullname, node.name, self._nodes[node.name].fullname
-            )
-
-        node.parent.remove_node(node)
-        self._nodes[node.name] = node
-        node._parent = self
-
+        self._add_single_node(node)
         return node
 
     def clear_type(self, cls):
@@ -331,6 +333,14 @@ class Node(Base):
         """*list*: The list of all tasks directly contained within a Family_."""
         result = []
         self._get_nodes(Task, result)
+        return result
+
+    @property
+    def all_families(self):
+        """*list*: The list of all tasks directly contained within a Family_."""
+        result = []
+        self._get_nodes(Family, result)
+        self._get_nodes(AnchorFamily, result)
         return result
 
     def has_variable(self, name):
@@ -760,13 +770,32 @@ class Node(Base):
     def __str__(self):
         return str(self.generate_node())
 
+    def generate_stub(self, scripts):
+        """Returns complete script by combining the fragments.
+
+        Parameters:
+            scripts(tuple): List of script fragments.
+
+        Returns:
+            *str*: Complete script.
+        """
+
+        return reduce(add, [n.generate_stub() for n in scripts], [])
+
 
 ################################################
 
 
 class Family(Node):
     def __init__(
-        self, name, json=None, modules=None, purge_modules=False, extern=False, **kwargs
+        self,
+        name,
+        json=None,
+        modules=None,
+        purge_modules=False,
+        extern=False,
+        exit_hook=None,
+        **kwargs,
     ):
         """
         Provides both visual and logical grouping of related families and tasks.
@@ -780,6 +809,7 @@ class Family(Node):
                 runtime.
             extern(bool): Whether the family is a shadow node created to satisfy an Extern_, and should not be
                 generated.
+            exit_hook(str,list): a script containing some commands to be called at exit time.
             workdir(string): Working directory for tasks.
             autocancel(Autocancel_): An attribute for automatic removal of the node which has completed.
             completes(Complete_): An attribute for setting a condition for setting the node as complete depending on
@@ -813,14 +843,17 @@ class Family(Node):
                 pass
         """
 
+        self._exit_hook = []
         super().__init__(
             name,
             json=json,
             modules=modules,
             purge_modules=purge_modules,
             extern=extern,
-            **kwargs
+            **kwargs,
         )
+        if exit_hook is not None:
+            self._add_exit_hook(exit_hook)
 
     def ecflow_object(self):
         """
@@ -837,6 +870,20 @@ class Family(Node):
         """Family_: The family object."""
         return self
 
+    @property
+    def manual_path(self):
+        """*str*: The deployment path of the current task, may be `None`."""
+
+        """
+        n.b. we do permit generating a None deploy path, as this is acceptable when
+        generating and deploying a suite to notebooks. The filesystem mechanism asserts
+        aggressively on this.
+        """
+        try:
+            return os.path.join(self.anchor.files_path, f"{self.name}.man")
+        except ValueError:
+            return None
+
     def _build(self, ecflow_parent):
         if isinstance(ecflow_parent, ecflow.Task):
             raise GenerateError(
@@ -846,10 +893,33 @@ class Family(Node):
             )
         ecflow_parent.add_family(self.generate_node())
 
+    def _add_single_node(self, node):
+        if isinstance(node, (Family, Task)):
+            node._add_exit_hook(self._exit_hook)
+        super()._add_single_node(node)
+
+    def _add_exit_hook(self, hook):
+        if isinstance(hook, str):
+            hook = [hook]
+        for hk in hook:
+            if hk not in self._exit_hook:
+                self._exit_hook.append(hk)
+        # Check if properly initialised
+        if "_nodes" in self.__dict__:
+            for chld in self.executable_children:
+                chld._add_exit_hook(hook)
+
 
 class AnchorFamily(AnchorMixin, Family):
     def __init__(
-        self, name, json=None, modules=None, purge_modules=False, extern=False, **kwargs
+        self,
+        name,
+        json=None,
+        modules=None,
+        purge_modules=False,
+        extern=False,
+        exit_hook=None,
+        **kwargs,
     ):
         """
         Provides grouping of tasks that require encapsulation.
@@ -863,6 +933,7 @@ class AnchorFamily(AnchorMixin, Family):
                 runtime.
             extern(bool): Whether the anchor family is a shadow node created to satisfy an Extern_, and should not be
                 generated.
+            exit_hook(str,list): a script containing some commands to be called at exit time.
             autocancel(Autocancel_): An attribute for automatic removal of the node which has completed.
             completes(Complete_): An attribute for setting a condition for setting the node as complete depending on
                 other tasks or families.
@@ -901,18 +972,20 @@ class AnchorFamily(AnchorMixin, Family):
             modules=modules,
             purge_modules=purge_modules,
             extern=extern,
-            **kwargs
+            exit_hook=exit_hook,
+            **kwargs,
         )
 
 
 class Suite(AnchorMixin, Node):
-    def __init__(self, name, host=None, *args, **kwargs):
+    def __init__(self, name, host=None, exit_hook=None, *args, **kwargs):
         """
         Represents a collection of interrelated **ecFlow** tasks.
 
         Parameters:
             name(str): Name of the suite to create.
             host(Host_): The host to execute the suite on. If `None`, default **ecFlow** behaviour will be used.
+            exit_hook(str,list): a script containing some commands to be called at exit time.
             json(dict): Parsed JSON for creation of the children node(s).
             workdir(str): The working directory for the tasks, can be fixed or an **ecFlow** variable.
             modules(tuple): The list of modules to load.
@@ -964,7 +1037,10 @@ class Suite(AnchorMixin, Node):
 
             host = EcflowDefaultHost()
 
+        self._exit_hook = []
         super().__init__(name, host=host, *args, **kwargs)
+        if exit_hook is not None:
+            self._add_exit_hook(exit_hook)
 
     def ecflow_object(self):
         """
@@ -1043,9 +1119,34 @@ class Suite(AnchorMixin, Node):
         target = target(self, **options)
         for t in self.all_tasks:
             script, includes = t.generate_script()
-            target.deploy_task(t.deploy_path, script, includes)
+            try:
+                target.deploy_task(t.deploy_path, script, includes)
+            except RuntimeError:
+                print(f"\nERROR when deploying task: {t.fullname}\n")
+                raise
+        for f in self.all_families:
+            manual = self.generate_stub(f.manual)
+            if manual:
+                target.deploy_manual(f.manual_path, manual)
+
         target.deploy_headers()
         return target
+
+    def _add_single_node(self, node):
+        if isinstance(node, (Family, Task)):
+            node._add_exit_hook(self._exit_hook)
+        super()._add_single_node(node)
+
+    def _add_exit_hook(self, hook):
+        if isinstance(hook, str):
+            hook = [hook]
+        for hk in hook:
+            if hk not in self._exit_hook:
+                self._exit_hook.append(hk)
+        # Check if properly initialised
+        if "_nodes" in self.__dict__:
+            for chld in self.executable_children:
+                chld._add_exit_hook(hook)
 
 
 class Task(Node):
@@ -1058,7 +1159,7 @@ class Task(Node):
         submit_arguments=None,
         exit_hook=None,
         clean_workdir=False,
-        **kwargs
+        **kwargs,
     ):
         """
         Describes what should be carried out as one executable unit within an **ecFlow** suite.
@@ -1111,10 +1212,12 @@ class Task(Node):
         self.script = kwargs.pop("script", Script())
         self._clean_workdir = clean_workdir
         self._submit_arguments = submit_arguments or {}
-        self._exit_hook = (
-            [exit_hook] if isinstance(exit_hook, str) else exit_hook
-        ) or []
+        self._exit_hook = []
         super().__init__(name, **kwargs)
+        # Setting this here ensures that exit hooks inherited from parents are
+        # ordered first
+        if exit_hook is not None:
+            self._add_exit_hook(exit_hook)
 
         # Get the host object, and attempt to add this task to its limits automatically.
         if autolimit:
@@ -1179,18 +1282,6 @@ class Task(Node):
         """*str*: The script file extension to be used during deployment of the task."""
         return self.lookup_variable_value("ECF_EXTN", ".ecf")
 
-    def generate_stub(self, nodes):
-        """Returns complete script for the current task by combining the fragments.
-
-        Parameters:
-            nodes(tuple): List of script fragments.
-
-        Returns:
-            *str*: Complete script for the current task.
-        """
-
-        return reduce(add, [n.generate_stub() for n in nodes], [])
-
     @property
     def deploy_path(self):
         """*str*: The deployment path of the current task, may be `None`."""
@@ -1226,6 +1317,13 @@ class Task(Node):
         """
 
         return self.host.purge_modules or super().task_purge_modules()
+
+    def _add_exit_hook(self, hook: str):
+        if isinstance(hook, str):
+            hook = [hook]
+        for hk in hook:
+            if hk not in self._exit_hook:
+                self._exit_hook.append(hk)
 
     def generate_script(self):
         """

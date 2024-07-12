@@ -544,6 +544,95 @@ for dow, day in enumerate(
     setattr(RepeatDate, day, property(lambda self: Eq(self.day_of_week, dow)))
 
 
+class RepeatDateTime(Exportable):
+    """
+    An attribute that allows a node to be repeated by a date+time value.
+
+    Parameters:
+        name(str): The name of the repeat attribute.
+        start(datetime): The start date of the repeat attribute.
+        end(datetime): The end date of the repeat attribute.
+        increment(timedelta): The increment used to update the datetime.
+
+    Example::
+
+        pyflow.RepeatDateTime('REPEAT_DATETIME',
+                              datetime.datetime(year=2019, month=1, day=1, hour=12, minute=0, second=0),
+                              datetime.datetime(year=2019, month=12, day=31, hour=12, minute=0, second=0),
+                              datetime.timedelta(hours=12, minutes=0, seconds=0))
+
+    Date and increment can also be strings::
+
+        pyflow.RepeatDateTime('REPEAT_DATETIME',
+                              '20190101T120000', '20191231T120000', '12:00:00')
+
+    """
+
+    def __init__(
+        self,
+        name,
+        start,
+        end,
+        increment=datetime.timedelta(hours=24, minutes=0, seconds=0),
+    ):
+        super().__init__(name)
+        self._start = start
+        self._end = end
+        self._increment = increment
+
+    def _build(self, ecflow_parent):
+        start = self._start(self) if callable(self._start) else self._start
+        end = self._end(self) if callable(self._end) else self._end
+        increment = (
+            self._increment(self) if callable(self._increment) else self._increment
+        )
+
+        repeat = ecflow.RepeatDateTime(
+            str(self.name),
+            as_date(start).strftime("%Y%m%dT%H%M%S"),
+            as_date(end).strftime("%Y%m%dT%H%M%S"),
+            self._delta_to_string(as_delta(increment)),
+        )
+
+        ecflow_parent.add_repeat(repeat)
+
+    def __add__(self, other):
+        return Add(self, other)
+
+    def __sub__(self, other):
+        return Sub(self, other)
+
+    def settings(self):
+        return self._start, self._end, self._increment
+
+    def _delta_to_string(self, delta):
+        # there is no strftime for timedelta so we make our own
+        total_seconds = int(delta.total_seconds())
+        hours, remainder = divmod(total_seconds, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        return "{:02d}:{:02d}:{:02d}".format(hours, minutes, seconds)
+
+    @property
+    def second(self):
+        """*int*: The second of the repeat datetime."""
+        return Mod(self, 60)
+
+    @property
+    def minute(self):
+        """*int*: The minute of the repeat datetime."""
+        return Mod(Div(self, 60), 60)
+
+    @property
+    def hour(self):
+        """*int*: The hour of the repeat datetime."""
+        return Mod(Div(self, 3600), 24)
+
+    @property
+    def day_of_week(self):
+        """*int*: The day of the week of the repeat datetime."""
+        return Mod(Add(Div(self, 86400), 4), 7)
+
+
 def string_or_enumerated(name, value):
     if all(isinstance(v, int) for v in value):
         return RepeatEnumerated(name, value)
@@ -569,7 +658,17 @@ def as_date(value):
         d = value % 100
 
     elif isinstance(value, str):
-        if "-" in value:
+        if "T" in value:
+            for format in ("%Y%m%dT%H", "%Y%m%dT%H%M", "%Y%m%dT%H%M%S"):
+                try:
+                    return datetime.datetime.strptime(value, format)
+                except ValueError:
+                    pass
+            raise ValueError(
+                'Argument "{}" should be in format '
+                "yyyymmddTHHMMSS, yyyymmddTHHMM or yyyymmddTHH".format(value)
+            )
+        elif "-" in value:
             y, m, d = [int(x, 10) for x in value.split("-")]
         else:
             y = int(value[:4])
@@ -579,6 +678,28 @@ def as_date(value):
         raise ValueError('Argument "{}" cannot be converted to date'.format(value))
 
     return datetime.datetime(y, m, d)
+
+
+def as_delta(value):
+    if isinstance(value, datetime.timedelta):
+        return value
+
+    if isinstance(value, str):
+        if ":" in value:
+            try:
+                split = [int(x) for x in value.split(":")]
+                if len(split) == 2:
+                    split.append(0)
+                return datetime.timedelta(
+                    hours=split[0], minutes=split[1], seconds=split[2]
+                )
+            except ValueError:
+                raise ValueError(
+                    'Argument "{}" should be in format '
+                    '"HH:MM:SS" or "HH:MM"'.format(value)
+                )
+
+    raise ValueError('Argument "{}" cannot be converted to timedelta'.format(value))
 
 
 def is_variable(name):
