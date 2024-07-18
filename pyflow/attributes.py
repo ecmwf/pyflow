@@ -295,6 +295,28 @@ class Variable(Exportable):
         ecflow_parent.add_variable(str(self.name), str(self.value))
 
 
+class GeneratedVariable(Exportable):
+    """
+    An attribute for referencing an **ecFlow** generated variable.
+    The variable value will be generated automatically by ecFlow.
+
+    Parameters:
+        name(str): The name of the variable.
+
+    Example::
+
+        GeneratedVariable('FOO')
+    """
+
+    def __init__(self, name):
+        if not is_variable(name):
+            raise ValueError("'{}' is not a valid variable name".format(name))
+        super().__init__(name)
+
+    def _build(self, *args, **kwargs):
+        return
+
+
 class Edit:
     """
     An attribute for setting multiple **ecFlow** variables.

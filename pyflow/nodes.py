@@ -19,6 +19,7 @@ from .attributes import (
     Event,
     Exportable,
     Follow,
+    GeneratedVariable,
     InLimit,
     Label,
     Limit,
@@ -148,6 +149,7 @@ class Node(Base):
             triggers(Trigger_): An attribute for setting a condition for running the node depending on other tasks or
                 families.
             variables(Variable_): An attribute for setting an **ecFlow** variable.
+            generated_variables(GeneratedVariable_): An attribute for setting an **ecFlow** generated variable.
             zombies(Zombies_): An attribute that defines how a zombie should be handled in an automated fashion.
             events(Event_): An attribute for declaring an action that a task can trigger while it is running.
             **kwargs(str): Accept extra keyword arguments as variables to be set on the node.
@@ -787,6 +789,8 @@ class Node(Base):
 
 
 class Family(Node):
+    family_gen_vars = ["FAMILY", "FAMILY1"]
+
     def __init__(
         self,
         name,
@@ -833,6 +837,7 @@ class Family(Node):
             triggers(Trigger_): An attribute for setting a condition for running the node depending on other tasks or
                 families.
             variables(Variable_): An attribute for setting an **ecFlow** variable.
+            generated_variables(GeneratedVariable_): An attribute for setting an **ecFlow** generated variable.
             zombies(Zombies_): An attribute that defines how a zombie should be handled in an automated fashion.
             events(Event_): An attribute for declaring an action that a task can trigger while it is running.
             **kwargs(str): Accept extra keyword arguments as variables to be set on the family.
@@ -844,12 +849,16 @@ class Family(Node):
         """
 
         self._exit_hook = []
+
+        generated_variables = kwargs.pop("generated_variables", [])
+        generated_variables += self.family_gen_vars
         super().__init__(
             name,
             json=json,
             modules=modules,
             purge_modules=purge_modules,
             extern=extern,
+            generated_variables=generated_variables,
             **kwargs,
         )
         if exit_hook is not None:
@@ -978,6 +987,22 @@ class AnchorFamily(AnchorMixin, Family):
 
 
 class Suite(AnchorMixin, Node):
+    suite_gen_vars = [
+        "DATE",
+        "DAY",
+        "DD",
+        "DOW",
+        "DOY",
+        "ECF_CLOCK",
+        "ECF_DATE",
+        "ECF_JULIAN",
+        "ECF_TIME",
+        "ECF_MM",
+        "ECF_MONTH",
+        "TIME",
+        "YYYY",
+    ]
+
     def __init__(self, name, host=None, exit_hook=None, *args, **kwargs):
         """
         Represents a collection of interrelated **ecFlow** tasks.
@@ -1015,6 +1040,7 @@ class Suite(AnchorMixin, Node):
             triggers(Trigger_): An attribute for setting a condition for running the node depending on other tasks or
                 families.
             variables(Variable_): An attribute for setting an **ecFlow** variable.
+            generated_variables(GeneratedVariable_): An attribute for setting an **ecFlow** generated variable.
             zombies(Zombies_): An attribute that defines how a zombie should be handled in an automated fashion.
             events(Event_): An attribute for declaring an action that a task can trigger while it is running.
             **kwargs(str): Accept extra keyword arguments as variables to be set on the suite.
@@ -1038,7 +1064,14 @@ class Suite(AnchorMixin, Node):
             host = EcflowDefaultHost()
 
         self._exit_hook = []
-        super().__init__(name, host=host, *args, **kwargs)
+
+        generated_variables = kwargs.pop("generated_variables", [])
+        generated_variables += self.suite_gen_vars
+
+        super().__init__(
+            name, host=host, generated_variables=generated_variables, *args, **kwargs
+        )
+
         if exit_hook is not None:
             self._add_exit_hook(exit_hook)
 
@@ -1151,6 +1184,16 @@ class Suite(AnchorMixin, Node):
 
 class Task(Node):
     SHELLVAR = re.compile("\\$\\{?([A-Z_][A-Z0-9_]*)")
+    task_gen_vars = [
+        "ECF_JOB",
+        "ECF_JOBOUT",
+        "ECF_NAME",
+        "ECF_PASS",
+        "ECF_RID",
+        "ECF_SCRIPT",
+        "ECF_TRYNO",
+        "TASK",
+    ]
 
     def __init__(
         self,
@@ -1199,6 +1242,7 @@ class Task(Node):
             triggers(Trigger_): An attribute for setting a condition for running the node depending on other tasks or
                 families.
             variables(Variable_): An attribute for setting an **ecFlow** variable.
+            generated_variables(GeneratedVariable_): An attribute for setting an **ecFlow** generated variable.
             zombies(Zombies_): An attribute that defines how a zombie should be handled in an automated fashion.
             events(Event_): An attribute for declaring an action that a task can trigger while it is running.
             **kwargs(str): Accept extra keyword arguments as variables to be set on the task.
@@ -1213,7 +1257,11 @@ class Task(Node):
         self._clean_workdir = clean_workdir
         self._submit_arguments = submit_arguments or {}
         self._exit_hook = []
-        super().__init__(name, **kwargs)
+
+        generated_variables = kwargs.pop("generated_variables", [])
+        generated_variables += self.task_gen_vars
+
+        super().__init__(name, generated_variables=generated_variables, **kwargs)
         # Setting this here ensures that exit hooks inherited from parents are
         # ordered first
         if exit_hook is not None:
@@ -1464,6 +1512,7 @@ ACCESSORS = [
     ("today", Today),
     ("triggers", Trigger),
     ("variables", Variable),
+    ("generated_variables", GeneratedVariable),
     ("zombies", Zombies),
     ("events", Event),
 ]
