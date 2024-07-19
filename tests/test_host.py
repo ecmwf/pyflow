@@ -227,8 +227,94 @@ def test_host_kill_cmd(class_name):
     assert host.kill_cmd == expected_kill_cmd
 
 
-# def test_pre_post_amble():
-#     assert False
+def check_pragma(script, pragmas):
+    for prag in pragmas:
+        print(prag)
+        check = False
+        for line in script[0]:
+            if prag in line:
+                check = True
+        assert check
+
+
+def test_troika_host():
+    host1 = pyflow.TroikaHost(
+        name="test_host",
+        user="test_user",
+    )
+    host2 = pyflow.TroikaHost(
+        name="test_host", user="test_user", troika_version="2.2.2"
+    )
+
+    submit_args = {
+        "tasks": 2,  # deprecated option, will be translated to total_tasks
+        "gpus": 1,
+        "sthost": "/foo/bar",
+        "distribution": "test",  # generates TROIKA pragma for recent version of troika, SBATCH for older versions
+    }
+
+    with pyflow.Suite("s", host=host1) as s:
+        with pyflow.Family("f"):
+            t1 = pyflow.Task("t1", script='echo "boom"', submit_arguments=submit_args)
+            t2 = pyflow.Task(
+                "t2", host=host2, script='echo "boom"', submit_arguments=submit_args
+            )
+
+    s.check_definition()
+
+    assert (
+        s.ECF_JOB_CMD.value
+        == "%TROIKA:troika% -vv  submit -u test_user -o %ECF_JOBOUT% test_host %ECF_JOB%"
+    )
+    assert (
+        s.ECF_KILL_CMD.value
+        == "%TROIKA:troika% -vv  kill -u test_user test_host %ECF_JOB%"
+    )
+
+    t1_script = t1.generate_script()
+    t2_script = t2.generate_script()
+    print(t1_script)
+    print(t2_script)
+
+    in_script = [
+        "#TROIKA total_tasks=2",
+        "#TROIKA gpus=1",
+        "#TROIKA export_vars=STHOST=/foo/bar",
+        "#SBATCH --distribution=test",
+    ]
+    check_pragma(t1_script, in_script)
+
+    # check for new versions of troika
+    in_script = [
+        "#TROIKA total_tasks=2",
+        "#TROIKA gpus=1",
+        "#TROIKA export_vars=STHOST=/foo/bar",
+        "#TROIKA distribution=test",
+    ]
+    check_pragma(t2_script, in_script)
+
+
+def test_troika_host_options():
+
+    host = pyflow.TroikaHost(
+        name="test_host",
+        user="test_user",
+        troika_exec="/path/to/troika",
+        troika_config="/path/to/troika.cfg",
+        troika_version="2.1.3",
+    )
+
+    s = pyflow.Suite("s", host=host)
+
+    assert (
+        s.ECF_JOB_CMD.value
+        == "%TROIKA:/path/to/troika% -vv -c %TROIKA_CONFIG:/path/to/troika.cfg% submit -u test_user -o %ECF_JOBOUT% test_host %ECF_JOB%"  # noqa: E501
+    )
+    assert (
+        s.ECF_KILL_CMD.value
+        == "%TROIKA:/path/to/troika% -vv -c %TROIKA_CONFIG:/path/to/troika.cfg% kill -u test_user test_host %ECF_JOB%"  # noqa: E501
+    )
+    assert s.host.troika_version == (2, 1, 3)
 
 
 if __name__ == "__main__":
