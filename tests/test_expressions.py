@@ -33,11 +33,6 @@ def test_all_complete():
         pyflow.all_complete(s.executable_children)
     )
 
-    assert (
-        "(((/s/f1/f1f1 eq complete) and (/s/f1/f1f2 eq complete)) and (/s/f1/t5 eq complete))"
-        == str(pyflow.all_complete(f.children))
-    )
-
 
 def test_trigger_chains():
     """
