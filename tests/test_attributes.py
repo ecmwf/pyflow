@@ -533,11 +533,12 @@ class TestRepeats:
 
 def test_generated_variables():
     with pyflow.Suite("s") as s:
-        with pyflow.Family("f") as f:
+        with pyflow.Family("f", generated_variables=["MYVAR"]) as f:
             t = pyflow.Task("t")
 
     assert [var in s.all_exportables for var in s.suite_gen_vars]
     assert [var in f.all_exportables for var in f.family_gen_vars]
+    assert "MYVAR" in f.all_exportables
     assert [var in t.all_exportables for var in t.task_gen_vars]
 
 

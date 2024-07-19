@@ -16,7 +16,7 @@ def test_triggers_and():
 
 def test_all_complete():
     with pyflow.Suite("s") as s:
-        with pyflow.Family("f1") as f:
+        with pyflow.Family("f1"):
             with pyflow.Family("f1f1"):
                 pyflow.Task("t1")
                 pyflow.Task("t2")
