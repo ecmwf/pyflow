@@ -1057,7 +1057,7 @@ class TroikaHost(Host):
                 return "hint", val
 
         def _translate_sthost(val):
-            return "export", f"STHOST={val}"
+            return "export_vars", f"STHOST={val}"
 
         special = {
             "hint": _translate_hint,
