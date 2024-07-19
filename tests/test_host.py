@@ -295,7 +295,6 @@ def test_troika_host():
 
 
 def test_troika_host_options():
-
     host = pyflow.TroikaHost(
         name="test_host",
         user="test_user",
