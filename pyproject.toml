@@ -1,13 +1,74 @@
+
 [build-system]
-# NOTE: `pip install build` to build with `python -m build`
-requires = [
-  "setuptools >= 40.9.0",
-  "wheel"
-]
+requires = ["setuptools>=65", "setuptools_scm[toml]>=6.2", "wheel"]
 build-backend = "setuptools.build_meta"
 
-[tool.pytest.ini_options]
-addopts = ""
-doctest_optionflags = ""
-testpaths = "tests"
-markers = []
+[project]
+name = "pyflow-workflow-generator"
+requires-python = ">=3.8"
+authors = [
+    {name = "European Centre for Medium-Range Weather Forecasts (ECMWF)", email = "software.support@ecmwf.int"},
+]
+maintainers = [
+    {name = "Corentin Carton de Wiart", email = "corentin.carton@ecmwf.int"},
+]
+description = "Create pythonic ecFlow suites"
+license = {file = "LICENSE"}
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.10",
+    "Topic :: Scientific/Engineering",
+]
+dynamic = ["version", "readme"]
+
+dependencies = [
+    "jinja2",
+    "requests",
+]
+
+[project.urls]
+    repository = "https://github.com/ecmwf/pyflow"
+    documentation = "https://pyflow-workflow-generator.readthedocs.io"
+    issues = "https://github.com/ecmwf/pyflow/issues"
+
+[project.optional-dependencies]
+    test = [
+        "pytest",
+    ]
+    diagrams = [
+        "graphviz",
+    ]
+
+# Code inspection
+[tool.black] 
+line-length = 79
+
+[tool.isort]
+profile="black"
+
+# Packaging/setuptools options
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.dynamic]
+readme = {file = ["README.md"], content-type = "text/markdown"}
+
+[tool.setuptools.packages.find]
+where = ["."]
+exclude = ["tests"]
+
+[tool.setuptools_scm]
+write_to = "pyflow/_version.py"
+write_to_template = '''
+# Do not change! Do not track in version control!
+__version__ = "{version}"
+'''
+parentdir_prefix_version='pyflow-'  # get version from GitHub-like tarballs
+fallback_version='3.3.0'
