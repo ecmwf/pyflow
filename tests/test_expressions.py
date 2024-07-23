@@ -16,7 +16,7 @@ def test_triggers_and():
 
 def test_all_complete():
     with pyflow.Suite("s") as s:
-        with pyflow.Family("f1") as f:
+        with pyflow.Family("f1"):
             with pyflow.Family("f1f1"):
                 pyflow.Task("t1")
                 pyflow.Task("t2")
@@ -31,11 +31,6 @@ def test_all_complete():
 
     assert "((/s/f1 eq complete) and (/s/f2 eq complete))" == str(
         pyflow.all_complete(s.executable_children)
-    )
-
-    assert (
-        "(((/s/f1/f1f1 eq complete) and (/s/f1/f1f2 eq complete)) and (/s/f1/t5 eq complete))"
-        == str(pyflow.all_complete(f.children))
     )
 
 

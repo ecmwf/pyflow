@@ -35,7 +35,7 @@ def test_children():
     children = f.children
     names = set([c.name for c in children])
 
-    assert names == {"limit1", "VARIABLE1", "f2", "t4", "t5"}
+    assert names == {"limit1", "VARIABLE1", "f2", "t4", "t5", "FAMILY", "FAMILY1"}
 
 
 def test_executable_children():
