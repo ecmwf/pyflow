@@ -561,7 +561,15 @@ class RepeatDate(Exportable):
 
 
 for dow, day in enumerate(
-    ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
+    (
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+        "sunday",
+    )
 ):
     setattr(RepeatDate, day, property(lambda self: Eq(self.day_of_week, dow)))
 
@@ -744,7 +752,10 @@ def make_variable(node, name, value):
                     if len(value) == 3:
                         if isinstance(value[2], int):
                             return RepeatDate(
-                                name, as_date(value[0]), as_date(value[1]), value[2]
+                                name,
+                                as_date(value[0]),
+                                as_date(value[1]),
+                                value[2],
                             )
                     else:
                         return RepeatDate(name, as_date(value[0]), as_date(value[1]), 1)

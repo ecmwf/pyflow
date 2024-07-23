@@ -1069,7 +1069,11 @@ class Suite(AnchorMixin, Node):
         generated_variables += self.suite_gen_vars
 
         super().__init__(
-            name, host=host, generated_variables=generated_variables, *args, **kwargs
+            name,
+            host=host,
+            generated_variables=generated_variables,
+            *args,
+            **kwargs,
         )
 
         if exit_hook is not None:
@@ -1341,7 +1345,8 @@ class Task(Node):
         """
         try:
             return "{}{}".format(
-                os.path.join(self.anchor.files_path, self.name), self.deploy_extension
+                os.path.join(self.anchor.files_path, self.name),
+                self.deploy_extension,
             )
         except ValueError:
             return None

@@ -48,7 +48,8 @@ class Resource(Task):
 
         self._hosts = hosts if isinstance(hosts, collections.abc.Iterable) else [hosts]
         self._resource_directory = os.path.join(
-            self._hosts[0].resources_directory, os.path.dirname(self.fullname[1:])
+            self._hosts[0].resources_directory,
+            os.path.dirname(self.fullname[1:]),
         )
 
         for h in self._hosts:

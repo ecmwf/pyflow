@@ -5,7 +5,10 @@ import pyflow
 
 def test_host_task():
     host1 = pyflow.SSHHost(
-        "a-host", user="a-user", scratch_directory="/tmp", ecflow_path="/usr/local/bin"
+        "a-host",
+        user="a-user",
+        scratch_directory="/tmp",
+        ecflow_path="/usr/local/bin",
     )
 
     host2 = pyflow.LocalHost(scratch_directory="/tmp2", ecflow_path="/usr/local/bin")
@@ -19,11 +22,17 @@ def test_host_task():
             t1 = pyflow.Task("t1")
 
             t2 = pyflow.Task(
-                "t2", host=host1, script='echo "boom"', workdir=host1.scratch_directory
+                "t2",
+                host=host1,
+                script='echo "boom"',
+                workdir=host1.scratch_directory,
             )
 
             t3 = pyflow.Task(
-                "t3", host=host2, script='echo "boom"', workdir=host2.scratch_directory
+                "t3",
+                host=host2,
+                script='echo "boom"',
+                workdir=host2.scratch_directory,
             )
 
         with pyflow.Family("f2", host=host1) as f2:
@@ -32,11 +41,17 @@ def test_host_task():
             )
 
             t5 = pyflow.Task(
-                "t5", host=host1, script='echo "boom"', workdir=host1.scratch_directory
+                "t5",
+                host=host1,
+                script='echo "boom"',
+                workdir=host1.scratch_directory,
             )
 
             t6 = pyflow.Task(
-                "t6", host=host2, script='echo "boom"', workdir=host2.scratch_directory
+                "t6",
+                host=host2,
+                script='echo "boom"',
+                workdir=host2.scratch_directory,
             )
 
         with pyflow.Family("f3", host=host2) as f3:
@@ -45,7 +60,10 @@ def test_host_task():
             )
 
             t8 = pyflow.Task(
-                "t8", host=host1, script='echo "boom"', workdir=host1.scratch_directory
+                "t8",
+                host=host1,
+                script='echo "boom"',
+                workdir=host1.scratch_directory,
             )
 
             t9 = pyflow.Task(
@@ -208,7 +226,10 @@ def test_host_kill_cmd(class_name):
 
     HostClass = getattr(pyflow, class_name)
     host = HostClass(
-        hostname, user=username, scratch_directory="/tmp", log_directory="/var/log"
+        hostname,
+        user=username,
+        scratch_directory="/tmp",
+        log_directory="/var/log",
     )
 
     if class_name == "LocalHost" or class_name == "SSHHost":
@@ -257,7 +278,10 @@ def test_troika_host():
         with pyflow.Family("f"):
             t1 = pyflow.Task("t1", script='echo "boom"', submit_arguments=submit_args)
             t2 = pyflow.Task(
-                "t2", host=host2, script='echo "boom"', submit_arguments=submit_args
+                "t2",
+                host=host2,
+                script='echo "boom"',
+                submit_arguments=submit_args,
             )
 
     s.check_definition()

@@ -202,7 +202,8 @@ class Configurator:
         Return an iterable of (named) tuples of the name, help string and options
         """
         Configurable = namedtuple(
-            "Configurable", ["name", "help", "choices", "multichoice", "default"]
+            "Configurable",
+            ["name", "help", "choices", "multichoice", "default"],
         )
         for attr_name, configuration_class in cls.configurations():
             choices = configuration_class.available_choices()

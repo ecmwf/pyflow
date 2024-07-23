@@ -520,7 +520,9 @@ class LocalHost(Host):
             mkdir -p "{}"
             cp "{}" "{}"
         """.format(
-                os.path.dirname(os.path.abspath(target_file)), source_file, target_file
+                os.path.dirname(os.path.abspath(target_file)),
+                source_file,
+                target_file,
             )
         )
 
@@ -666,7 +668,11 @@ class SSHHost(Host):
 
         if self.indirect_host is not None:
             return "ssh -o StrictHostKeyChecking=no {}@{} ssh -o StrictHostKeyChecking=no {}@{} {}".format(
-                self.indirect_user, self.indirect_host, self.user, self.hostname, cmd
+                self.indirect_user,
+                self.indirect_host,
+                self.user,
+                self.hostname,
+                cmd,
             )
         else:
             return "ssh -o StrictHostKeyChecking=no {}@{} {}".format(

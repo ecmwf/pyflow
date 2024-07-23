@@ -56,7 +56,9 @@ class Deployment:
                 with open(target, "r") as f:
                     old_content = f.read()
                     diff = difflib.unified_diff(
-                        old_content.splitlines(), source.splitlines(), lineterm=""
+                        old_content.splitlines(),
+                        source.splitlines(),
+                        lineterm="",
                     )
                     diff_str = "\n".join(diff)
                     print(

@@ -427,7 +427,10 @@ class TestRepeats:
                 )
             with pyflow.Task("t2") as t2:
                 pyflow.RepeatDate(
-                    "DATE_REPEAT", datetime(2018, 1, 1), datetime(2019, 12, 31), 2
+                    "DATE_REPEAT",
+                    datetime(2018, 1, 1),
+                    datetime(2019, 12, 31),
+                    2,
                 )
         t2.triggers = t1.DATE_REPEAT == t2.DATE_REPEAT
         t2.triggers |= t1.DATE_REPEAT + 4 <= t2.DATE_REPEAT
@@ -503,7 +506,12 @@ class TestRepeats:
         input_tests = (
             ("REPEAT_DATETIME", start, end),
             ("REPEAT_DATETIME", start, end, increment),
-            ("REPEAT_DATETIME", "20200101T120000", "20201231T120000", "12:00:00"),
+            (
+                "REPEAT_DATETIME",
+                "20200101T120000",
+                "20201231T120000",
+                "12:00:00",
+            ),
             ("REPEAT_DATETIME", "20200101T13", "20201231T1400", "13:00"),
             ("REPEAT_DATETIME", "20200102", "20201231T080102", "12:00:00"),
             ("REPEAT_DATETIME", "20200102", end, "18:10:20"),

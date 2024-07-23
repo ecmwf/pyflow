@@ -261,7 +261,14 @@ def test_disable_ecflow_keywords():
     script, includes = t.generate_script()
 
     idx = script.index("%nopp")
-    assert script[idx : idx + 6] == ["%nopp", "", "Multiline", "script", "", "%end"]
+    assert script[idx : idx + 6] == [
+        "%nopp",
+        "",
+        "Multiline",
+        "script",
+        "",
+        "%end",
+    ]
 
 
 def test_modules():

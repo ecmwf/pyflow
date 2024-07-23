@@ -118,7 +118,9 @@ class Crontab:
 
         if minute is None and hour is None:
             ts = ecflow.TimeSeries(
-                ecflow.TimeSlot(0, 0), ecflow.TimeSlot(23, 59), ecflow.TimeSlot(0, 1)
+                ecflow.TimeSlot(0, 0),
+                ecflow.TimeSlot(23, 59),
+                ecflow.TimeSlot(0, 1),
             )
         else:
             if minute is None:
