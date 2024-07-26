@@ -1138,7 +1138,7 @@ class Suite(AnchorMixin, Node):
 
         return super().find_node(subpath)
 
-    def deploy_suite(self, target=FileSystem, **options):
+    def deploy_suite(self, target=FileSystem, node=None, **options):
         """
         Deploys suite and its components.
 
@@ -1154,14 +1154,15 @@ class Suite(AnchorMixin, Node):
         assert not self._extern, "Attempting to deploy extern node not permitted"
 
         target = target(self, **options)
-        for t in self.all_tasks:
+        node = node if node is not None else self
+        for t in node.all_tasks:
             script, includes = t.generate_script()
             try:
                 target.deploy_task(t.deploy_path, script, includes)
             except RuntimeError:
                 print(f"\nERROR when deploying task: {t.fullname}\n")
                 raise
-        for f in self.all_families:
+        for f in node.all_families:
             manual = self.generate_stub(f.manual)
             if manual:
                 target.deploy_manual(f.manual_path, manual)
