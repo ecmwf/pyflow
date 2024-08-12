@@ -10,12 +10,14 @@ from pyflow import (
     ExternMeter,
     ExternTask,
     ExternYMD,
+    ExternVariable,
     Family,
     Meter,
     Notebook,
     RepeatDate,
     Suite,
     Task,
+    Variable,
 )
 from pyflow.extern import KNOWN_EXTERNS
 
@@ -70,10 +72,12 @@ def test_extern_attributes():
         eymd = ExternYMD("/a/b/c/d:YMD")
         eevent = ExternEvent("/e/f/g/h:ev")
         emeter = ExternMeter("/g/h/i/j:mt")
+        evar = ExternVariable("/g/h/i/j:VARIABLE")
 
         Task("t1", YMD=(now, now)).follow = eymd
         Task("t2").triggers = eevent
         Task("t3").triggers = emeter == 10
+        Task("t4").triggers = evar == '1'
 
     # Check that the externs have real types --> will have correct functionality available
 
@@ -89,6 +93,10 @@ def test_extern_attributes():
     assert emeter.name == "mt"
     assert emeter.fullname == "/g/h/i/j:mt"
 
+    assert isinstance(evar, Variable)
+    assert evar.name == "VARIABLE"
+    assert evar.fullname == "/g/h/i/j:VARIABLE"
+
     # Check that they work!
 
     s.check_definition()
@@ -102,9 +110,35 @@ def test_extern_attributes():
     assert "extern /a/b/c/d:YMD\n" in defs
     assert "extern /e/f/g/h:ev\n" in defs
     assert "extern /g/h/i/j:mt\n" in defs
+    assert "extern /g/h/i/j:VARIABLE\n" in defs
     assert defs.index("extern /a/b/c/d:YMD") < defs.index("suite s")
     assert defs.index("extern /e/f/g/h:ev") < defs.index("suite s")
     assert defs.index("extern /g/h/i/j:mt") < defs.index("suite s")
+    assert defs.index("extern /g/h/i/j:VARIABLE") < defs.index("suite s")
+
+
+def test_extern_int_variable_only():
+    with Suite("s") as s:
+        evar = ExternVariable("/g/h/i/j:VARIABLE")
+        Task("t4").triggers = evar == 1
+
+    s.check_definition()
+    s.generate_node()
+
+    with Suite("s") as s:
+        evar = ExternVariable("/g/h/i/j:VARIABLE")
+        Task("t4").triggers = evar == "1"
+
+    s.check_definition()
+    s.generate_node()
+
+    with Suite("s") as s:
+        evar = ExternVariable("/g/h/i/j:VARIABLE")
+        Task("t4").triggers = evar == "TRUE"
+
+    with pytest.raises(RuntimeError) as excinfo:
+        s.check_definition()
+    assert "ecflow definitions failed checks: Failed to parse trigger" in excinfo.value.args[0]
 
 
 def test_extern_safety():
@@ -121,6 +155,7 @@ def test_extern_safety():
         externs.append(ExternYMD("i/j/k/l:YMD"))
         externs.append(ExternEvent("m/n/o/p:ev"))
         externs.append(ExternMeter("q/s/t/u:mt"))
+        externs.append(ExternVariable("q/s/t/u:VARIABLE"))
 
     for extern in externs:
         with pytest.raises(AssertionError) as excinfo:

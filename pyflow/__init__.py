@@ -40,6 +40,7 @@ from .extern import (
     ExternNode,
     ExternTask,
     ExternYMD,
+    ExternVariable,
 )
 from .header import FileHeader, FileTail, Header, InlineCodeHeader
 from .host import Host, LocalHost, NullHost, PBSHost, SLURMHost, SSHHost, TroikaHost

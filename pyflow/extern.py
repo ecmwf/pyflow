@@ -1,6 +1,6 @@
 import datetime
 
-from .attributes import Event, Meter, RepeatDate
+from .attributes import Event, Meter, RepeatDate, Variable
 from .base import Root
 from .nodes import Family, Suite, Task
 
@@ -103,6 +103,25 @@ def ExternMeter(path):
     """
 
     return ExternAttribute(path, Meter, 0)
+
+
+def ExternVariable(path):
+    """
+    Maps an external variable, i.e. a variable that is not built from the same repository.
+    If used in a trigger expression, must check agains a integer value otherwise it will raise an error.
+
+    Parameters:
+        path(str): Path of the external variable.
+
+    Returns:
+        Variable_: An object that corresponds to an external variable.
+
+    Example::
+
+        pyflow.ExternVariable('/g/h/i/j:VAR')
+    """
+
+    return ExternAttribute(path, Variable, 0)
 
 
 def Extern(path):
