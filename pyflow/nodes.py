@@ -1144,6 +1144,7 @@ class Suite(AnchorMixin, Node):
 
         Parameters:
             target(Deployment): Deployment target for the suite.
+            node(str): Path to node to limit deployment to a family/task.
             **options(dict): Accept extra keyword arguments as deployment options.
 
         Returns:
@@ -1154,7 +1155,8 @@ class Suite(AnchorMixin, Node):
         assert not self._extern, "Attempting to deploy extern node not permitted"
 
         target = target(self, **options)
-        node = node if node is not None else self
+        node = self.find_node(node) if node is not None else self
+
         for t in node.all_tasks:
             script, includes = t.generate_script()
             try:

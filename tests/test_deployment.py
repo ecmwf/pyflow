@@ -31,7 +31,7 @@ def test_deploy_filesystem(tmpdir, ECF_FILES):
     # partial deployment
     t1.script = "echo new"
     t2.script = "echo new"
-    s.deploy_suite(node=s.f2)
+    s.deploy_suite(node="f2")
     with open(f1) as f:
         # shouldn't not be updated
         assert "echo foo" in f.read()
