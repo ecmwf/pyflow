@@ -23,7 +23,9 @@ def definition_to_html(d):
         )
 
         n = re.sub(
-            r" (\%) ", r' <span style="text-weight: bold; color: purple">\1</span> ', n
+            r" (\%) ",
+            r' <span style="text-weight: bold; color: purple">\1</span> ',
+            n,
         )
 
         n = re.sub(

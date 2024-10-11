@@ -295,6 +295,28 @@ class Variable(Exportable):
         ecflow_parent.add_variable(str(self.name), str(self.value))
 
 
+class GeneratedVariable(Exportable):
+    """
+    An attribute for referencing an **ecFlow** generated variable.
+    The variable value will be generated automatically by ecFlow.
+
+    Parameters:
+        name(str): The name of the variable.
+
+    Example::
+
+        GeneratedVariable('FOO')
+    """
+
+    def __init__(self, name):
+        if not is_variable(name):
+            raise ValueError("'{}' is not a valid variable name".format(name))
+        super().__init__(name)
+
+    def _build(self, *args, **kwargs):
+        return
+
+
 class Edit:
     """
     An attribute for setting multiple **ecFlow** variables.
@@ -539,7 +561,15 @@ class RepeatDate(Exportable):
 
 
 for dow, day in enumerate(
-    ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
+    (
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+        "sunday",
+    )
 ):
     setattr(RepeatDate, day, property(lambda self: Eq(self.day_of_week, dow)))
 
@@ -722,7 +752,10 @@ def make_variable(node, name, value):
                     if len(value) == 3:
                         if isinstance(value[2], int):
                             return RepeatDate(
-                                name, as_date(value[0]), as_date(value[1]), value[2]
+                                name,
+                                as_date(value[0]),
+                                as_date(value[1]),
+                                value[2],
                             )
                     else:
                         return RepeatDate(name, as_date(value[0]), as_date(value[1]), 1)

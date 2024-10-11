@@ -18,7 +18,9 @@ if __name__ == "__main__":
         default=os.environ.get("ECF_HOST", "localhost"),
     )
     parser.add_argument(
-        "--port", help="ecflow server port", default=os.environ.get("ECF_PORT", 5459)
+        "--port",
+        help="ecflow server port",
+        default=os.environ.get("ECF_PORT", 5459),
     )
     parser.add_argument(
         "--family", help="the subset of the tree to deploy", default="/"
@@ -29,10 +31,14 @@ if __name__ == "__main__":
         default=getpass.getuser(),
     )
     parser.add_argument(
-        "--deploy-host", help="the subset of the tree to deploy", default="localhost"
+        "--deploy-host",
+        help="the subset of the tree to deploy",
+        default="localhost",
     )
     parser.add_argument(
-        "--deploy-files", help="sync the files with the remote", action="store_true"
+        "--deploy-files",
+        help="sync the files with the remote",
+        action="store_true",
     )
     parser.add_argument(
         "--play-suite", help="play the suite to ecflow", action="store_true"
