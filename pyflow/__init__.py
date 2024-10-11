@@ -3,6 +3,7 @@
 from __future__ import absolute_import
 
 from .attributes import (
+    Aviso,
     Complete,
     Cron,
     Crons,
@@ -16,6 +17,7 @@ from .attributes import (
     Late,
     Limit,
     Meter,
+    Mirror,
     RepeatDate,
     RepeatDateTime,
     RepeatEnumerated,
