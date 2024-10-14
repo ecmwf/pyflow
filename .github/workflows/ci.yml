@@ -19,6 +19,28 @@ jobs:
       - run: black --check .
       - run: flake8 .
 
+  docs:
+    name: docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: test
+          environment-file: docs/environment.yml
+          python-version: 3.8
+          auto-activate-base: false
+      - name: Conda check
+        shell: bash -l {0}
+        run: |
+          conda info
+          conda list
+      - name: Install pyflow and docs
+        shell: bash -l {0}  # required to load conda I think
+        run: |
+          cd docs
+          make html
+
   setup:
     name: setup
     runs-on: ubuntu-latest

@@ -11,6 +11,7 @@ from .attributes import (
     Defstatus,
     Edit,
     Event,
+    GeneratedVariable,
     InLimit,
     Inlimit,
     Label,
