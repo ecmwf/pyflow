@@ -1033,7 +1033,6 @@ class TroikaHost(Host):
             "tasks": "total_tasks",
             "nodes": "total_nodes",
             "threads_per_task": "cpus_per_task",
-            "tasks_per_node": "tasks_per_node",
             "hyperthreads": "threads_per_core",
             "memory_per_task": "memory_per_cpu",
             "accounting": "billing_account",
