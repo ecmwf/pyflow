@@ -35,7 +35,15 @@ def test_children():
     children = f.children
     names = set([c.name for c in children])
 
-    assert names == {"limit1", "VARIABLE1", "f2", "t4", "t5"}
+    assert names == {
+        "limit1",
+        "VARIABLE1",
+        "f2",
+        "t4",
+        "t5",
+        "FAMILY",
+        "FAMILY1",
+    }
 
 
 def test_executable_children():
@@ -89,6 +97,35 @@ def test_files_locations():
     assert t5.deploy_path == "/a/base/path/f3/t5.ecf"
     assert t6.deploy_path == "/a/base/path/t6.ecf"
     assert t7.deploy_path == "/a/base/path/f5/f6/t7.ecf"
+
+
+def test_exit_hook():
+    """
+    Propagate exit hook to children of a given family
+    """
+
+    with Family("f3", exit_hook="hook_f3") as f3:
+        t3 = Task("t3", exit_hook="hook_t3")
+        t4 = Task("t4")
+
+    t5 = Task("t5")
+
+    with Suite("S"):
+        with Family("f", exit_hook="hook_f", tasks=t5) as f:
+            Limit("limit1", 15)
+            Variable("VARIABLE1", 1234)
+            t1 = Task("t1", exit_hook="hook_t1")
+            with Family("f2", families=f3, exit_hook="hook_f2") as f2:
+                t2 = Task("t2", exit_hook="hook_t2")
+
+    assert f._exit_hook == ["hook_f"]
+    assert t1._exit_hook == ["hook_f", "hook_t1"]
+    assert f2._exit_hook == ["hook_f", "hook_f2"]
+    assert t2._exit_hook == ["hook_f", "hook_f2", "hook_t2"]
+    assert f3._exit_hook == ["hook_f3", "hook_f", "hook_f2"]
+    assert t3._exit_hook == ["hook_f3", "hook_t3", "hook_f", "hook_f2"]
+    assert t4._exit_hook == ["hook_f3", "hook_f", "hook_f2"]
+    assert t5._exit_hook == ["hook_f"]
 
 
 if __name__ == "__main__":

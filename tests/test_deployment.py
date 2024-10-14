@@ -11,11 +11,11 @@ def test_deploy_filesystem(tmpdir, ECF_FILES):
     files = path.join(str(tmpdir), ECF_FILES)
     with pyflow.Suite("s", ECF_HOME=str(tmpdir), ECF_FILES=files) as s:
         with pyflow.Family("f1"):
-            with pyflow.Task("t") as t:
-                t.script = "echo foo"
+            with pyflow.Task("t") as t1:
+                t1.script = "echo foo"
         with pyflow.Family("f2"):
-            with pyflow.Task("t2") as t:
-                t.script = "echo bar"
+            with pyflow.Task("t2") as t2:
+                t2.script = "echo bar"
 
     s.deploy_suite()
     s.deploy_suite(target=pyflow.Notebook)
@@ -27,6 +27,16 @@ def test_deploy_filesystem(tmpdir, ECF_FILES):
     assert path.exists(f2)
     with open(f2) as f:
         assert "echo bar" in f.read()
+
+    # partial deployment
+    t1.script = "echo new"
+    t2.script = "echo new"
+    s.deploy_suite(node="f2")
+    with open(f1) as f:
+        # shouldn't not be updated
+        assert "echo foo" in f.read()
+    with open(f2) as f:
+        assert "echo new" in f.read()
 
 
 def test_move_node(tmpdir):

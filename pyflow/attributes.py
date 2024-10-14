@@ -295,6 +295,28 @@ class Variable(Exportable):
         ecflow_parent.add_variable(str(self.name), str(self.value))
 
 
+class GeneratedVariable(Exportable):
+    """
+    An attribute for referencing an **ecFlow** generated variable.
+    The variable value will be generated automatically by ecFlow.
+
+    Parameters:
+        name(str): The name of the variable.
+
+    Example::
+
+        GeneratedVariable('FOO')
+    """
+
+    def __init__(self, name):
+        if not is_variable(name):
+            raise ValueError("'{}' is not a valid variable name".format(name))
+        super().__init__(name)
+
+    def _build(self, *args, **kwargs):
+        return
+
+
 class Edit:
     """
     An attribute for setting multiple **ecFlow** variables.
@@ -539,7 +561,15 @@ class RepeatDate(Exportable):
 
 
 for dow, day in enumerate(
-    ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
+    (
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+        "sunday",
+    )
 ):
     setattr(RepeatDate, day, property(lambda self: Eq(self.day_of_week, dow)))
 
@@ -722,7 +752,10 @@ def make_variable(node, name, value):
                     if len(value) == 3:
                         if isinstance(value[2], int):
                             return RepeatDate(
-                                name, as_date(value[0]), as_date(value[1]), value[2]
+                                name,
+                                as_date(value[0]),
+                                as_date(value[1]),
+                                value[2],
                             )
                     else:
                         return RepeatDate(name, as_date(value[0]), as_date(value[1]), 1)
@@ -1255,3 +1288,105 @@ class Late(Attribute):
             adder(ecflow.TimeSlot(hour, mins), rel)
         else:
             adder(ecflow.TimeSlot(hour, mins))
+
+
+###################################################################
+
+
+class Aviso(Attribute):
+    """
+    An attribute that allows a node to be triggered by an external Aviso notification.
+
+    Parameters:
+        name(str): The name of the attribute.
+        listener(str): The listener configuration.
+        url(str): The URL to the Aviso server.
+        schema(str): The schema used to process Aviso notifications.
+        polling(str, int): The time interval used to poll the Aviso server.
+        auth(str): The path to the Aviso authentication credentials file.
+
+    Example::
+
+        pyflow.Aviso("AVISO_NOTIFICATION",
+                     r'{ "event": "mars", "request": { "class": "od"} }',
+                    "https://aviso.ecm:8888/v1",
+                    "/path/to/schema.json"
+                    60,
+                    "/path/to/auth.json")
+
+    """
+
+    def __init__(self, name, listener, url, schema, polling, auth):
+        super().__init__(name)
+        self.listener = str(listener)
+        self.url = str(url)
+        self.schema = str(schema)
+        self.polling = str(polling)
+        self.auth = str(auth)
+
+    def _build(self, ecflow_parent):
+        # The listener configuration must be provided as a single-quoted JSON string
+        quoted_listener_cfg = "'{}'".format(self.listener)
+
+        aviso = ecflow.AvisoAttr(
+            self.name,
+            quoted_listener_cfg,
+            self.url,
+            self.schema,
+            self.polling,
+            self.auth,
+        )
+
+        ecflow_parent.add_aviso(aviso)
+
+
+###################################################################
+
+
+class Mirror(Attribute):
+    """
+    An attribute that allows a node status to be synchronized with a node from another ecFlow server.
+
+    Parameters:
+        name(str): The name of the attribute.
+        remote_path(str): The path to the mirrored node on the remote ecFlow server.
+        remote_host(str): The host used to connect to the remote ecFlow server.
+        remote_port(str, int): The port used to connect to the remote ecFlow server.
+        polling(str, int): The time interval used to poll the remote ecFlow server.
+        ssl(bool): The flag indicating if SSL communication is enabled.
+        auth(str): The path to the ecFlow authentication credentials file.
+
+
+    Example::
+
+        pyflow.Mirror("NODE_MIRROR"
+                     "/suite/family/task",
+                     "remote-ecflow-server",
+                     "3141",
+                     60,
+                     False
+                     "/path/to/auth.json")
+
+    """
+
+    def __init__(self, name, remote_path, remote_host, remote_port, polling, ssl, auth):
+        super().__init__(name)
+        self.remote_path = str(remote_path)
+        self.remote_host = str(remote_host)
+        self.remote_port = str(remote_port)
+        self.polling = str(polling)
+        self.ssl = bool(ssl)
+        self.auth = str(auth)
+
+    def _build(self, ecflow_parent):
+        mirror = ecflow.MirrorAttr(
+            self.name,
+            self.remote_path,
+            self.remote_host,
+            self.remote_port,
+            self.polling,
+            self.ssl,
+            self.auth,
+        )
+
+        ecflow_parent.add_mirror(mirror)

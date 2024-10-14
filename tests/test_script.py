@@ -31,7 +31,10 @@ def test_script_lists():
             t1 = pyflow.Task("t1")
             t2 = pyflow.Task(
                 "t2",
-                script=["echo 'bit1'", pyflow.Script(["echo 'bit2'", "echo 'bit3'"])],
+                script=[
+                    "echo 'bit1'",
+                    pyflow.Script(["echo 'bit2'", "echo 'bit3'"]),
+                ],
             )
 
     t1.script = ["echo 'bit1'", pyflow.Script(["echo 'bit2'", "echo 'bit3'"])]
@@ -182,7 +185,9 @@ def test_script_exportables():
         with pyflow.Family("f", VARIABLE2=4321) as f:
             subscript = pyflow.Script("uninteresting2")
             with pyflow.Task(
-                "t", script=['echo "uninteresting script', subscript], VARIABLE3=9999
+                "t",
+                script=['echo "uninteresting script', subscript],
+                VARIABLE3=9999,
             ) as t:
                 v4 = pyflow.Variable("VARIABLE4", 8888)
 
@@ -282,7 +287,10 @@ def test_variable_detection_script():
                 check = True
         assert check
 
-    not_in_script = ['export S_FOO="%S_FOO%"', 'export T_FOO_T_BAR="%T_FOO_T_BAR%"']
+    not_in_script = [
+        'export S_FOO="%S_FOO%"',
+        'export T_FOO_T_BAR="%T_FOO_T_BAR%"',
+    ]
     for var in not_in_script:
         check = False
         for line in full_script[0]:

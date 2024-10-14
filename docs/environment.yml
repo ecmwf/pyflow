@@ -6,7 +6,7 @@ dependencies:
   - python
   - pip
   - jupyterlab
-  - ecflow
+  - ecflow >= 5.13
   - jinja2
   - requests
   - pytest

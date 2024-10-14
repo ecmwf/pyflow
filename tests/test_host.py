@@ -5,7 +5,10 @@ import pyflow
 
 def test_host_task():
     host1 = pyflow.SSHHost(
-        "a-host", user="a-user", scratch_directory="/tmp", ecflow_path="/usr/local/bin"
+        "a-host",
+        user="a-user",
+        scratch_directory="/tmp",
+        ecflow_path="/usr/local/bin",
     )
 
     host2 = pyflow.LocalHost(scratch_directory="/tmp2", ecflow_path="/usr/local/bin")
@@ -19,11 +22,17 @@ def test_host_task():
             t1 = pyflow.Task("t1")
 
             t2 = pyflow.Task(
-                "t2", host=host1, script='echo "boom"', workdir=host1.scratch_directory
+                "t2",
+                host=host1,
+                script='echo "boom"',
+                workdir=host1.scratch_directory,
             )
 
             t3 = pyflow.Task(
-                "t3", host=host2, script='echo "boom"', workdir=host2.scratch_directory
+                "t3",
+                host=host2,
+                script='echo "boom"',
+                workdir=host2.scratch_directory,
             )
 
         with pyflow.Family("f2", host=host1) as f2:
@@ -32,11 +41,17 @@ def test_host_task():
             )
 
             t5 = pyflow.Task(
-                "t5", host=host1, script='echo "boom"', workdir=host1.scratch_directory
+                "t5",
+                host=host1,
+                script='echo "boom"',
+                workdir=host1.scratch_directory,
             )
 
             t6 = pyflow.Task(
-                "t6", host=host2, script='echo "boom"', workdir=host2.scratch_directory
+                "t6",
+                host=host2,
+                script='echo "boom"',
+                workdir=host2.scratch_directory,
             )
 
         with pyflow.Family("f3", host=host2) as f3:
@@ -45,7 +60,10 @@ def test_host_task():
             )
 
             t8 = pyflow.Task(
-                "t8", host=host1, script='echo "boom"', workdir=host1.scratch_directory
+                "t8",
+                host=host1,
+                script='echo "boom"',
+                workdir=host1.scratch_directory,
             )
 
             t9 = pyflow.Task(
@@ -208,7 +226,10 @@ def test_host_kill_cmd(class_name):
 
     HostClass = getattr(pyflow, class_name)
     host = HostClass(
-        hostname, user=username, scratch_directory="/tmp", log_directory="/var/log"
+        hostname,
+        user=username,
+        scratch_directory="/tmp",
+        log_directory="/var/log",
     )
 
     if class_name == "LocalHost" or class_name == "SSHHost":
@@ -227,8 +248,96 @@ def test_host_kill_cmd(class_name):
     assert host.kill_cmd == expected_kill_cmd
 
 
-# def test_pre_post_amble():
-#     assert False
+def check_pragma(script, pragmas):
+    for prag in pragmas:
+        print(prag)
+        check = False
+        for line in script[0]:
+            if prag in line:
+                check = True
+        assert check
+
+
+def test_troika_host():
+    host1 = pyflow.TroikaHost(
+        name="test_host",
+        user="test_user",
+    )
+    host2 = pyflow.TroikaHost(
+        name="test_host", user="test_user", troika_version="2.2.2"
+    )
+
+    submit_args = {
+        "tasks": 2,  # deprecated option, will be translated to total_tasks
+        "gpus": 1,
+        "sthost": "/foo/bar",
+        "distribution": "test",  # generates TROIKA pragma for recent version of troika, SBATCH for older versions
+    }
+
+    with pyflow.Suite("s", host=host1) as s:
+        with pyflow.Family("f"):
+            t1 = pyflow.Task("t1", script='echo "boom"', submit_arguments=submit_args)
+            t2 = pyflow.Task(
+                "t2",
+                host=host2,
+                script='echo "boom"',
+                submit_arguments=submit_args,
+            )
+
+    s.check_definition()
+
+    assert (
+        s.ECF_JOB_CMD.value
+        == "%TROIKA:troika% -vv  submit -u test_user -o %ECF_JOBOUT% test_host %ECF_JOB%"
+    )
+    assert (
+        s.ECF_KILL_CMD.value
+        == "%TROIKA:troika% -vv  kill -u test_user test_host %ECF_JOB%"
+    )
+
+    t1_script = t1.generate_script()
+    t2_script = t2.generate_script()
+    print(t1_script)
+    print(t2_script)
+
+    in_script = [
+        "#TROIKA total_tasks=2",
+        "#TROIKA gpus=1",
+        "#TROIKA export_vars=STHOST=/foo/bar",
+        "#SBATCH --distribution=test",
+    ]
+    check_pragma(t1_script, in_script)
+
+    # check for new versions of troika
+    in_script = [
+        "#TROIKA total_tasks=2",
+        "#TROIKA gpus=1",
+        "#TROIKA export_vars=STHOST=/foo/bar",
+        "#TROIKA distribution=test",
+    ]
+    check_pragma(t2_script, in_script)
+
+
+def test_troika_host_options():
+    host = pyflow.TroikaHost(
+        name="test_host",
+        user="test_user",
+        troika_exec="/path/to/troika",
+        troika_config="/path/to/troika.cfg",
+        troika_version="2.1.3",
+    )
+
+    s = pyflow.Suite("s", host=host)
+
+    assert (
+        s.ECF_JOB_CMD.value
+        == "%TROIKA:/path/to/troika% -vv -c %TROIKA_CONFIG:/path/to/troika.cfg% submit -u test_user -o %ECF_JOBOUT% test_host %ECF_JOB%"  # noqa: E501
+    )
+    assert (
+        s.ECF_KILL_CMD.value
+        == "%TROIKA:/path/to/troika% -vv -c %TROIKA_CONFIG:/path/to/troika.cfg% kill -u test_user test_host %ECF_JOB%"  # noqa: E501
+    )
+    assert s.host.troika_version == (2, 1, 3)
 
 
 if __name__ == "__main__":
