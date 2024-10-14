@@ -49,6 +49,14 @@ Variable
 .. autoclass:: pyflow.Edit
 
 
+GeneratedVariable
+~~~~~~~~~~~~~~~~~
+
+.. _GeneratedVariable:
+
+.. autoclass:: pyflow.GeneratedVariable
+
+
 .. _Trigger:
 
 Trigger
@@ -103,6 +111,16 @@ Defstatus
 ~~~~~~~~~
 
 .. autoclass:: pyflow.Defstatus
+
+Aviso
+~~~~~~~~~
+
+.. autoclass:: pyflow.Aviso
+
+Mirror
+~~~~~~~~~
+
+.. autoclass:: pyflow.Mirror
 
 
 Time Dependencies
