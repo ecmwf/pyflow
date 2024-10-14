@@ -49,6 +49,14 @@ Variable
 .. autoclass:: pyflow.Edit
 
 
+GeneratedVariable
+~~~~~~~~~~~~~~~~~
+
+.. _GeneratedVariable:
+
+.. autoclass:: pyflow.GeneratedVariable
+
+
 .. _Trigger:
 
 Trigger
