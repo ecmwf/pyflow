@@ -112,6 +112,16 @@ Defstatus
 
 .. autoclass:: pyflow.Defstatus
 
+Aviso
+~~~~~~~~~
+
+.. autoclass:: pyflow.Aviso
+
+Mirror
+~~~~~~~~~
+
+.. autoclass:: pyflow.Mirror
+
 
 Time Dependencies
 ~~~~~~~~~~~~~~~~~
