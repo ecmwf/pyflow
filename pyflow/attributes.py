@@ -1355,6 +1355,7 @@ class Mirror(Attribute):
         polling(str, int): The time interval used to poll the remote ecFlow server.
         ssl(bool): The flag indicating if SSL communication is enabled.
         auth(str): The path to the ecFlow authentication credentials file.
+        force(bool): The flag indicating whether to override lower limit on polling time
 
 
     Example::
@@ -1363,14 +1364,28 @@ class Mirror(Attribute):
                      "/suite/family/task",
                      "remote-ecflow-server",
                      "3141",
-                     60,
+                     300,
                      False
                      "/path/to/auth.json")
 
     """
 
-    def __init__(self, name, remote_path, remote_host, remote_port, polling, ssl, auth):
+    def __init__(
+        self,
+        name: str,
+        remote_path: str,
+        remote_host: str,
+        remote_port: str,
+        auth: str = "",
+        polling: int = 300,
+        ssl: bool = False,
+        force: bool = False,
+    ):
         super().__init__(name)
+        if int(polling) < 60 and not force:
+            raise ValueError(
+                "Polling time should be at least 60 seconds. Use force=True to override."
+            )
         self.remote_path = str(remote_path)
         self.remote_host = str(remote_host)
         self.remote_port = str(remote_port)

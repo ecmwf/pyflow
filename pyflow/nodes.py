@@ -25,6 +25,7 @@ from .attributes import (
     Limit,
     Manual,
     Meter,
+    Mirror,
     RepeatDay,
     Time,
     Today,
@@ -142,6 +143,7 @@ class Node(Base):
             limits(Limit_): An attribute for a simple load management by limiting the number of tasks submitted by a
                 specific **ecFlow** server.
             meters(Meter_): An attribute for a range of integer values that can be set from a script.
+            mirror(Mirror_): An attribute for a mirroring a node on another ecflow server.
             repeat(RepeatDay_): An attribute that allows a node to be repeated infinitely.
             tasks(Task_): An attribute for adding a child task on the node.
             time(Time_): An attribute for setting a time dependency of the node.
@@ -830,6 +832,7 @@ class Family(Node):
             limits(Limit_): An attribute for a simple load management by limiting the number of tasks submitted by a
                 specific **ecFlow** server.
             meters(Meter_): An attribute for a range of integer values that can be set from a script.
+            mirror(Mirror_): An attribute for a mirroring a node on another ecflow server.
             repeat(RepeatDay_): An attribute that allows a node to be repeated infinitely.
             tasks(Task_): An attribute for adding a child task on the node.
             time(Time_): An attribute for setting a time dependency of the node.
@@ -958,6 +961,7 @@ class AnchorFamily(AnchorMixin, Family):
             limits(Limit_): An attribute for a simple load management by limiting the number of tasks submitted by a
                 specific **ecFlow** server.
             meters(Meter_): An attribute for a range of integer values that can be set from a script.
+            mirror(Mirror_): An attribute for a mirroring a node on another ecflow server.
             repeat(RepeatDay_): An attribute that allows a node to be repeated infinitely.
             tasks(Task_): An attribute for adding a child task on the node.
             time(Time_): An attribute for setting a time dependency of the node.
@@ -1033,6 +1037,7 @@ class Suite(AnchorMixin, Node):
             limits(Limit_): An attribute for a simple load management by limiting the number of tasks submitted by a
                 specific **ecFlow** server.
             meters(Meter_): An attribute for a range of integer values that can be set from a script.
+            mirror(Mirror_): An attribute for a mirroring a node on another ecflow server.
             repeat(RepeatDay_): An attribute that allows a node to be repeated infinitely.
             tasks(Task_): An attribute for adding a child task on the node.
             time(Time_): An attribute for setting a time dependency of the node.
@@ -1242,6 +1247,7 @@ class Task(Node):
             limits(Limit_): An attribute for a simple load management by limiting the number of tasks submitted by a
                 specific **ecFlow** server.
             meters(Meter_): An attribute for a range of integer values that can be set from a script.
+            mirror(Mirror_): An attribute for a mirroring a node on another ecflow server.
             repeat(RepeatDay_): An attribute that allows a node to be repeated infinitely.
             tasks(Task_): An attribute for adding a child task on the node.
             time(Time_): An attribute for setting a time dependency of the node.
@@ -1523,6 +1529,7 @@ ACCESSORS = [
     ("generated_variables", GeneratedVariable),
     ("zombies", Zombies),
     ("events", Event),
+    ("mirror", Mirror),
 ]
 
 
