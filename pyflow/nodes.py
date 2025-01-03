@@ -25,6 +25,7 @@ from .attributes import (
     Limit,
     Manual,
     Meter,
+    Mirror,
     Time,
     Today,
     Trigger,
@@ -142,6 +143,7 @@ class Node(Base):
             limits(Limit_): An attribute for a simple load management by limiting the number of tasks submitted by a
                 specific **ecFlow** server.
             meters(Meter_): An attribute for a range of integer values that can be set from a script.
+            mirror(Mirror_): An attribute for a mirroring a node on another ecflow server.
             tasks(Task_): An attribute for adding a child task on the node.
             time(Time_): An attribute for setting a time dependency of the node.
             today(Today_): An attribute for setting a cron dependency of the node for the current day.
@@ -857,6 +859,7 @@ class Family(Node):
             limits(Limit_): An attribute for a simple load management by limiting the number of tasks submitted by a
                 specific **ecFlow** server.
             meters(Meter_): An attribute for a range of integer values that can be set from a script.
+            mirror(Mirror_): An attribute for a mirroring a node on another ecflow server.
             tasks(Task_): An attribute for adding a child task on the node.
             time(Time_): An attribute for setting a time dependency of the node.
             today(Today_): An attribute for setting a cron dependency of the node for the current day.
@@ -985,6 +988,7 @@ class AnchorFamily(AnchorMixin, Family):
             limits(Limit_): An attribute for a simple load management by limiting the number of tasks submitted by a
                 specific **ecFlow** server.
             meters(Meter_): An attribute for a range of integer values that can be set from a script.
+            mirror(Mirror_): An attribute for a mirroring a node on another ecflow server.
             tasks(Task_): An attribute for adding a child task on the node.
             time(Time_): An attribute for setting a time dependency of the node.
             today(Today_): An attribute for setting a cron dependency of the node for the current day.
@@ -1060,6 +1064,7 @@ class Suite(AnchorMixin, Node):
             limits(Limit_): An attribute for a simple load management by limiting the number of tasks submitted by a
                 specific **ecFlow** server.
             meters(Meter_): An attribute for a range of integer values that can be set from a script.
+            mirror(Mirror_): An attribute for a mirroring a node on another ecflow server.
             tasks(Task_): An attribute for adding a child task on the node.
             time(Time_): An attribute for setting a time dependency of the node.
             today(Today_): An attribute for setting a cron dependency of the node for the current day.
@@ -1270,6 +1275,7 @@ class Task(Node):
             limits(Limit_): An attribute for a simple load management by limiting the number of tasks submitted by a
                 specific **ecFlow** server.
             meters(Meter_): An attribute for a range of integer values that can be set from a script.
+            mirror(Mirror_): An attribute for a mirroring a node on another ecflow server.
             tasks(Task_): An attribute for adding a child task on the node.
             time(Time_): An attribute for setting a time dependency of the node.
             today(Today_): An attribute for setting a cron dependency of the node for the current day.
@@ -1553,6 +1559,7 @@ ACCESSORS = [
     ("generated_variables", GeneratedVariable),
     ("zombies", Zombies),
     ("events", Event),
+    ("mirror", Mirror),
 ]
 
 
