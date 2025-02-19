@@ -9,3 +9,4 @@ build:
     - ecmwf/ecbuild@develop
     - ecmwf/ecflow@develop
   parallel: 64
+  pytest_cmd: pytest -rx
