@@ -1,9 +1,10 @@
 build:
   modules:
-    - boost
+    - boost/1.84.0
     - ninja
-    - python3
+    - python3/3.11.8-01
     - qt
+    - cmake/new
   dependencies:
     - ecmwf/ecbuild@develop
     - ecmwf/ecflow@develop
