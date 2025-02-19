@@ -16,6 +16,7 @@ except ImportError:
     for env_var in ("ECFLOW_DIR", "ecflow_DIR"):
         try:
             lib_dir = os.path.join(os.environ[env_var], "lib")
+            print("DF: Looking for lib_dir: {}".format(lib_dir))
         except KeyError:
             continue
 
@@ -23,7 +24,9 @@ except ImportError:
             python_dir = os.path.join(
                 lib_dir, "python3.{}".format(minor_version), "site-packages"
             )
+            print("DF: Looking for python_dir: {}".format(python_dir))
             if os.path.exists(python_dir):
+                print("DF: Found python_dir: {}".format(python_dir))
                 sys.path.insert(0, python_dir)
                 import ecflow  # noqa: F401
 
