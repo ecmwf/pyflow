@@ -7,7 +7,7 @@ Introduction
 
 .. seealso::
 
-   For more details about **ecFlow**, please check `ecFlow Documentation`_.
+   For more details about **ecFlow**, please check `ecFlow documentation`_.
 
 
 Benefits
@@ -44,4 +44,4 @@ The aim of **pyflow** is to build object-oriented suites, which compile to **ecF
 
 
 .. _`ecFlow`: https://github.com/ecmwf/ecflow
-.. _`ecFlow Documentation`: https://confluence.ecmwf.int/display/ECFLOW
+.. _`ecFlow documentation`: https://ecflow.readthedocs.io/

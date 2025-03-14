@@ -7,7 +7,7 @@ You can quickly get started with **pyflow** with a trivial example outlined belo
 
 .. seealso::
 
-   For more details about **ecFlow**, please check `ecFlow Documentation`_.
+   For more details about **ecFlow**, please check `ecFlow documentation`_.
 
 
 Write Suite
@@ -141,4 +141,4 @@ After you finish, make sure to stop the local **ecFlow** server:
    ecflow_stop.sh
 
 
-.. _`ecFlow Documentation`: https://confluence.ecmwf.int/display/ECFLOW
+.. _`ecFlow documentation`: https://ecflow.readthedocs.io/
