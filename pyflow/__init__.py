@@ -20,6 +20,7 @@ from .attributes import (
     Meter,
     Mirror,
     RepeatDate,
+    RepeatDateList,
     RepeatDateTime,
     RepeatEnumerated,
     RepeatInteger,
