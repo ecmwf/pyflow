@@ -3,7 +3,7 @@ channels:
   - conda-forge
 
 dependencies:
-  - python
+  - python <= 3.12
   - pip
   - jupyterlab
   - ecflow >= 5.13
