@@ -440,6 +440,48 @@ class RepeatEnumerated(Exportable):
         return Sub(self, other)
 
 
+class RepeatDateList(Exportable):
+    """
+    An attribute that allows a node to be repeated over a list of dates.
+
+    Parameters:
+        name(str): The name of the repeat attribute.
+        list(tuple): The list of dates for the repeat attribute.
+
+    Example::
+
+        pyflow.RepeatDateList("REPEAT_DATELIST", ["20000101", "20000102", "20000103", "d", "e"])
+    """
+
+    def __init__(self, name, value):
+        super().__init__(name, value)
+
+    def _build(self, ecflow_parent):
+        repeat = ecflow.RepeatDateList(self.name, self.values)
+        ecflow_parent.add_repeat(repeat)
+
+    @property
+    def values(self):
+        """*list*: The list of date values (as integers)."""
+        # Convert dates to numerical values
+        v = [
+            x.strftime("%Y%m%d") if isinstance(x, datetime.date) else x
+            for x in self.value
+        ]
+        # Convert all values to integers
+        v = [int(x) for x in v]
+        return v
+
+    def settings(self):
+        return self.value
+
+    def __add__(self, other):
+        return Add(self, other)
+
+    def __sub__(self, other):
+        return Sub(self, other)
+
+
 class RepeatInteger(Exportable):
     """
     An attribute that allows a node to be repeated by an integer range.
