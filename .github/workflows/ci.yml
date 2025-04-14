@@ -1,75 +1,40 @@
-name: ci-pyflow
+name: ci
 
-# Controls when the workflow will run
 on:
+  # Trigger the workflow on push to master or develop, except tag creation
   push:
-    branches: [ "master", "develop" ]
-  pull_request:
-    branches: [ "master", "develop" ]
+    branches:
+      - 'master'
+      - 'develop'
+    tags-ignore:
+      - '**'
+
+  # Trigger the workflow on pull request
+  pull_request: ~
+
+  # Trigger the workflow manually
+  workflow_dispatch: ~
+
+  # Trigger after public PR approved for CI
+  pull_request_target:
+    types: [labeled]
 
 jobs:
-  qa:
-    name: qa
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v4
-      - run: pip install black flake8 isort
-      - run: isort --check .
-      - run: black --check .
-      - run: flake8 .
+  # Run CI including downstream packages on self-hosted runners
+  downstream-ci:
+    name: downstream-ci
+    if: ${{ !github.event.pull_request.head.repo.fork && github.event.action != 'labeled' || github.event.label.name == 'approved-for-ci' }}
+    uses: ecmwf-actions/downstream-ci/.github/workflows/downstream-ci.yml@feature/pyflow
+    with:
+      pyflow: ecmwf/pyflow@${{ github.event.pull_request.head.sha || github.sha }}
+      python_qa: true
+    secrets: inherit
 
-  docs:
-    name: docs
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: mamba-org/setup-micromamba@v1
-        with:
-         environment-name: pyflow-docs
-         environment-file: docs/environment.yml
-      - name: Install pyflow and docs
-        shell: bash -l {0}  # required to load conda
-        run: |
-          python -m pip install .
-          cd docs
-          make html
-
-  setup:
-    name: setup
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-      - run: python -m pip install -r requirements.txt
-      - run: python -m pip install .
-  
-  test:
-    name: pytest
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: mamba-org/setup-micromamba@v1
-        with:
-         environment-name: pyflow-test
-         environment-file: environment.yml
-      - name: Install pyflow and test
-        shell: bash -l {0}  # required to load conda
-        run: |
-          python -m pip install .
-          pytest
-
-  notify:
-    name: notify
-    runs-on: ubuntu-20.04
-    needs:
-    - qa
-    - setup
-    - test
-    if: always() && inputs.notify_teams && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop')
-    steps:
-    - name: Notify Teams
-      uses: ecmwf-actions/notify-teams@v1
-      with:
-        incoming_webhook: ${{ secrets.incoming_webhook }}
-        needs_context: ${{ toJSON(needs) }}
+  # Build downstream packages on HPC
+  downstream-ci-hpc:
+    name: downstream-ci-hpc
+    if: ${{ !github.event.pull_request.head.repo.fork && github.event.action != 'labeled' || github.event.label.name == 'approved-for-ci' }}
+    uses: ecmwf-actions/downstream-ci/.github/workflows/downstream-ci-hpc.yml@feature/pyflow
+    with:
+      pyflow: ecmwf/pyflow@${{ github.event.pull_request.head.sha || github.sha }}
+    secrets: inherit

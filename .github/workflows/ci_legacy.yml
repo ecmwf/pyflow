@@ -1,0 +1,75 @@
+name: ci-pyflow
+
+# Controls when the workflow will run
+on:
+  push:
+    branches: [ "master", "develop" ]
+  pull_request:
+    branches: [ "master", "develop" ]
+
+jobs:
+  qa:
+    name: qa
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v4
+      - run: pip install black flake8 isort
+      - run: isort --check .
+      - run: black --check .
+      - run: flake8 .
+
+  docs:
+    name: docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: mamba-org/setup-micromamba@v1
+        with:
+         environment-name: pyflow-docs
+         environment-file: docs/environment.yml
+      - name: Install pyflow and docs
+        shell: bash -l {0}  # required to load conda
+        run: |
+          python -m pip install .
+          cd docs
+          make html
+
+  setup:
+    name: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - run: python -m pip install -r requirements.txt
+      - run: python -m pip install .
+  
+  test:
+    name: pytest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: mamba-org/setup-micromamba@v1
+        with:
+         environment-name: pyflow-test
+         environment-file: environment.yml
+      - name: Install pyflow and test
+        shell: bash -l {0}  # required to load conda
+        run: |
+          python -m pip install .
+          pytest
+
+  notify:
+    name: notify
+    runs-on: ubuntu-20.04
+    needs:
+    - qa
+    - setup
+    - test
+    if: always() && inputs.notify_teams && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop')
+    steps:
+    - name: Notify Teams
+      uses: ecmwf-actions/notify-teams@v1
+      with:
+        incoming_webhook: ${{ secrets.incoming_webhook }}
+        needs_context: ${{ toJSON(needs) }}
