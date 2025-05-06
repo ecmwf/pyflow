@@ -37,6 +37,18 @@ time_values = [
     },
 ]
 
+time_non_supported = [
+    {
+        "time": "0 12 15 * *",
+    },
+    {
+        "time": "0 12 * 1 *",
+    },
+    {
+        "time": "0 12 * * SUN",
+    },
+]
+
 
 @pytest.mark.parametrize("time_value", time_values)
 def test_time(time_value):
@@ -46,6 +58,15 @@ def test_time(time_value):
 
     assert f"time {time_value['definition']}" in str(s.t)
 
+
+@pytest.mark.parametrize("time_value", time_non_supported)
+def test_non_supported_time(time_value):
+    with pyflow.Suite("s") as s:
+        with pyflow.Task("t"):
+                pyflow.Time(time_value["time"])
+
+    with pytest.raises(ValueError):
+        assert s.t
 
 cron_values = [
     {

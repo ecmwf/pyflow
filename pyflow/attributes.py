@@ -134,7 +134,10 @@ class Time(Attribute):
             ecflow_parent.add_time(self.value)
             return
 
-        time = Crontab(self.value)
+        try:
+            time = Crontab(self.value, time_only=True)
+        except AssertionError as exc:
+            raise ValueError(f"Invalid cron-like time format: {self.value}") from exc
         ecflow_parent.add_time(time.generate_time())
 
 
