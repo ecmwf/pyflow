@@ -63,10 +63,11 @@ def test_time(time_value):
 def test_non_supported_time(time_value):
     with pyflow.Suite("s") as s:
         with pyflow.Task("t"):
-                pyflow.Time(time_value["time"])
+            pyflow.Time(time_value["time"])
 
     with pytest.raises(ValueError):
         assert s.t
+
 
 cron_values = [
     {
