@@ -1436,15 +1436,16 @@ class Task(Node):
                 module_lines.append("module load {} &> /dev/null".format(mod))
 
         # Generate the workdir code here, even if it is used later, as it is needed to evaluate the used variables
-        if self.workdir is not None:
+        workdir = self.workdir or self.host.workdir
+        if workdir is not None:
             workdir_lines = []
             if self._clean_workdir:
                 workdir_lines.append(
-                    '[[ -d "{0}" ]] && rm -rf "{0}"'.format(self.workdir)
+                    '[[ -d "{0}" ]] && rm -rf "{0}"'.format(workdir)
                 )
             workdir_lines += [
-                '[[ -d "{0}" ]] || mkdir -p "{0}"'.format(self.workdir),
-                'cd "{}"'.format(self.workdir),
+                '[[ -d "{0}" ]] || mkdir -p "{0}"'.format(workdir),
+                'cd "{}"'.format(workdir),
             ]
         else:
             workdir_lines = []

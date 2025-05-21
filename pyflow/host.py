@@ -61,6 +61,8 @@ class Host:
             and use defaults from server
         submit_arguments(dict): A dictionary of arguments to pass to the scheduler when submitting jobs, which each key
             is a label that can be referenced when creating tasks with the `Host` instance.
+        workdir(str): Work directory for every task executed within the `Host` instance, if not 
+            overriden for a Node.
 
     Example::
 
@@ -87,6 +89,7 @@ class Host:
         ecflow_path=None,
         server_ecfvars=False,
         submit_arguments=None,
+        workdir=None,
     ):
         self.name = name
         self.hostname = hostname or name
@@ -109,6 +112,7 @@ class Host:
         self.module_source = module_source
         self.modules = modules or []
         self.purge_modules = purge_modules
+        self.workdir = workdir
 
         # Limit cannot be build before tree starts being constructed
 
