@@ -1216,7 +1216,8 @@ class Task(Node):
 
         Parameters:
             autolimit(bool): Whether to automatically add the task to the executing hosts limit, if it has one.
-            submit_arguments(dict): Parameters to encode into the script to make the scheduler happy.
+            submit_arguments(dict, str): Job submission arguments, can be passed as a dictionary or a string pointing
+                to an entry in the dictionary given to the host.
             exit_hook(str,list): a script containing some commands to be called at exit time.
             clean_workdir(bool): Whether to ensure that the working directory is empty.+
             script(str,list): The script command or the list of script commands associated with the task.
