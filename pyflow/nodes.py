@@ -1440,9 +1440,7 @@ class Task(Node):
         if workdir is not None:
             workdir_lines = []
             if self._clean_workdir:
-                workdir_lines.append(
-                    '[[ -d "{0}" ]] && rm -rf "{0}"'.format(workdir)
-                )
+                workdir_lines.append('[[ -d "{0}" ]] && rm -rf "{0}"'.format(workdir))
             workdir_lines += [
                 '[[ -d "{0}" ]] || mkdir -p "{0}"'.format(workdir),
                 'cd "{}"'.format(workdir),

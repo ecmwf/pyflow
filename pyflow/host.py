@@ -61,7 +61,7 @@ class Host:
             and use defaults from server
         submit_arguments(dict): A dictionary of arguments to pass to the scheduler when submitting jobs, which each key
             is a label that can be referenced when creating tasks with the `Host` instance.
-        workdir(str): Work directory for every task executed within the `Host` instance, if not 
+        workdir(str): Work directory for every task executed within the `Host` instance, if not
             overriden for a Node.
 
     Example::

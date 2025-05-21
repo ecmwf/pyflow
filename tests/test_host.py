@@ -337,7 +337,10 @@ def test_host_submit_args():
                 "t2",
                 host=host1,
                 script='echo "boom"',
-                submit_arguments={**submit_args["troika"], **{"job_name": "task2_jobname", "gpus": 2}},
+                submit_arguments={
+                    **submit_args["troika"],
+                    **{"job_name": "task2_jobname", "gpus": 2},
+                },
             )
             t3 = pyflow.Task("t3", script='echo "boom"')
 
@@ -364,7 +367,7 @@ def test_host_submit_args():
         "#TROIKA job_name=task2_jobname",
     ]
     check_pragma(t2_script, in_script)
-    
+
     assert "#TROIKA" not in t3_script[0]
     assert "#SBATCH" not in t3_script[0]
 
