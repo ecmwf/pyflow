@@ -11,6 +11,11 @@ class AnchorMixin:
         variables = {}
         variables.update(kwargs)
 
+        if "out" in kwargs:
+            print(
+                f"WARNING! out option is deprecated for nodes, use the log_directory option in the host instead"
+            )
+
         for control_variable in ("files", "include", "home", "out", "extn"):
             if control_variable in kwargs:
                 ecf_var = "ECF_{}".format(control_variable.upper())
@@ -26,13 +31,6 @@ class AnchorMixin:
             and self.suite is not self
         ):
             self.ECF_FILES = self._anchor_new_files_path
-
-        if (
-            "include" not in kwargs
-            and "ECF_INCLUDE" not in kwargs
-            and self.suite is not self
-        ):
-            self.ECF_INCLUDE = self._anchor_new_include_path
 
     @property
     def anchor(self):
@@ -60,11 +58,5 @@ class AnchorMixin:
         """
         return os.path.join(
             self.parent.anchor.files_path,
-            os.path.relpath(self.fullname, self.parent.anchor.fullname),
-        )
-
-    def _anchor_new_include_path(self, unused):
-        return os.path.join(
-            self.parent.anchor.include_path,
             os.path.relpath(self.fullname, self.parent.anchor.fullname),
         )

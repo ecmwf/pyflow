@@ -257,10 +257,10 @@ class Host:
 
     def script_submit_arguments(self, submit_arguments):
         if len(submit_arguments) > 0:
-            warnings.formatwarning = lambda mess, *args, **kwargs: "%s" % mess
             warnings.warn(
-                f"Host {self.__class__.__name__} does not support scheduler submission arguments. "
-                "Submission arguments will be ignored in the script generation \n"
+                f"Host {self.__class__.__name__} does not support scheduler submission arguments. Submission arguments will be ignored in the script generation",
+                UserWarning,
+                stacklevel=2
             )
         return []
 
@@ -1115,8 +1115,10 @@ class TroikaHost(Host):
                     args.append(pragma)
             else:
                 if arg in deprecated:
-                    print(
-                        f"WARNING! '{arg}' is deprecated, use '{deprecated[arg]}' instead"
+                    warnings.warn(
+                        f"WARNING! '{arg}' is deprecated, use '{deprecated[arg]}' instead",
+                        UserWarning,
+                        stacklevel=2
                     )
                     arg = deprecated[arg]
                 if arg is not None:
