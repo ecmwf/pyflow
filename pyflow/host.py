@@ -260,7 +260,7 @@ class Host:
             warnings.formatwarning = lambda mess, *args, **kwargs: "%s" % mess
             warnings.warn(
                 f"Host {self.__class__.__name__} does not support scheduler submission arguments. "
-                "Submission arguments will be ignored in the script generation /n"
+                "Submission arguments will be ignored in the script generation \n"
             )
         return []
 
