@@ -13,7 +13,7 @@ class AnchorMixin:
 
         if "out" in kwargs:
             print(
-                f"WARNING! out option is deprecated for nodes, use the log_directory option in the host instead"
+                "WARNING! out option is deprecated for nodes, use the log_directory option in the host instead"
             )
 
         for control_variable in ("files", "include", "home", "out", "extn"):

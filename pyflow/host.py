@@ -7,7 +7,6 @@ import os
 import pwd
 import shutil
 import textwrap
-import warnings
 
 from .attributes import Label, Limit
 from .base import STACK
@@ -257,10 +256,9 @@ class Host:
 
     def script_submit_arguments(self, submit_arguments):
         if len(submit_arguments) > 0:
-            warnings.warn(
-                f"Host {self.__class__.__name__} does not support scheduler submission arguments. Submission arguments will be ignored in the script generation",
-                UserWarning,
-                stacklevel=2
+            print(
+                f"Host {self.__class__.__name__} does not support scheduler submission arguments. \
+                    Submission arguments will be ignored in the script generation",
             )
         return []
 
@@ -1115,10 +1113,8 @@ class TroikaHost(Host):
                     args.append(pragma)
             else:
                 if arg in deprecated:
-                    warnings.warn(
-                        f"WARNING! '{arg}' is deprecated, use '{deprecated[arg]}' instead",
-                        UserWarning,
-                        stacklevel=2
+                    print(
+                        f"WARNING! '{arg}' is deprecated, use '{deprecated[arg]}' instead"
                     )
                     arg = deprecated[arg]
                 if arg is not None:
