@@ -7,7 +7,6 @@ import os
 import pwd
 import shutil
 import textwrap
-import warnings
 
 from .attributes import Label, Limit
 from .base import STACK
@@ -59,6 +58,10 @@ class Host:
         ecflow_path(str): The directory containing the `ecflow_client` executable.
         server_ecfvars(bool): If true, don't define ECF_JOB_CMD, ECF_KILL_CMD, ECF_STATUS_CMD and ECF_OUT variables
             and use defaults from server
+        submit_arguments(dict): A dictionary of arguments to pass to the scheduler when submitting jobs, which each key
+            is a label that can be referenced when creating tasks with the `Host` instance.
+        workdir(str): Work directory for every task executed within the `Host` instance, if not
+            overriden for a Node.
 
     Example::
 
@@ -84,6 +87,8 @@ class Host:
         user=getpass.getuser(),
         ecflow_path=None,
         server_ecfvars=False,
+        submit_arguments=None,
+        workdir=None,
     ):
         self.name = name
         self.hostname = hostname or name
@@ -106,6 +111,7 @@ class Host:
         self.module_source = module_source
         self.modules = modules or []
         self.purge_modules = purge_modules
+        self.workdir = workdir
 
         # Limit cannot be build before tree starts being constructed
 
@@ -118,6 +124,8 @@ class Host:
         self.ecflow_path = ecflow_path
 
         self.server_ecfvars = server_ecfvars
+
+        self.submit_arguments = submit_arguments or {}
 
     def __str__(self):
         return "{}({})".format(self.__class__.__name__, self.hostname)
@@ -248,12 +256,28 @@ class Host:
 
     def script_submit_arguments(self, submit_arguments):
         if len(submit_arguments) > 0:
-            warnings.formatwarning = lambda mess, *args, **kwargs: "%s" % mess
-            warnings.warn(
-                f"Host {self.__class__.__name__} does not support scheduler submission arguments. "
-                "They will be ignore for script generation"
+            print(
+                f"Host {self.__class__.__name__} does not support scheduler submission arguments. \
+                    Submission arguments will be ignored in the script generation",
             )
         return []
+
+    def get_host_submit_arguments(self, label: str):
+        """
+        Returns the submit arguments for the given label.
+
+        Parameters:
+            label(str): The label to get the submit arguments for.
+
+        Returns:
+            *dict*: The submit arguments for the given label.
+        """
+        try:
+            return self.submit_arguments[label]
+        except KeyError:
+            raise KeyError(
+                f"Label {label} not found in submit arguments for host {self.name}"
+            )
 
     def preamble_init(self, ecflowpath):
         """
@@ -797,6 +821,8 @@ class SLURMHost(SSHHost):
         Returns:
             *list*: The list of script submit arguments.
         """
+        if isinstance(submit_arguments, str):
+            submit_arguments = self.get_host_submit_arguments(submit_arguments)
         args = []
         for key, value in submit_arguments.items():
             args.append("#SBATCH --{}={}".format(key, value))
@@ -915,6 +941,8 @@ class PBSHost(SSHHost):
             *list*: The list of script submit arguments.
         """
 
+        if isinstance(submit_arguments, str):
+            submit_arguments = self.get_host_submit_arguments(submit_arguments)
         args = []
         for key, value in submit_arguments.items():
             args.append("#PBS -l {}={}".format(key, value))
@@ -1069,6 +1097,8 @@ class TroikaHost(Host):
             "sthost": _translate_sthost,
         }
 
+        if isinstance(submit_arguments, str):
+            submit_arguments = self.get_host_submit_arguments(submit_arguments)
         args = []
         for arg, val in submit_arguments.items():
             if arg in special:
