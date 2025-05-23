@@ -31,53 +31,49 @@ Setup
 Conda Environment (Recommended)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For Conda environment, a definition file is provided in the repository root. It will create a suitable environment with all dependencies installed.
+An environment definition file to setup Conda is provided at the root of the **pyflow** repository. 
+The following commands create a suitable environment with all necessary dependencies, including `ecFlow`_:
 
 .. code-block:: shell
 
-   git clone ssh://git@git.ecmwf.int/ecflow/pyflow.git
+   # clone using HTTPS
+   git clone https://github.com/ecmwf/pyflow.git
+   # or, clone using an SSH key
+   git clone git@github.com:ecmwf/pyflow.git
+
    cd pyflow
    conda env create -f environment.yml
    conda activate pyflow
 
-
-ECMWF Environment Modules
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-On ECMWF systems, Environment Modules can be used to switch on relevant packages and make them available for use.
+To install **pyflow** in the Conda environment, simply use :code:`pip`
 
 .. code-block:: shell
 
-   module load python3 ecflow/5 pyflow
-
-
-.. warning::
-
-   Please make sure to also set the following environment variable, so **pyflow** library can be found:
-
-   .. code-block:: shell
-
-      export PYTHONPATH="$PYFLOW_DIR/lib/python3.6/site-packages:$PYTHONPATH"
-
-
-.. todo::
-
-   The need for ``PYTHONPATH`` variable should be handled in the next release of the module.
+   pip install pyflow-workflow-generator
 
 
 Install from Source
 ~~~~~~~~~~~~~~~~~~~
 
-Follow `ecFlow installation instructions`_ and after all steps make sure to set following environment variable to correct paths.
+Follow the `ecFlow installation instructions`_ ensuring that the ecFlow Python interface is enabled (see :code:`ENABLE_PYTHON`).
+After a successful build, perform the ecFlow installation step to place all binary artifacts into an instalation directory.
+Considering :code:`$ECFLOW_DIR` is the installation directory, the ecFlow Python interface is available at
+:code:`$ECFLOW_DIR/lib/python3.XX/site-packages/ecflow/`. 
+
+Ensure the following environment variables are set, and install **pyflow**:
 
 .. code-block:: shell
 
-   export ECFLOW_DIR=/path/to/ecflow
-   git clone ssh://git@git.ecmwf.int/ecflow/pyflow.git
-   cd pyflow
-   pip3 install .
+   export ECFLOW_DIR=/path/to/installation/directory/of/ecflow
 
+   # clone using HTTPS
+   git clone https://github.com/ecmwf/pyflow.git
+   # or, clone using an SSH key
+   git clone git@github.com:ecmwf/pyflow.git
+
+   cd pyflow
+   pip install .
 
 .. _`ecFlow`: https://github.com/ecmwf/ecflow
 .. _`Jupyter Notebook`: https://jupyter.org
-.. _`ecFlow installation instructions`: https://github.com/ecmwf/ecflow#install-from-source
+.. _`ecFlow installation instructions`: https://ecflow.readthedocs.io/en/latest/install/build_from_source.html

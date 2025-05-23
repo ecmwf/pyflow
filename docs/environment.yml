@@ -15,8 +15,8 @@ dependencies:
   - pip:
     - ipykernel
     - nbsphinx
-    - sphinx-rtd-theme==0.5.2
-    - sphinx-copybutton==0.3.1
+    - sphinx-rtd-theme
+    - sphinx-copybutton
     - sphinx-tabs
     - git+https://github.com/ecmwf/pyflow.git
 

@@ -540,6 +540,48 @@ class TestRepeats:
 
         s.check_definition()
 
+    def test_repeat_date_list(self):
+        i = date(year=2019, month=12, day=31)
+        j = date(year=2020, month=1, day=1)
+        k = date(year=2020, month=1, day=3)
+
+        x = "19991231"
+        y = 20000101
+        z = 20000102
+
+        input_tests = (
+            ("A", [i]),
+            ("B", [i, j]),
+            ("C", [i, j, k]),
+            ("D", [x]),
+            ("E", [x, y]),
+            ("F", [x, y, z]),
+            ("G", [i, x, j, y]),
+        )
+
+        with pyflow.Suite("s") as s:
+            for idx, args in enumerate(input_tests):
+                with pyflow.Task(f"t{str(idx)}"):
+                    pyflow.RepeatDateList(*args)
+
+        asserts = (
+            f'repeat datelist A "{i.strftime("%Y%m%d")}"',
+            f'repeat datelist B "{i.strftime("%Y%m%d")}" "{j.strftime("%Y%m%d")}"',
+            f'repeat datelist C "{i.strftime("%Y%m%d")}" "{j.strftime("%Y%m%d")}" "{k.strftime("%Y%m%d")}"',
+            f'repeat datelist D "{x}"',
+            f'repeat datelist E "{x}" "{y}"',
+            f'repeat datelist F "{x}" "{y}" "{z}"',
+            f'repeat datelist G "{i.strftime("%Y%m%d")}" "{x}" "{j.strftime("%Y%m%d")}" "{y}"',
+        )
+
+        print(s.ecflow_definition())
+
+        for a in asserts:
+            print(a)
+            assert a in str(s.ecflow_definition())
+
+        s.check_definition()
+
 
 class TestAviso:
     """A set of tests for Aviso attributes."""
@@ -735,4 +777,4 @@ def test_generated_variables():
 if __name__ == "__main__":
     from os import path
 
-    pytest.main(path.abspath(__file__))
+    pytest.main([path.abspath(__file__)])

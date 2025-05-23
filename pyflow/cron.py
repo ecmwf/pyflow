@@ -110,11 +110,16 @@ def increment(a, b):
 
 
 class Crontab:
-    def __init__(self, cron):
+    def __init__(self, cron, time_only=False):
         minute, hour, day_of_month, month, day_of_week = parse_cron(cron)
         self._day_of_week = _expand(day_of_week)
         self._day_of_month = _expand(day_of_month)
         self._month = _expand(month)
+
+        if time_only:
+            assert self._day_of_week is None, "Day of week not supported"
+            assert self._day_of_month is None, "Day of month not supported"
+            assert self._month is None, "Month not supported"
 
         if minute is None and hour is None:
             ts = ecflow.TimeSeries(
