@@ -77,7 +77,6 @@ DEFAULT_SIGNAL_LIST = [
     61,
     62,
     63,
-    64,
 ]
 
 
