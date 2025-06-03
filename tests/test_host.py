@@ -1,6 +1,7 @@
 import pytest
 
 import pyflow
+import pyflow.host
 
 
 def test_host_task():
@@ -338,6 +339,28 @@ def test_troika_host_options():
         == "%TROIKA:/path/to/troika% -vv -c %TROIKA_CONFIG:/path/to/troika.cfg% kill -u test_user test_host %ECF_JOB%"  # noqa: E501
     )
     assert s.host.troika_version == (2, 1, 3)
+
+
+def test_traps():
+    sigs = [1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 13]
+    with pyflow.Suite("s") as s1:
+        t1 = pyflow.Task(
+            "t1", host=pyflow.TroikaHost("a-host", user="me", trap_signals=sigs)
+        )
+        t2 = pyflow.Task("t2", host=pyflow.TroikaHost("b-host", user="me"))
+
+    signal_list1 = "export SIGNAL_LIST='1 2 3 4 5 6 7 8 10 11 13'\n"
+    signal_list2 = (
+        "export SIGNAL_LIST='"
+        + " ".join(str(s) for s in pyflow.host.DEFAULT_SIGNAL_LIST)
+        + "'\n"
+    )
+
+    s1 = "\n".join(t1.generate_script()[0])
+    s2 = "\n".join(t2.generate_script()[0])
+
+    assert signal_list1 in s1
+    assert signal_list2 in s2
 
 
 if __name__ == "__main__":

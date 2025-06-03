@@ -31,6 +31,54 @@ ecflow_client --complete  # Notify ecFlow of a normal end
 exit 0
 """
 
+DEFAULT_SIGNAL_LIST = [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    10,
+    11,
+    13,
+    24,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60,
+    61,
+    62,
+    63,
+]
+
 
 SSH_COMMAND = "ssh -v -o StrictHostKeyChecking=no"
 
@@ -59,6 +107,7 @@ class Host:
         ecflow_path(str): The directory containing the `ecflow_client` executable.
         server_ecfvars(bool): If true, don't define ECF_JOB_CMD, ECF_KILL_CMD, ECF_STATUS_CMD and ECF_OUT variables
             and use defaults from server
+        trap_signals(list): The list of signals to trap. A default list is used if not set.
 
     Example::
 
@@ -84,6 +133,7 @@ class Host:
         user=getpass.getuser(),
         ecflow_path=None,
         server_ecfvars=False,
+        trap_signals=None,
     ):
         self.name = name
         self.hostname = hostname or name
@@ -118,6 +168,8 @@ class Host:
         self.ecflow_path = ecflow_path
 
         self.server_ecfvars = server_ecfvars
+
+        self.trap_signals = trap_signals or DEFAULT_SIGNAL_LIST
 
     def __str__(self):
         return "{}({})".format(self.__class__.__name__, self.hostname)
@@ -309,6 +361,7 @@ class Host:
                 script += f"    {line}\n"
         script += "}\n\n"
 
+        signal_list = " ".join(str(s) for s in self.trap_signals)
         script += textwrap.dedent(
             (
                 """
@@ -330,7 +383,7 @@ class Host:
 
             # Trap any signal that may cause the script to fail
             # Note: don't trap SIGTERM/SIGCONT for Slurm to properly reach shell children on cancel/timeout
-            export SIGNAL_LIST='1 2 3 4 5 6 7 8 10 11 13 24 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64'
+            export SIGNAL_LIST='%(signal_list)s'
 
             for signal in $SIGNAL_LIST; do
                 trap "ERROR $signal \\"Signal $(kill -l $signal) ($signal) received \\"" $signal
@@ -341,7 +394,7 @@ class Host:
             set -x
             """  # noqa: E501
             )
-            % {"ecf_path": ecflowpath}
+            % {"ecf_path": ecflowpath, "signal_list": signal_list}
         )
         return script
 
@@ -375,6 +428,7 @@ class NullHost(Host):
         ecflow_path(str): The directory containing the `ecflow_client` executable.
         server_ecfvars(bool): If true, don't define ECF_JOB_CMD, ECF_KILL_CMD, ECF_STATUS_CMD and ECF_OUT variables
             and use defaults from server
+        trap_signals(list): The list of signals to trap. A default list is used if not set.
 
     Example::
 
@@ -440,6 +494,7 @@ class LocalHost(Host):
         ecflow_path(str): The directory containing the `ecflow_client` executable.
         server_ecfvars(bool): If true, don't define ECF_JOB_CMD, ECF_KILL_CMD, ECF_STATUS_CMD and ECF_OUT variables
             and use defaults from server
+        trap_signals(list): The list of signals to trap. A default list is used if not set.
 
     Example::
 
@@ -564,6 +619,7 @@ class SSHHost(Host):
         ecflow_path(str): The directory containing the `ecflow_client` executable.
         server_ecfvars(bool): If true, don't define ECF_JOB_CMD, ECF_KILL_CMD, ECF_STATUS_CMD and ECF_OUT variables
             and use defaults from server
+        trap_signals(list): The list of signals to trap. A default list is used if not set.
 
     Example::
 
@@ -954,6 +1010,7 @@ class TroikaHost(Host):
         ecflow_path(str): The directory containing the `ecflow_client` executable.
         server_ecfvars(bool): If true, don't define ECF_JOB_CMD, ECF_KILL_CMD, ECF_STATUS_CMD and ECF_OUT variables
             and use defaults from server
+        trap_signals(list): The list of signals to trap. A default list is used if not set.
 
     Example::
 
