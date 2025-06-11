@@ -2,7 +2,7 @@
 # This does NOT trigger a build of the documentation, this is handled through webhooks.
 name: Read the Docs PR Preview
 on:
-  pull_request_target:
+  pull_request:
     types:
       - opened
       - synchronize
