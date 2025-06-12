@@ -178,6 +178,49 @@ def test_python_script():
 
     assert checkscript == t.script.value
 
+def test_python_script_cmd_args():
+    with pyflow.Suite("s"):
+        with pyflow.Family("f"):
+            s1 = pyflow.PythonScript(
+                textwrap.dedent(
+                """
+                import argparse
+
+                if __name__ == "__main__":
+                    parser = argparse.ArgumentParser(description="Parse for test")
+                    parser.add_argument('--key-1', type=str, required=True, help='key-1')
+                    parser.add_argument('--key-2', type=str, required=True, help='key-2')
+
+                    args = parser.parse_args()
+
+                    print(args.key_1)
+                    print(args.key_2)
+                """),
+                cmd_args={"key-1": "value-1", "key-2": "value-2"},
+                python=3,
+            )
+
+            t = pyflow.Task("t", script=[s1])
+
+    checkscript = textwrap.dedent(
+        """
+        python3 -u --key-1=value-1 --key-2=value-2 - <<EOS
+        import argparse
+
+        if __name__ == "__main__":
+            parser = argparse.ArgumentParser(description="Parse for test")
+            parser.add_argument('--key-1', type=str, required=True, help='key-1')
+            parser.add_argument('--key-2', type=str, required=True, help='key-2')
+
+            args = parser.parse_args()
+
+            print(args.key_1)
+            print(args.key_2)
+        EOS
+        """
+        )
+
+    assert checkscript.strip() == t.script.value.strip()
 
 def test_script_exportables():
     with pyflow.Suite("s"):
