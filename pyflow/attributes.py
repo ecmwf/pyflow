@@ -124,6 +124,10 @@ class Time(Attribute):
 
         pyflow.Time("23:00")          # at next 23:00
         pyflow.Time("0 10-20 * * *")  # every hour between 10 am and 8 pm
+
+    Raises:
+        AssertionError:
+            Cron-like time definition do not support Day of Week, Day of Month or Month.
     """
 
     def __init__(self, value):

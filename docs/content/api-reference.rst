@@ -156,15 +156,25 @@ Repeat
 
 .. autoclass:: pyflow.RepeatDate
 
-.. autoclass:: pyflow.RepeatInteger
+.. _RepeatDateList:
 
-.. autoclass:: pyflow.RepeatEnumerated
-
-.. autoclass:: pyflow.attributes.RepeatString
+.. autoclass:: pyflow.attributes.RepeatDateList
 
 .. _RepeatDay:
 
 .. autoclass:: pyflow.attributes.RepeatDay
+
+.. _RepeatInteger:
+
+.. autoclass:: pyflow.RepeatInteger
+
+.. _RepeatEnumerated:
+
+.. autoclass:: pyflow.RepeatEnumerated
+
+.. _RepeatString:
+
+.. autoclass:: pyflow.attributes.RepeatString
 
 
 Limit
