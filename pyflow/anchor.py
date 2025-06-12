@@ -1,5 +1,4 @@
 import os
-from warnings import warn
 
 
 class AnchorMixin:
