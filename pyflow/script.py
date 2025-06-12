@@ -210,11 +210,13 @@ class PythonScript(Script):
         # Generate command line args from dict
         args = ""
         if len(self.cmd_args) > 0:
-            args = " ".join([f"--{key}={value}" for key, value in self.cmd_args.items()]) + " "
+            args = (
+                " ".join([f"--{key}={value}" for key, value in self.cmd_args.items()])
+                + " "
+            )
 
-        return (
-            [f"python{self.python_version} -u {args}- <<EOS"] + script_body + ["EOS"]
-        )
+        return [f"python{self.python_version} -u {args}- <<EOS"] + script_body + ["EOS"]
+
 
 class DelegatingScript(Script):
     """

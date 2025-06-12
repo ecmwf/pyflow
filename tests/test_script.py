@@ -178,12 +178,13 @@ def test_python_script():
 
     assert checkscript == t.script.value
 
+
 def test_python_script_cmd_args():
     with pyflow.Suite("s"):
         with pyflow.Family("f"):
             s1 = pyflow.PythonScript(
                 textwrap.dedent(
-                """
+                    """
                 import argparse
 
                 if __name__ == "__main__":
@@ -195,13 +196,14 @@ def test_python_script_cmd_args():
 
                     print(args.key_1)
                     print(args.key_2)
-                """),
+                """
+                ),
                 cmd_args={"key-1": "value-1", "key-2": "value-2"},
                 python=3,
             )
             s2 = pyflow.PythonScript(
                 textwrap.dedent(
-                """
+                    """
                 import argparse
 
                 if __name__ == "__main__":
@@ -213,7 +215,8 @@ def test_python_script_cmd_args():
 
                     print(args.key_1)
                     print(args.key_2)
-                """),
+                """
+                ),
                 cmd_args={"key-1": "value-1", "key-2": "value-2"},
                 python=2,
             )
@@ -242,7 +245,7 @@ def test_python_script_cmd_args():
             print(args.key_2)
         EOS
         """
-        )
+    )
 
     checkscript_python2 = textwrap.dedent(
         """
@@ -260,18 +263,19 @@ def test_python_script_cmd_args():
             print(args.key_2)
         EOS
         """
-        )
+    )
 
     checkscript_empty = textwrap.dedent(
         """
         python3 -u - <<EOS
         EOS
         """
-        )
+    )
 
     assert checkscript_python3.strip() == t1.script.value.strip()
     assert checkscript_python2.strip() == t2.script.value.strip()
     assert checkscript_empty.strip() == t3.script.value.strip()
+
 
 def test_script_exportables():
     with pyflow.Suite("s"):
