@@ -195,7 +195,7 @@ class PythonScript(Script):
         pyflow.PythonScript('w1 = "Hello"\\nw2 = "world"\\nprint(f"{w1}, {w2}!")', 3)
     """
 
-    def __init__(self, value=None, cmd_args: dict[str, str] = {}, python=3):
+    def __init__(self, value=None, cmd_args={}, python=3):
         super().__init__(value)
         self.python_version = python
         self.cmd_args = cmd_args
