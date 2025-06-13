@@ -251,12 +251,7 @@ def test_host_kill_cmd(class_name):
 
 def check_pragma(script, pragmas):
     for prag in pragmas:
-        print(prag)
-        check = False
-        for line in script[0]:
-            if prag in line:
-                check = True
-        assert check
+        assert prag in script[0]
 
 
 def test_troika_host():
@@ -317,6 +312,65 @@ def test_troika_host():
         "#TROIKA distribution=test",
     ]
     check_pragma(t2_script, in_script)
+
+
+def test_host_submit_args():
+
+    submit_args = {
+        "troika": {
+            "tasks": 2,  # deprecated option, will be translated to total_tasks
+            "gpus": 1,
+            "sthost": "/foo/bar",
+            "distribution": "test",  # generates TROIKA pragma for recent version of troika, SBATCH for older versions
+        },
+    }
+    host1 = pyflow.TroikaHost(
+        name="test_host",
+        user="test_user",
+        submit_arguments=submit_args,
+        troika_version="2.2.2",
+    )
+
+    with pyflow.Suite("s", host=host1) as s:
+        with pyflow.Family("f"):
+            t1 = pyflow.Task("t1", script='echo "boom"', submit_arguments="troika")
+            t2 = pyflow.Task(
+                "t2",
+                host=host1,
+                script='echo "boom"',
+                submit_arguments={
+                    **submit_args["troika"],
+                    **{"job_name": "task2_jobname", "gpus": 2},
+                },
+            )
+            t3 = pyflow.Task("t3", script='echo "boom"')
+
+    s.check_definition()
+
+    t1_script = t1.generate_script()
+    t2_script = t2.generate_script()
+    t3_script = t3.generate_script()
+
+    in_script = [
+        "#TROIKA total_tasks=2",
+        "#TROIKA gpus=1",
+        "#TROIKA export_vars=STHOST=/foo/bar",
+        "#TROIKA distribution=test",
+    ]
+    check_pragma(t1_script, in_script)
+
+    # check for new versions of troika
+    in_script = [
+        "#TROIKA total_tasks=2",
+        "#TROIKA gpus=2",
+        "#TROIKA export_vars=STHOST=/foo/bar",
+        "#TROIKA distribution=test",
+        "#TROIKA job_name=task2_jobname",
+    ]
+    check_pragma(t2_script, in_script)
+
+    assert "#TROIKA" not in t3_script[0]
+    assert "#SBATCH" not in t3_script[0]
 
 
 def test_troika_host_options():

@@ -11,4 +11,6 @@ dist
 pyflow.slides.html
 course/scratch/*
 docs/_build
-pyflow/_version.py
+_version.py
+.vscode
+.DS_Store

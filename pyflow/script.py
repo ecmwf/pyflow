@@ -195,9 +195,10 @@ class PythonScript(Script):
         pyflow.PythonScript('w1 = "Hello"\\nw2 = "world"\\nprint(f"{w1}, {w2}!")', 3)
     """
 
-    def __init__(self, value=None, python=3):
+    def __init__(self, value=None, cmd_args={}, python=3):
         super().__init__(value)
         self.python_version = python
+        self.cmd_args = cmd_args
 
     def generate_stub(self):
         script_body = super().generate_stub()
@@ -205,9 +206,16 @@ class PythonScript(Script):
             script_body = script_body[1:]
         if script_body[-1] == "":
             script_body = script_body[:-1]
-        return (
-            ["python{} -u - <<EOS".format(self.python_version)] + script_body + ["EOS"]
-        )
+
+        # Generate command line args from dict
+        args = ""
+        if len(self.cmd_args) > 0:
+            args = (
+                " ".join([f"--{key}={value}" for key, value in self.cmd_args.items()])
+                + " "
+            )
+
+        return [f"python{self.python_version} -u {args}- <<EOS"] + script_body + ["EOS"]
 
 
 class DelegatingScript(Script):
