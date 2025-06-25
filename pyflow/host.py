@@ -8,6 +8,8 @@ import pwd
 import shutil
 import textwrap
 
+from . import warn
+from .inspect import get_value_at_caller
 from .attributes import Label, Limit
 from .base import STACK
 from .nodes import DuplicateNodeError, Family, ecflow_name
@@ -307,9 +309,13 @@ class Host:
 
     def script_submit_arguments(self, submit_arguments):
         if len(submit_arguments) > 0:
-            print(
-                f"Host {self.__class__.__name__} does not support scheduler submission arguments. \
-                    Submission arguments will be ignored in the script generation",
+            node = get_value_at_caller("self", 2)
+            name = getattr(node, "name", node)
+            warn(
+                f"Host {self.__class__.__name__} does not support scheduler submission arguments, which "
+                f"will be ignored in the script generation for task {name}. ",
+                UserWarning,
+                stacklevel=0,
             )
         return []
 
@@ -1169,8 +1175,11 @@ class TroikaHost(Host):
                     args.append(pragma)
             else:
                 if arg in deprecated:
-                    print(
-                        f"WARNING! '{arg}' is deprecated, use '{deprecated[arg]}' instead"
+                    node = get_value_at_caller("self", stacklevel=2)
+                    name = getattr(node, "fullname", getattr(node, "name", node))
+                    warn(
+                        f"{name}: {arg}' is deprecated in TroikaHost, use '{deprecated[arg]}' instead",
+                        stacklevel=0,
                     )
                     arg = deprecated[arg]
                 if arg is not None:
