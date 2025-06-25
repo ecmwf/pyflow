@@ -1,5 +1,6 @@
 import os
 
+from . import warn
 
 class AnchorMixin:
     """
@@ -12,8 +13,10 @@ class AnchorMixin:
         variables.update(kwargs)
 
         if "out" in kwargs:
-            print(
-                "WARNING! out option is deprecated for nodes, use the log_directory option in the host instead"
+            warn(
+                "'out' option is deprecated for nodes, use the log_directory option in the host instead",
+                DeprecationWarning,
+                stacklevel=2,
             )
 
         for control_variable in ("files", "include", "home", "out", "extn"):
