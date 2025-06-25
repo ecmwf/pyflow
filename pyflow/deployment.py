@@ -5,6 +5,7 @@ import hashlib
 import os
 import shutil
 
+from pyflow import warn
 from pyflow.html import FileListHTMLWrapper
 
 
@@ -232,7 +233,7 @@ class FileSystem(Deployment):
             try:
                 os.makedirs(path)
             except Exception:
-                print("WARNING: Couldn't create directory: {}".format(path))
+                warn("Couldn't create directory: {}".format(path), stacklevel=0)
 
     def check(self, target):
         """

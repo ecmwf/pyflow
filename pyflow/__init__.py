@@ -2,6 +2,14 @@
 
 from __future__ import absolute_import
 
+import warnings
+
+warnings.formatwarning = (
+    lambda mess, category, filename, lineno, *args: f"\033[93m[{category.__name__}] {filename}:{lineno}\n{mess}\n\033[0m"
+)
+warnings.filterwarnings("default", category=DeprecationWarning)
+warn = warnings.warn
+
 from .attributes import (
     Aviso,
     Complete,
