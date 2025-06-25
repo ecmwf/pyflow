@@ -310,10 +310,10 @@ class Host:
     def script_submit_arguments(self, submit_arguments):
         if len(submit_arguments) > 0:
             node = get_value_at_caller("self", 2)
-            name = getattr(node, "name", node)
+            name = getattr(node, "fullname", getattr(node, "name", node))
             warn(
-                f"Host {self.__class__.__name__} does not support scheduler submission arguments, which "
-                f"will be ignored in the script generation for task {name}. ",
+                f"{name}: Host {self.__class__.__name__} does not support scheduler submission arguments, which "
+                f"will be ignored in the script generation. ",
                 UserWarning,
                 stacklevel=0,
             )
@@ -1179,6 +1179,7 @@ class TroikaHost(Host):
                     name = getattr(node, "fullname", getattr(node, "name", node))
                     warn(
                         f"{name}: {arg}' is deprecated in TroikaHost, use '{deprecated[arg]}' instead",
+                        DeprecationWarning,
                         stacklevel=0,
                     )
                     arg = deprecated[arg]
