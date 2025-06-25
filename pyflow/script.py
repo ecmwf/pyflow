@@ -215,7 +215,7 @@ class PythonScript(Script):
                 + " "
             )
 
-        return [f"python{self.python_version} -u {args}- <<EOS"] + script_body + ["EOS"]
+        return [f"python{self.python_version} -u - {args}<<EOS"] + script_body + ["EOS"]
 
 
 class DelegatingScript(Script):
