@@ -9,9 +9,9 @@ import shutil
 import textwrap
 
 from . import warn
-from .inspect import get_value_at_caller
 from .attributes import Label, Limit
 from .base import STACK
+from .inspect import get_value_at_caller
 from .nodes import DuplicateNodeError, Family, ecflow_name
 
 SET_ECF_VARIABLES = """

@@ -1163,7 +1163,7 @@ class Suite(AnchorMixin, Node):
                 target.deploy_task(t.deploy_path, script, includes)
             except Exception as e:
                 print(f"\nERROR when deploying task: {t.fullname}\n")
-                raise(e)
+                raise (e)
         for f in node.all_families:
             manual = self.generate_stub(f.manual)
             if manual:
