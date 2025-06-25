@@ -231,7 +231,7 @@ def test_python_script_cmd_args():
 
     checkscript_python3 = textwrap.dedent(
         """
-        python3 -u --key-1=value-1 --key-2=value-2 - <<EOS
+        python3 -u - --key-1=value-1 --key-2=value-2 <<EOS
         import argparse
 
         if __name__ == "__main__":
@@ -249,7 +249,7 @@ def test_python_script_cmd_args():
 
     checkscript_python2 = textwrap.dedent(
         """
-        python2 -u --key-1=value-1 --key-2=value-2 - <<EOS
+        python2 -u - --key-1=value-1 --key-2=value-2 <<EOS
         import argparse
 
         if __name__ == "__main__":
