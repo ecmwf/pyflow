@@ -315,7 +315,6 @@ def test_troika_host():
 
 
 def test_host_submit_args():
-
     submit_args = {
         "troika": {
             "tasks": 2,  # deprecated option, will be translated to total_tasks
