@@ -1,6 +1,6 @@
 import datetime
 
-from .attributes import Event, Meter, RepeatDate
+from .attributes import Event, Meter, RepeatDate, Edit, Limit, Variable
 from .base import Root
 from .nodes import Family, Suite, Task
 
@@ -11,7 +11,7 @@ def is_extern_known(ext):
     return ext in KNOWN_EXTERNS
 
 
-def ExternNode(path, tail_cls=Family):
+def ExternNode(path, tail_cls=Family, **args):
     """
     Maps an external node, i.e. a node that is not built from the same repository.
 
@@ -39,7 +39,7 @@ def ExternNode(path, tail_cls=Family):
         cls = Family
 
     with current:
-        return tail_cls(path_cpts[-1], extern=True)
+        return tail_cls(path_cpts[-1], extern=True, **args)
 
 
 def ExternAttribute(path, cls, *args):
@@ -47,6 +47,47 @@ def ExternAttribute(path, cls, *args):
     path, attr = path.split(":")
     with ExternNode(path):
         return cls(attr, *args)
+
+
+def ExternEdit(path):
+    """
+    Maps an external variable (that may also be a repeat)
+
+    Parameters:
+        path(*str*): Path of the external variable.
+
+    Returns:
+        RepeatDate_: An object that corresponds to an external item.
+
+    Example::
+
+        pyflow.ExternYMD('/a/b/c/d:YMD')
+    """
+    KNOWN_EXTERNS.add(path)
+    path, attr = path.split(":")
+    kind = Family if '/' in path[1:] else Suite
+    return ExternNode(path, kind, variables=[Variable(attr, 1), ])
+
+
+def ExternLimit(path):
+    """
+    Maps an external limit.
+
+    Parameters:
+        path(*str*): Path of the item.
+
+    Returns:
+        RepeatDate_: An object that corresponds to an external item.
+
+    Example::
+
+        pyflow.ExternYMD('/a/limits:hpc')
+    """
+    KNOWN_EXTERNS.add(path)
+    node, attr = path.split(":")
+    kind = Family if '/' in path[1:] else Suite
+    # return ExternNode(path, kind, limits=[Limit(attr, 1), ])
+    return ExternAttribute(path, Limit, 1)
 
 
 def ExternYMD(path):
@@ -123,6 +164,24 @@ def Extern(path):
     return ExternNode(path)
 
 
+def ExternSuite(path):
+    """
+    Maps an external suite.
+
+    Parameters:
+        path(str): Path of the external suite.
+
+    Returns:
+        Family_: An object that corresponds to an external suite.
+
+    Example::
+
+        pyflow.ExternSuite('/a')
+    """
+
+    return ExternNode(path, Suite)
+
+
 def ExternFamily(path):
     """
     Maps an external family, i.e. a family that is not built from the same repository.
@@ -138,7 +197,7 @@ def ExternFamily(path):
         pyflow.ExternFamily('/f/g/h/i')
     """
 
-    return ExternNode(path)
+    return ExternNode(path, Family)
 
 
 def ExternTask(path):

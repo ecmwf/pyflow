@@ -4,13 +4,19 @@ import os
 import pytest
 
 from pyflow import (
+    Edit,
     Event,
     ExternEvent,
+    ExternEdit,
     ExternFamily,
+    ExternLimit,
     ExternMeter,
+    ExternSuite,
     ExternTask,
     ExternYMD,
     Family,
+    InLimit,
+    Limit,
     Meter,
     Notebook,
     RepeatDate,
@@ -68,14 +74,17 @@ def test_extern():
 def test_extern_attributes():
     with Suite("s") as s:
         eymd = ExternYMD("/a/b/c/d:YMD")
+        evar = ExternYMD("/a/main:SUITE_START")
+        elimit = ExternLimit("/limits/lim:hpc")
         eevent = ExternEvent("/e/f/g/h:ev")
         emeter = ExternMeter("/g/h/i/j:mt")
 
         Task("t1", YMD=(now, now)).follow = eymd
         Task("t2").triggers = eevent
         Task("t3").triggers = emeter == 10
-
-    # Check that the externs have real types --> will have correct functionality available
+        Task("t4").completes = evar != eymd
+        Task("t5", inlimits= [elimit, ])
+        # Check that the externs have real types --> will have correct functionality available
 
     assert isinstance(eymd, RepeatDate)
     assert eymd.name == "YMD"
@@ -113,6 +122,11 @@ def test_extern_safety():
     with Suite("s"):
         externs.append(ExternTask("/a/b/c/d"))
         externs.append(ExternFamily("/e/f/g/h"))
+        # externs.append(ExternSuite("/limits"))
+        externs.append(ExternLimit("/limits/lim:hpc"))  # OK
+        # externs.append(ExternLimit("/limits:hpc"))  # NOK
+        externs.append(ExternEdit("/a/main:SUITE_START"))
+        # externs.append(ExternEdit("/a:SUITE_START"))      # NOK
 
         with externs[-1]:
             # n.b. should never do this in reality, but trying to break things...
