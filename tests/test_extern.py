@@ -76,6 +76,7 @@ def test_extern_attributes():
         eymd = ExternYMD("/a/b/c/d:YMD")
         evar = ExternYMD("/a/main:SUITE_START")
         elimit = ExternLimit("/limits/lim:hpc")
+        slimit = ExternLimit("/limits:hpc")
         eevent = ExternEvent("/e/f/g/h:ev")
         emeter = ExternMeter("/g/h/i/j:mt")
 
@@ -83,7 +84,7 @@ def test_extern_attributes():
         Task("t2").triggers = eevent
         Task("t3").triggers = emeter == 10
         Task("t4").completes = evar != eymd
-        Task("t5", inlimits= [elimit, ])
+        Task("t5", inlimits= [elimit, slimit ])
         # Check that the externs have real types --> will have correct functionality available
 
     assert isinstance(eymd, RepeatDate)
