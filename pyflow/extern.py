@@ -45,7 +45,8 @@ def ExternNode(path, tail_cls=Family, **args):
 def ExternAttribute(path, cls, *args):
     KNOWN_EXTERNS.add(path)
     path, attr = path.split(":")
-    with ExternNode(path):
+    kind = Family if '/' in path[1:] else Suite
+    with ExternNode(path, kind):
         return cls(attr, *args)
 
 
@@ -64,9 +65,7 @@ def ExternEdit(path):
         pyflow.ExternYMD('/a/b/c/d:YMD')
     """
     KNOWN_EXTERNS.add(path)
-    path, attr = path.split(":")
-    kind = Family if '/' in path[1:] else Suite
-    return ExternNode(path, kind, variables=[Variable(attr, 1), ])
+    return ExternAttribute(path, Variable, 1)  # context manager protocol
 
 
 def ExternLimit(path):
@@ -86,7 +85,6 @@ def ExternLimit(path):
     KNOWN_EXTERNS.add(path)
     node, attr = path.split(":")
     kind = Family if '/' in path[1:] else Suite
-    # return ExternNode(path, kind, limits=[Limit(attr, 1), ])
     return ExternAttribute(path, Limit, 1)
 
 

@@ -72,9 +72,12 @@ def test_extern():
 
 
 def test_extern_attributes():
+    sext = ExternSuite("/limits")  # extern shall not be under a node suite/family/task
+    evar = ExternEdit("/a/main:SUITE_START")
+    svar = ExternEdit("/a:SUITE_START")
+    # svar = ExternEdit("/b:SUITE_START") # OK
     with Suite("s") as s:
         eymd = ExternYMD("/a/b/c/d:YMD")
-        evar = ExternYMD("/a/main:SUITE_START")
         elimit = ExternLimit("/limits/lim:hpc")
         slimit = ExternLimit("/limits:hpc")
         eevent = ExternEvent("/e/f/g/h:ev")
@@ -85,6 +88,8 @@ def test_extern_attributes():
         Task("t3").triggers = emeter == 10
         Task("t4").completes = evar != eymd
         Task("t5", inlimits= [elimit, slimit ])
+        Task("t6").completes = svar != eymd
+        Task("ts").completes = sext.complete
         # Check that the externs have real types --> will have correct functionality available
 
     assert isinstance(eymd, RepeatDate)
@@ -119,15 +124,15 @@ def test_extern_attributes():
 
 def test_extern_safety():
     externs = []
+    externs.append(ExternSuite("/limits"))
+    externs.append(ExternLimit("/limits:hpc"))
+    externs.append(ExternLimit("/limits/lim:hpc"))
+    externs.append(ExternEdit("/a/main:SUITE_START"))
+    externs.append(ExternEdit("/a:SUITE_START"))
 
     with Suite("s"):
         externs.append(ExternTask("/a/b/c/d"))
         externs.append(ExternFamily("/e/f/g/h"))
-        # externs.append(ExternSuite("/limits"))
-        externs.append(ExternLimit("/limits/lim:hpc"))  # OK
-        # externs.append(ExternLimit("/limits:hpc"))  # NOK
-        externs.append(ExternEdit("/a/main:SUITE_START"))
-        # externs.append(ExternEdit("/a:SUITE_START"))      # NOK
 
         with externs[-1]:
             # n.b. should never do this in reality, but trying to break things...
