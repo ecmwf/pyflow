@@ -402,11 +402,11 @@ def test_troika_host_options_no_config():
 
     assert (
         s.ECF_JOB_CMD.value
-        == "%TROIKA:troika% -vv submit -u test_user -o %ECF_JOBOUT% test_host %ECF_JOB%"  # noqa: E501
+        == "%TROIKA:troika% -vv  submit -u test_user -o %ECF_JOBOUT% test_host %ECF_JOB%"  # noqa: E501
     )
     assert (
         s.ECF_KILL_CMD.value
-        == "%TROIKA:troika% -vv kill -u test_user test_host %ECF_JOB%"  # noqa: E501
+        == "%TROIKA:troika% -vv  kill -u test_user test_host %ECF_JOB%"  # noqa: E501
     )
 
 
