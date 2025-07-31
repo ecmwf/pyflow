@@ -395,7 +395,7 @@ def test_troika_host_options_no_config():
     host = pyflow.TroikaHost(
         name="test_host",
         user="test_user",
-        troika_config=False,
+        troika_config=None,
     )
 
     s = pyflow.Suite("s", host=host)
