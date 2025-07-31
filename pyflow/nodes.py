@@ -602,7 +602,9 @@ class Node(Base):
 
         d.auto_add_externs(True)
         for ext in d.externs:
-            assert is_extern_known(ext), "Attempting to add unknown extern reference"
+            assert is_extern_known(
+                ext
+            ), f"Attempting to add unknown extern reference {ext}"
 
         return d
 
