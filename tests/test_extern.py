@@ -6,8 +6,8 @@ import pytest
 from pyflow import (
     Edit,
     Event,
-    ExternEvent,
     ExternEdit,
+    ExternEvent,
     ExternFamily,
     ExternLimit,
     ExternMeter,
