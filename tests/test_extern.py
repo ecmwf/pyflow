@@ -22,6 +22,7 @@ from pyflow import (
     RepeatDate,
     Suite,
     Task,
+    Variable,
 )
 from pyflow.extern import KNOWN_EXTERNS
 
@@ -71,10 +72,16 @@ def test_extern():
     assert excinfo.value.args == ("Attempting to add unknown extern reference",)
 
 
+# @pytest.mark.xfail
+def test_extern_fail():
+    pass
+
 def test_extern_attributes():
     sext = ExternSuite("/limits")  # extern shall not be under a node suite/family/task
     evar = ExternEdit("/a/main:SUITE_START")
     svar = ExternEdit("/a:SUITE_START")
+    limit = ExternLimit("/limits:hpc")  # extern shall not be under a node suite/family/task
+
     # svar = ExternEdit("/b:SUITE_START") # OK
     with Suite("s") as s:
         eymd = ExternYMD("/a/b/c/d:YMD")
@@ -91,6 +98,14 @@ def test_extern_attributes():
         Task("t6").completes = svar != eymd
         Task("ts").completes = sext.complete
         # Check that the externs have real types --> will have correct functionality available
+
+    assert isinstance(elimit, Limit)
+    assert limit.name == "hpc"
+    assert limit.fullname == "/limits:hpc"
+
+    assert isinstance(svar, Variable)
+    assert svar.name == "SUITE_START"
+    assert svar.fullname == "/a:SUITE_START"
 
     assert isinstance(eymd, RepeatDate)
     assert eymd.name == "YMD"

@@ -83,8 +83,6 @@ def ExternLimit(path):
         pyflow.ExternYMD('/a/limits:hpc')
     """
     KNOWN_EXTERNS.add(path)
-    node, attr = path.split(":")
-    kind = Family if '/' in path[1:] else Suite
     return ExternAttribute(path, Limit, 1)
 
 
