@@ -1044,6 +1044,10 @@ class TroikaHost(Host):
     Parameters:
         name(str): The name of the host.
         user(str): The user to use for troika commands to the host.
+        troika_exec(str): The path to the troika executable, defaults to `%TROIKA:troika%`.
+        troika_config(str): The path to the troika configuration file, defaults to `%TROIKA_CONFIG%`.
+            Value False or None will deactivate the config in the command.
+        troika_version(str): The version of the troika executable, defaults to `0.2.3`.
         hostname(str): The hostname of the host, otherwise `name` will be used.
         scratch_directory(str): The path in which tasks will be run, unless otherwise specified.
         log_directory(str): The directory to use for script output. Normally `ECF_HOME`, but may need to be changed on
@@ -1068,24 +1072,26 @@ class TroikaHost(Host):
             pass
     """
 
-    def __init__(self, name, user, **kwargs):
-        self.troika_exec = kwargs.pop("troika_exec", "troika")
-        self.troika_config = kwargs.pop("troika_config", "")
-        self.troika_version = tuple(
-            map(int, kwargs.pop("troika_version", "0.2.1").split("."))
-        )
+    def __init__(
+        self,
+        name,
+        user,
+        troika_exec="%TROIKA:troika%",
+        troika_config="%TROIKA_CONFIG%",
+        troika_version="0.2.3",
+        **kwargs,
+    ):
+        self.troika_exec = troika_exec
+        self.troika_config = troika_config
+        self.troika_version = tuple(map(int, troika_version.split(".")))
         super().__init__(name, user=user, **kwargs)
 
     def troika_command(self, command):
         cmd = " ".join(
             [
-                f"%TROIKA:{self.troika_exec}%",
+                f"{self.troika_exec}",
                 "-vv",
-                (
-                    f"-c %TROIKA_CONFIG:{self.troika_config}%"
-                    if self.troika_config
-                    else ""
-                ),
+                (f"-c {self.troika_config}" if self.troika_config else ""),
                 f"{command}",
                 f"-u {self.user}",
             ]

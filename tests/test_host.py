@@ -256,12 +256,9 @@ def check_pragma(script, pragmas):
 
 def test_troika_host():
     host1 = pyflow.TroikaHost(
-        name="test_host",
-        user="test_user",
+        name="test_host", user="test_user", troika_version="0.2.1"
     )
-    host2 = pyflow.TroikaHost(
-        name="test_host", user="test_user", troika_version="2.2.2"
-    )
+    host2 = pyflow.TroikaHost(name="test_host", user="test_user")
 
     submit_args = {
         "total_tasks": 2,
@@ -284,11 +281,11 @@ def test_troika_host():
 
     assert (
         s.ECF_JOB_CMD.value
-        == "%TROIKA:troika% -vv  submit -u test_user -o %ECF_JOBOUT% test_host %ECF_JOB%"
+        == "%TROIKA:troika% -vv -c %TROIKA_CONFIG% submit -u test_user -o %ECF_JOBOUT% test_host %ECF_JOB%"
     )
     assert (
         s.ECF_KILL_CMD.value
-        == "%TROIKA:troika% -vv  kill -u test_user test_host %ECF_JOB%"
+        == "%TROIKA:troika% -vv -c %TROIKA_CONFIG% kill -u test_user test_host %ECF_JOB%"
     )
 
     t1_script = t1.generate_script()
@@ -385,13 +382,32 @@ def test_troika_host_options():
 
     assert (
         s.ECF_JOB_CMD.value
-        == "%TROIKA:/path/to/troika% -vv -c %TROIKA_CONFIG:/path/to/troika.cfg% submit -u test_user -o %ECF_JOBOUT% test_host %ECF_JOB%"  # noqa: E501
+        == "/path/to/troika -vv -c /path/to/troika.cfg submit -u test_user -o %ECF_JOBOUT% test_host %ECF_JOB%"  # noqa: E501
     )
     assert (
         s.ECF_KILL_CMD.value
-        == "%TROIKA:/path/to/troika% -vv -c %TROIKA_CONFIG:/path/to/troika.cfg% kill -u test_user test_host %ECF_JOB%"  # noqa: E501
+        == "/path/to/troika -vv -c /path/to/troika.cfg kill -u test_user test_host %ECF_JOB%"  # noqa: E501
     )
     assert s.host.troika_version == (2, 1, 3)
+
+
+def test_troika_host_options_no_config():
+    host = pyflow.TroikaHost(
+        name="test_host",
+        user="test_user",
+        troika_config=False,
+    )
+
+    s = pyflow.Suite("s", host=host)
+
+    assert (
+        s.ECF_JOB_CMD.value
+        == "%TROIKA:troika% -vv submit -u test_user -o %ECF_JOBOUT% test_host %ECF_JOB%"  # noqa: E501
+    )
+    assert (
+        s.ECF_KILL_CMD.value
+        == "%TROIKA:troika% -vv kill -u test_user test_host %ECF_JOB%"  # noqa: E501
+    )
 
 
 def test_traps():
