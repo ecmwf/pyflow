@@ -62,7 +62,9 @@ def test_extern():
 
     with pytest.raises(AssertionError) as excinfo:
         s.ecflow_definition()
-    assert excinfo.value.args == ("Attempting to add unknown extern reference /a/b/c/d",)
+    assert excinfo.value.args == (
+        "Attempting to add unknown extern reference /a/b/c/d",
+    )
 
 
 def test_extern_attributes():
