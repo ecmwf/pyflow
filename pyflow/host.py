@@ -201,9 +201,9 @@ class Host:
                     "ECF_KILL_CMD",
                     "ECF_STATUS_CMD",
                     "ECF_CHECK_CMD",
-                    "ECF_OUT"
+                    "ECF_OUT",
                 ],
-                "variables": {**self.extra_variables}
+                "variables": {**self.extra_variables},
             }
         else:
             host_attrs = {
@@ -214,8 +214,8 @@ class Host:
                     "ECF_STATUS_CMD": self.status_cmd,
                     "ECF_CHECK_CMD": self.check_cmd,
                     "ECF_OUT": self.log_directory,
-                    **self.extra_variables
-                }
+                    **self.extra_variables,
+                },
             }
 
         # Update the options with host-specific attributes
