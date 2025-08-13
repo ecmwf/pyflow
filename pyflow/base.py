@@ -22,6 +22,10 @@ class Root:
         pass
 
     @property
+    def repeat(self):
+        return None
+
+    @property
     def host(self):
         return None
 

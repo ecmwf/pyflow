@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import datetime
 import re
 
+from . import warn
 from .anchor import AnchorMixin
 from .base import Base, GenerateError
 from .cron import Crontab
@@ -90,26 +91,6 @@ class Attribute(Base):
         return []
 
     shape = "box"
-
-
-class RepeatDay(Attribute):
-    """
-    An attribute that allows a node to be repeated infinitely.
-
-    Parameters:
-        value(int): The repeat step.
-
-    Example::
-
-        pyflow.attributes.RepeatDay(1)
-    """
-
-    def __init__(self, value):
-        super().__init__("_repeat")
-        self._value = value
-
-    def _build(self, ecflow_parent):
-        ecflow_parent.add_repeat(ecflow.RepeatDay(int(self.value)))
 
 
 class Time(Attribute):
@@ -341,7 +322,49 @@ class Edit:
             Variable(key, val)
 
 
-class RepeatString(Exportable):
+class Repeat(Exportable):
+    """
+    A virtual class that defines a repeat attribute
+    """
+
+    def __init__(self, name, values=None):
+        super().__init__(name, values)
+        if self.parent._repeat is not None:
+            warn(
+                "Overwriting an existing repeat value!",
+                category=UserWarning,
+                stacklevel=2,
+            )
+        self.parent._repeat = self
+        print(self.parent.host)
+        # self.parent._nodes["repeat"] = self
+        # print(self.parent)
+
+    def settings(self):
+        raise NotImplementedError("Subclasses must implement settings()")
+
+
+class RepeatDay(Repeat):
+    """
+    An attribute that allows a node to be repeated infinitely.
+
+    Parameters:
+        value(int): The repeat step.
+
+    Example::
+
+        pyflow.attributes.RepeatDay(1)
+    """
+
+    def __init__(self, value):
+        super().__init__("_repeat")
+        self._value = value
+
+    def _build(self, ecflow_parent):
+        ecflow_parent.add_repeat(ecflow.RepeatDay(int(self.value)))
+
+
+class RepeatString(Repeat):
     """
     An attribute that allows a node to be repeated by a string value.
 
@@ -412,7 +435,7 @@ class RepeatString(Exportable):
         return Sub(self, other)
 
 
-class RepeatEnumerated(Exportable):
+class RepeatEnumerated(Repeat):
     """
     An attribute that allows a node to be repeated by an enumerated list.
 
@@ -447,7 +470,7 @@ class RepeatEnumerated(Exportable):
         return Sub(self, other)
 
 
-class RepeatDateList(Exportable):
+class RepeatDateList(Repeat):
     """
     An attribute that allows a node to be repeated over a list of dates.
 
@@ -489,7 +512,7 @@ class RepeatDateList(Exportable):
         return Sub(self, other)
 
 
-class RepeatInteger(Exportable):
+class RepeatInteger(Repeat):
     """
     An attribute that allows a node to be repeated by an integer range.
 
@@ -527,7 +550,7 @@ class RepeatInteger(Exportable):
         return Sub(self, other)
 
 
-class RepeatDate(Exportable):
+class RepeatDate(Repeat):
     """
     An attribute that allows a node to be repeated by a date value.
 
@@ -712,12 +735,6 @@ class RepeatDateTime(Exportable):
         return Mod(Add(Div(self, 86400), 4), 7)
 
 
-def string_or_enumerated(name, value):
-    if all(isinstance(v, int) for v in value):
-        return RepeatEnumerated(name, value)
-    return RepeatString(name, value)
-
-
 def is_date(value):
     return (
         isinstance(value, (datetime.date, datetime.datetime))
@@ -796,27 +813,7 @@ def make_variable(node, name, value):
 
     with node:
         if isinstance(value, (tuple, list)):
-            if len(value) in [2, 3]:
-                if is_date(value[0]) and is_date(value[1]):
-                    if len(value) == 3:
-                        if isinstance(value[2], int):
-                            return RepeatDate(
-                                name,
-                                as_date(value[0]),
-                                as_date(value[1]),
-                                value[2],
-                            )
-                    else:
-                        return RepeatDate(name, as_date(value[0]), as_date(value[1]), 1)
-
-                if isinstance(value[0], int) and isinstance(value[1], int):
-                    if len(value) == 3:
-                        if isinstance(value[2], int):
-                            return RepeatInteger(name, value[0], value[1], value[2])
-                    else:
-                        return RepeatInteger(name, value[0], value[1], 1)
-
-            return string_or_enumerated(name, value)
+            raise Exception("Repeat attributes must be added after the node creation")
 
         if isinstance(value, (str, int, float)):
             return Variable(name, value)
@@ -1239,26 +1236,26 @@ class Manual(Attribute):
 
 class Follow(_Trigger):
     """
-    An attribute for setting a condition for running the node behind another repeated node which has completed.
+        An attribute for setting a condition for running the node behind another repeated node which has completed.
 
-    Parameters:
-        value(RepeatDate_): The repeat date attribute of the followed node.
+        Parameters:
+            value(RepeatDate_): The repeat date attribute of the followed node.
 
-    Example::
-
-        pyflow.attributes.Follow(pyflow.RepeatDate('REPEAT_DATE',
-                                                   datetime.date(year=2019, month=1, day=1),
-                                                   datetime.date(year=2019, month=12, day=31)))
+        Example::
+    pyflow.RepeatDate('REPEAT_DATE',
+        datetime.date(year=2019, month=1, day=1),
+        datetime.date(year=2019, month=12, day=31))
+            pyflow.attributes.Follow()
     """
 
-    def __init__(self, value):
-        super().__init__("_follow_%s" % (value,), value)
-        if not hasattr(value, "settings"):
-            raise Exception(
-                "Cannot follow a node of type %s (%r)" % (type(value), value)
-            )
-        self.parent[value.name] = value.settings()
-        self._value = value.parent.complete | (self.parent[value.name] < value)
+    def __init__(self, repeat):
+        super().__init__(f"_follow_{repeat.name}")
+        if not isinstance(repeat, Repeat):
+            raise TypeError(f"Follow attribute {self.name} requires a Repeat instance")
+        print(self.parent.name)
+        if self.parent.repeat is None:
+            raise TypeError(f"Follow attribute {self.name} requires a parent repeat")
+        self._value = repeat.parent.complete | (self.parent.repeat < repeat)
 
 
 ###################################################################

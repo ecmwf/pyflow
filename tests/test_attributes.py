@@ -5,6 +5,7 @@ from datetime import date, datetime, timedelta
 import pytest
 
 import pyflow
+from build.lib.pyflow.attributes import RepeatDate
 from pyflow.base import GenerateError
 
 
@@ -305,8 +306,12 @@ class TestRepeats:
 
     def test_combined_string_repeats(self):
         with pyflow.Suite("s") as s:
-            t1 = pyflow.Task("t1", YMD=["20170101", "20180101"])
-            t2 = pyflow.Task("t2", YMD=["20170101", "20180101"])
+            t1 = pyflow.Task("t1")
+            with t1:
+                RepeatDate("YMD", "20170101", "20180101")
+            t2 = pyflow.Task("t2")
+            with t2:
+                RepeatDate("YMD", "20170101", "20180101")
         t2.triggers = t1.YMD >= t2.YMD
         assert str(t2.triggers.value) == "(/s/t1:YMD ge /s/t2:YMD)"
 
