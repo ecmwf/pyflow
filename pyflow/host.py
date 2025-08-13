@@ -190,14 +190,26 @@ class Host:
     def ecflow_variables(self):
         """*dict*: The variables that must be set on relevant nodes to run on this host."""
         if self.server_ecfvars:
-            vars = {}
+            vars = {
+                "generated_variables": [
+                    "ECF_JOB_CMD",
+                    "ECF_KILL_CMD",
+                    "ECF_STATUS_CMD",
+                    "ECF_CHECK_CMD",
+                    "ECF_OUT"
+                ],
+                "variables": {**self.extra_variables}
+            }
         else:
             vars = {
-                "ECF_JOB_CMD": self.job_cmd,
-                "ECF_KILL_CMD": self.kill_cmd,
-                "ECF_STATUS_CMD": self.status_cmd,
-                "ECF_CHECK_CMD": self.check_cmd,
-                "ECF_OUT": self.log_directory,
+                "variables": {
+                    "ECF_JOB_CMD": self.job_cmd,
+                    "ECF_KILL_CMD": self.kill_cmd,
+                    "ECF_STATUS_CMD": self.status_cmd,
+                    "ECF_CHECK_CMD": self.check_cmd,
+                    "ECF_OUT": self.log_directory,
+                    **self.extra_variables
+                }
             }
         vars.update(self.extra_variables)
         return vars
