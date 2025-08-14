@@ -12,7 +12,7 @@ def is_extern_known(ext):
     return ext in KNOWN_EXTERNS
 
 
-def ExternNode(path, tail_cls=Family, **args):
+def ExternNode(path, tail_cls=Family):
     """
     Maps an external node, i.e. a node that is not built from the same repository.
 
@@ -40,10 +40,10 @@ def ExternNode(path, tail_cls=Family, **args):
         cls = Family
 
     with current:
-        return tail_cls(path_cpts[-1], extern=True, **args)
+        return tail_cls(path_cpts[-1], extern=True)
 
 
-def ExternAttribute(path, cls=Attribute, *args):
+def ExternAttribute(path, cls, *args):
     KNOWN_EXTERNS.add(path)
     path, attr = path.split(":")
     kind = Family if "/" in path[1:] else Suite
@@ -59,13 +59,12 @@ def ExternVariable(path):
         path(*str*): Path of the item.
 
     Returns:
-        Variable: An object that corresponds to an external variable.
+        Variable_: An object that corresponds to an external variable.
 
     Example::
 
-        pyflow.ExternYMD('/a/b:var')
+        pyflow.ExternVariable('/a/b:var')
     """
-    KNOWN_EXTERNS.add(path)
     return ExternAttribute(path, Variable, 1)
 
 
@@ -77,13 +76,12 @@ def ExternLimit(path):
         path(*str*): Path of the item.
 
     Returns:
-        RepeatDate_: An object that corresponds to an external item.
+        Limit_: An object that corresponds to an external item.
 
     Example::
 
-        pyflow.ExternYMD('/a/limits:hpc')
+        pyflow.ExternLimit('/a/limits:hpc')
     """
-    KNOWN_EXTERNS.add(path)
     return ExternAttribute(path, Limit, 1)
 
 
@@ -195,7 +193,7 @@ def ExternSuite(path):
         path(str): Path of the external suite.
 
     Returns:
-        Family_: An object that corresponds to an external suite.
+       Suite_: An object that corresponds to an external suite.
 
     Example::
 

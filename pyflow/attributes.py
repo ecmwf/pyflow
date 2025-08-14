@@ -337,9 +337,6 @@ class Repeat(Exportable):
             )
         self.parent._repeat = self  # set the repeat at the node level
 
-    def settings(self):
-        raise NotImplementedError("Subclasses must implement settings()")
-
 
 class RepeatDay(Repeat):
     """
@@ -457,9 +454,6 @@ class RepeatEnumerated(Repeat):
         """*list*: The list of enumerated values."""
         return [str(x) for x in self.value]
 
-    def settings(self):
-        return self.value
-
     def __add__(self, other):
         return Add(self, other)
 
@@ -498,9 +492,6 @@ class RepeatDateList(Repeat):
         # Convert all values to integers
         v = [int(x) for x in v]
         return v
-
-    def settings(self):
-        return self.value
 
     def __add__(self, other):
         return Add(self, other)
@@ -600,9 +591,6 @@ class RepeatDate(Repeat):
             result = Sub(self.julian, other.julian)
         return result
 
-    def settings(self):
-        return self._start, self._end, self._increment
-
     @property
     def julian(self):
         """*int*: The Julian date of the repeat date."""
@@ -700,9 +688,6 @@ class RepeatDateTime(Exportable):
 
     def __sub__(self, other):
         return Sub(self, other)
-
-    def settings(self):
-        return self._start, self._end, self._increment
 
     def _delta_to_string(self, delta):
         # there is no strftime for timedelta so we make our own
