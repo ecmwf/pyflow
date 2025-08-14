@@ -1,6 +1,6 @@
 import datetime
 
-from pyflow import Notebook, RepeatDate, Suite, Task
+from pyflow import Notebook, RepeatDate, Suite, Task, Family
 
 now = datetime.datetime.now()
 
@@ -8,22 +8,31 @@ now = datetime.datetime.now()
 def test_follow():
     with Suite("s") as s:
         with Task("t1") as t1:
-            r1 = RepeatDate("YMD", now, now)
-        with Task("t2") as t2:
-            RepeatDate("YMD", now, now)
-        t3 = Task("t3")
-        with t3:
-            RepeatDate("YMD", now, now)
+            r1 = RepeatDate("YMD1", now, now)
+        with Family("f1") as f1:
+            f1.repeat = (RepeatDate, "YMD2", now, now)
+            t2 = Task("t2")
+        t3 = Task("t3", repeat=(RepeatDate, "YMD3", now, now))
 
-        t2.triggers = t1.complete
         t2.follow = r1
-        t3.follow = t2.repeat
+        t3.follow = t2
 
-    print(s)
     s.check_definition()
     s.generate_node()
 
     s.deploy_suite(target=Notebook)
+    print(s)
+    print(t3.repeat)
+    print(str(t2.triggers))
+    print(str(t3.triggers))
+    assert (
+        str(t2.triggers) ==
+        "Triggers<  task t2\n    trigger ../t1 eq complete or ../f1:YMD2 lt ../t1:YMD1\n>"
+    )
+    assert (
+        str(t3.triggers) ==
+        "Triggers<  task t3\n    trigger f1/t2 eq complete or t3:YMD3 lt f1:YMD2\n    repeat date YMD3 20250814 20250814 1\n>"
+    )
 
 
 if __name__ == "__main__":

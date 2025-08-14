@@ -335,10 +335,7 @@ class Repeat(Exportable):
                 category=UserWarning,
                 stacklevel=2,
             )
-        self.parent._repeat = self
-        print(self.parent.host)
-        # self.parent._nodes["repeat"] = self
-        # print(self.parent)
+        self.parent._repeat = self  # set the repeat at the node level
 
     def settings(self):
         raise NotImplementedError("Subclasses must implement settings()")
@@ -445,7 +442,7 @@ class RepeatEnumerated(Repeat):
 
     Example::
 
-        pyflow.RepeatEnumerated("REPEAT_STRING", ["a", "b", "c", "d", "e"])
+        pyflow.RepeatEnumerated("REPEAT_STRING", [1, 3, 4, 5])
     """
 
     def __init__(self, name, value):
@@ -1239,7 +1236,7 @@ class Follow(_Trigger):
         An attribute for setting a condition for running the node behind another repeated node which has completed.
 
         Parameters:
-            value(RepeatDate_): The repeat date attribute of the followed node.
+            value(Repeat_ or Node_): The repeat attribute of the followed node or the followed node.
 
         Example::
     pyflow.RepeatDate('REPEAT_DATE',
@@ -1248,14 +1245,22 @@ class Follow(_Trigger):
             pyflow.attributes.Follow()
     """
 
-    def __init__(self, repeat):
-        super().__init__(f"_follow_{repeat.name}")
-        if not isinstance(repeat, Repeat):
-            raise TypeError(f"Follow attribute {self.name} requires a Repeat instance")
-        print(self.parent.name)
-        if self.parent.repeat is None:
-            raise TypeError(f"Follow attribute {self.name} requires a parent repeat")
-        self._value = repeat.parent.complete | (self.parent.repeat < repeat)
+    def __init__(self, value):
+        super().__init__(f"_follow_{value.name}")
+        from .nodes import Node  # yeah it's bad but there's a circular import
+
+        if isinstance(value, Node):
+            parent = value
+            repeat = value.repeat
+        elif isinstance(value, Repeat):
+            parent = value.parent
+            repeat = value
+        else:
+            raise TypeError(f"Follow attribute {self.name} requires a Repeat or a Node instance")
+
+        if repeat is None:
+            raise TypeError(f"Follow attribute {self.name} requires a repeat")
+        self._value = parent.complete | (self.parent.repeat < repeat)
 
 
 ###################################################################

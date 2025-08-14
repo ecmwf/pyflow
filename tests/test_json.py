@@ -9,10 +9,10 @@ def test_json():
         x = json.loads(f.read())
 
     s = Suite("s", json=x)
+    print(s)
 
     s.check_definition()
     s.generate_node()
-
 
 if __name__ == "__main__":
     import pytest

@@ -14,6 +14,7 @@ from pyflow import (
     Tasks,
     Trigger,
     Variable,
+    RepeatEnumerated
 )
 
 
@@ -22,7 +23,7 @@ def test_suite():
         Limit("foo", 1)
         Limit("bar", 2)
 
-        with Family("f", BAR=[1, 2, 3]):
+        with Family("f", repeat=(RepeatEnumerated, "BAR", [1, 2, 3])):
             Task("t1")
             Task("t2")
             Task("t3").triggers = (s.f.t1 == "complete") | "2 < 8"
@@ -30,7 +31,7 @@ def test_suite():
         with Family("g") as g:
             InLimit("foo")
 
-            g.QUUX = [1, 2]
+            RepeatEnumerated("QUUX", [1, 2])
             Task("t4").triggers = s.f.t1 == "aborted"
 
             with Task("t5"):

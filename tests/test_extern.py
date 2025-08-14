@@ -29,7 +29,7 @@ now = datetime.datetime.now()
 
 def test_extern():
     with Suite("s") as s:
-        t1 = Task("t1", YMD=(now, now))
+        t1 = Task("t1", repeat=(RepeatDate, "YMD", now, now))
 
         et = ExternTask("/a/b/c/d")
         ef = ExternFamily("/f/g/h/i")
@@ -97,7 +97,7 @@ def test_extern_attributes():
         eevent = ExternEvent("/e/f/g/h:ev")
         emeter = ExternMeter("/g/h/i/j:mt")
 
-        t1 = Task("t1", repeat=RepeatDate("YMD", now, now))
+        t1 = Task("t1", repeat=(RepeatDate, "YMD", now, now))
         t1.follow = eymd
         Task("t2").triggers = eevent
         Task("t3").triggers = emeter == 10
