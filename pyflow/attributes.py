@@ -1238,13 +1238,12 @@ class Follow(_Trigger):
         An attribute for setting a condition for running the node behind another repeated node which has completed.
 
         Parameters:
-            value(Repeat_ or Node_): The repeat attribute of the followed node or the followed node.
+            value(Repeat_ or Node_): The followed node or the repeat attribute of the followed node.
 
         Example::
-    pyflow.RepeatDate('REPEAT_DATE',
-        datetime.date(year=2019, month=1, day=1),
-        datetime.date(year=2019, month=12, day=31))
-            pyflow.attributes.Follow()
+            t1 = Task("t1", repeat=(RepeatEnumerated, "NUM", [1, 2, 3]))
+            t2 = Task("t2", repeat=(RepeatEnumerated, "NUM", [1, 2, 3]))
+            t2.follow = t1
     """
 
     def __init__(self, value):
