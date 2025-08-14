@@ -1238,7 +1238,7 @@ class Follow(_Trigger):
     An attribute for setting a condition for running the node behind another repeated node which has completed.
 
     Parameters:
-        value(Repeat_ or Node_): The followed node or the repeat attribute of the followed node.
+        value(Repeat_ or Task_ or Family_ or Suite_): The followed node or the repeat attribute of the followed node.
 
     Example::
         t1 = Task("t1", repeat=(RepeatEnumerated, "NUM", [1, 2, 3]))
