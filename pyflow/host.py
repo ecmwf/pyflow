@@ -221,11 +221,11 @@ class Host:
         # Update the options with host-specific attributes
         for attribute, values in host_attrs.items():
             if attribute in ["variables"]:
-                variables = options.pop("variables", {})
+                variables = options.pop(attribute, {})
                 values.update(variables)
                 options[attribute] = values
             elif attribute in ["generated_variables"]:
-                gen_variables = options.pop("generated_variables", [])
+                gen_variables = options.pop(attribute, [])
                 values += gen_variables
                 options[attribute] = values
             else:
