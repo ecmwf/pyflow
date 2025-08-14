@@ -1,7 +1,7 @@
 import datetime
 
 from . import warn
-from .attributes import Attribute, Event, Limit, Meter, Repeat, RepeatDate, Variable
+from .attributes import Event, Limit, Meter, Repeat, RepeatDate, Variable
 from .base import Root
 from .nodes import Family, Suite, Task
 
