@@ -1235,15 +1235,15 @@ class Manual(Attribute):
 
 class Follow(_Trigger):
     """
-        An attribute for setting a condition for running the node behind another repeated node which has completed.
+    An attribute for setting a condition for running the node behind another repeated node which has completed.
 
-        Parameters:
-            value(Repeat_ or Node_): The followed node or the repeat attribute of the followed node.
+    Parameters:
+        value(Repeat_ or Node_): The followed node or the repeat attribute of the followed node.
 
-        Example::
-            t1 = Task("t1", repeat=(RepeatEnumerated, "NUM", [1, 2, 3]))
-            t2 = Task("t2", repeat=(RepeatEnumerated, "NUM", [1, 2, 3]))
-            t2.follow = t1
+    Example::
+        t1 = Task("t1", repeat=(RepeatEnumerated, "NUM", [1, 2, 3]))
+        t2 = Task("t2", repeat=(RepeatEnumerated, "NUM", [1, 2, 3]))
+        t2.follow = t1
     """
 
     def __init__(self, value):
