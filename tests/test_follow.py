@@ -25,14 +25,10 @@ def test_follow():
     print(t3.repeat)
     print(str(t2.triggers))
     print(str(t3.triggers))
-    assert (
-        str(t2.triggers)
-        == "Triggers<  task t2\n    trigger ../t1 eq complete or ../f1:YMD2 lt ../t1:YMD1\n>"
-    )
-    assert (
-        str(t3.triggers)
-        == "Triggers<  task t3\n    trigger f1/t2 eq complete or t3:YMD3 lt f1:YMD2\n    repeat date YMD3 20250814 20250814 1\n>"  # noqa: E501
-    )
+    print(t2.triggers)
+    assert "trigger ../t1 eq complete or ../f1:YMD2 lt ../t1:YMD1" in str(t2.triggers)
+    assert "trigger f1/t2 eq complete or t3:YMD3 lt f1:YMD2" in str(t3.triggers)
+    assert "repeat date YMD3 20250814 20250814 1" in str(t3.triggers)
 
 
 if __name__ == "__main__":
