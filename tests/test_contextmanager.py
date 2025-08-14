@@ -9,12 +9,12 @@ from pyflow import (
     Label,
     Limit,
     Meter,
+    RepeatEnumerated,
     Suite,
     Task,
     Tasks,
     Trigger,
     Variable,
-    RepeatEnumerated
 )
 
 
@@ -28,7 +28,7 @@ def test_suite():
             Task("t2")
             Task("t3").triggers = (s.f.t1 == "complete") | "2 < 8"
 
-        with Family("g") as g:
+        with Family("g"):
             InLimit("foo")
 
             RepeatEnumerated("QUUX", [1, 2])

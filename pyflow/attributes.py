@@ -810,7 +810,9 @@ def make_variable(node, name, value):
 
     with node:
         if isinstance(value, (tuple, list)):
-            raise Exception("Repeat attributes must be added after the node creation")
+            raise Exception(
+                "Repeat construction through a list is not supported anymore"
+            )
 
         if isinstance(value, (str, int, float)):
             return Variable(name, value)
@@ -1256,7 +1258,9 @@ class Follow(_Trigger):
             parent = value.parent
             repeat = value
         else:
-            raise TypeError(f"Follow attribute {self.name} requires a Repeat or a Node instance")
+            raise TypeError(
+                f"Follow attribute {self.name} requires a Repeat or a Node instance"
+            )
 
         if repeat is None:
             raise TypeError(f"Follow attribute {self.name} requires a repeat")

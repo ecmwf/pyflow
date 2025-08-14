@@ -5,7 +5,6 @@ from datetime import date, datetime, timedelta
 import pytest
 
 import pyflow
-from build.lib.pyflow.attributes import RepeatDate
 from pyflow.base import GenerateError
 
 
@@ -277,9 +276,11 @@ def test_date():
     assert "date *.*.3" in str(s.ecflow_definition())
 
     with pyflow.Suite("s") as s:
-        t1 = pyflow.Task("t1", repeat=(pyflow.RepeatString, "DATE", ["20180105", "20180206"]))
+        t1 = pyflow.Task(
+            "t1", repeat=(pyflow.RepeatString, "DATE", ["20180105", "20180206"])
+        )
 
-    assert t1.DATE.value == ['20180105', '20180206']
+    assert t1.DATE.value == ["20180105", "20180206"]
     assert 'repeat string DATE "20180105" "20180206"' in str(s.ecflow_definition())
 
 
@@ -289,7 +290,9 @@ class TestRepeats:
     def test_string_repeat(self):
         with pyflow.Suite("s") as s:
             with pyflow.Family("f1") as f1:
-                pyflow.RepeatString("STRING_REPEAT", [str(v) for v in reversed(range(10))])
+                pyflow.RepeatString(
+                    "STRING_REPEAT", [str(v) for v in reversed(range(10))]
+                )
 
                 t1 = pyflow.Task("t1")
                 t1.triggers = (f1.STRING_REPEAT == "7") & (f1.STRING_REPEAT == 3)
@@ -306,8 +309,12 @@ class TestRepeats:
 
     def test_combined_string_repeats(self):
         with pyflow.Suite("s") as s:
-            t1 = pyflow.Task("t1", repeat=(pyflow.RepeatDate, "YMD", "20170101", "20180101"))
-            t2 = pyflow.Task("t2", repeat=(pyflow.RepeatDate, "YMD", "20170101", "20180101"))
+            t1 = pyflow.Task(
+                "t1", repeat=(pyflow.RepeatDate, "YMD", "20170101", "20180101")
+            )
+            t2 = pyflow.Task(
+                "t2", repeat=(pyflow.RepeatDate, "YMD", "20170101", "20180101")
+            )
         t2.triggers = t1.YMD >= t2.repeat
         assert str(t2.triggers.value) == "(/s/t1:YMD ge /s/t2:YMD)"
 
@@ -385,7 +392,9 @@ class TestRepeats:
     def test_date_datetime_repeat(self):
         with pyflow.Suite("s") as s:
             with pyflow.Family("f4") as f4:
-                pyflow.RepeatDateTime("DATE_REPEAT", datetime(2018, 1, 1), datetime(2019, 12, 31))
+                pyflow.RepeatDateTime(
+                    "DATE_REPEAT", datetime(2018, 1, 1), datetime(2019, 12, 31)
+                )
 
                 t4 = pyflow.Task("t4")
                 t4.triggers = (f4.DATE_REPEAT >= "20180301") & (

@@ -2,7 +2,7 @@ import datetime
 
 import pytest
 
-from pyflow import Family, Suite, Task, RepeatString, RepeatDate
+from pyflow import Family, RepeatDate, RepeatString, Suite, Task
 from pyflow.base import GenerateError
 
 

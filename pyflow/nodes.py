@@ -320,7 +320,7 @@ class Node(Base):
         if self._repeat is not None:
             return self._repeat
         return self.parent.repeat
-    
+
     @repeat.setter
     def repeat(self, value):
         if not isinstance(value, (list, tuple)):

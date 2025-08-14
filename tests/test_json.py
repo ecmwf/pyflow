@@ -14,6 +14,7 @@ def test_json():
     s.check_definition()
     s.generate_node()
 
+
 if __name__ == "__main__":
     import pytest
 
