@@ -76,11 +76,6 @@ def test_extern():
     )
 
 
-# @pytest.mark.xfail
-def test_extern_fail():
-    pass
-
-
 def test_extern_attributes():
     sext = ExternSuite("/limits")  # extern shall not be under a node suite/family/task
     evar = ExternVariable("/a/main:SUITE_START")

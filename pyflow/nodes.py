@@ -172,8 +172,7 @@ class Node(Base):
         # If we have changed the host, then set the relevant directories
         self._host = host
         if host is not None:
-            for variable_name, variable_val in host.ecflow_variables.items():
-                kwargs.setdefault(variable_name, variable_val)
+            host.update_node_attributes(kwargs)
 
             # If we have set/changed the host, then add a label as decided by the Host object
             with self:

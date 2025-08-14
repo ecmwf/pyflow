@@ -186,21 +186,52 @@ class Host:
     def __repr__(self):
         return str(self)
 
-    @property
-    def ecflow_variables(self):
-        """*dict*: The variables that must be set on relevant nodes to run on this host."""
+    def update_node_attributes(self, options):
+        """
+        Updates the attributes of a node with the host-specific values.
+
+        Parameters:
+        - options (dict): The options dictionary to update with host-specific attributes.
+        """
         if self.server_ecfvars:
-            vars = {}
-        else:
-            vars = {
-                "ECF_JOB_CMD": self.job_cmd,
-                "ECF_KILL_CMD": self.kill_cmd,
-                "ECF_STATUS_CMD": self.status_cmd,
-                "ECF_CHECK_CMD": self.check_cmd,
-                "ECF_OUT": self.log_directory,
+            # Use generated variables to be able to export the variables in tasks
+            host_attrs = {
+                "generated_variables": [
+                    "ECF_JOB_CMD",
+                    "ECF_KILL_CMD",
+                    "ECF_STATUS_CMD",
+                    "ECF_CHECK_CMD",
+                    "ECF_OUT",
+                ],
+                "variables": {**self.extra_variables},
             }
-        vars.update(self.extra_variables)
-        return vars
+        else:
+            host_attrs = {
+                "generated_variables": [],
+                "variables": {
+                    "ECF_JOB_CMD": self.job_cmd,
+                    "ECF_KILL_CMD": self.kill_cmd,
+                    "ECF_STATUS_CMD": self.status_cmd,
+                    "ECF_CHECK_CMD": self.check_cmd,
+                    "ECF_OUT": self.log_directory,
+                    **self.extra_variables,
+                },
+            }
+
+        # Update the options with host-specific attributes
+        for attribute, values in host_attrs.items():
+            if attribute in ["variables"]:
+                variables = options.pop(attribute, {})
+                values.update(variables)
+                options[attribute] = values
+            elif attribute in ["generated_variables"]:
+                gen_variables = options.pop(attribute, [])
+                values += gen_variables
+                options[attribute] = values
+            else:
+                raise Exception("Unknown attribute: {}".format(attribute))
+
+        return options
 
     @property
     def job_cmd(self):
@@ -469,10 +500,8 @@ class NullHost(Host):
         kwargs.setdefault("limit", None)
         super().__init__("null", **kwargs)
 
-    @property
-    def ecflow_variables(self):
-        """*dict*: The variables that must be set on relevant nodes to run on this host, always empty."""
-        return {}
+    def update_node_attributes(self, options):
+        return options
 
     def host_preamble(self, exit_hook=None):
         """
