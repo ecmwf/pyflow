@@ -55,7 +55,6 @@ class NodeAdder:
         self.add(other)
 
     def _create(self, other):
-
         result = []
         if other is None:
             return result
