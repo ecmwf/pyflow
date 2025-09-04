@@ -2,7 +2,8 @@ import datetime
 
 from pyflow import Family, Notebook, RepeatDate, Suite, Task
 
-now = datetime.datetime.now()
+# Use a date object, not the datetime.date descriptor method
+now = datetime.date(2025, 8, 14)
 
 
 def test_follow():
