@@ -264,7 +264,7 @@ def test_troika_host():
     )
 
     submit_args = {
-        "tasks": 2,  # deprecated option, will be translated to total_tasks
+        "total_tasks": 2,
         "gpus": 1,
         "sthost": "/foo/bar",
         "distribution": "test",  # generates TROIKA pragma for recent version of troika, SBATCH for older versions
@@ -317,7 +317,7 @@ def test_troika_host():
 def test_host_submit_args():
     submit_args = {
         "troika": {
-            "tasks": 2,  # deprecated option, will be translated to total_tasks
+            "total_tasks": 2,
             "gpus": 1,
             "sthost": "/foo/bar",
             "distribution": "test",  # generates TROIKA pragma for recent version of troika, SBATCH for older versions

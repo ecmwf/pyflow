@@ -1,6 +1,7 @@
 import datetime
 
-from .attributes import Event, Meter, RepeatDate
+from . import warn
+from .attributes import Event, Limit, Meter, Repeat, RepeatDate, Variable
 from .base import Root
 from .nodes import Family, Suite, Task
 
@@ -45,8 +46,63 @@ def ExternNode(path, tail_cls=Family):
 def ExternAttribute(path, cls, *args):
     KNOWN_EXTERNS.add(path)
     path, attr = path.split(":")
-    with ExternNode(path):
+    kind = Family if "/" in path[1:] else Suite
+    with ExternNode(path, kind):
         return cls(attr, *args)
+
+
+def ExternVariable(path):
+    """
+    Maps an external variable.
+
+    Parameters:
+        path(*str*): Path of the item.
+
+    Returns:
+        Variable_: An object that corresponds to an external variable.
+
+    Example::
+
+        pyflow.ExternVariable('/a/b:var')
+    """
+    return ExternAttribute(path, Variable, 1)
+
+
+def ExternLimit(path):
+    """
+    Maps an external limit.
+
+    Parameters:
+        path(*str*): Path of the item.
+
+    Returns:
+        Limit_: An object that corresponds to an external item.
+
+    Example::
+
+        pyflow.ExternLimit('/a/limits:hpc')
+    """
+    return ExternAttribute(path, Limit, 1)
+
+
+def ExternRepeat(path):
+    """
+    Maps an external repeat, i.e. a repeat that is not built from the same repository.
+    Cannot be a generic attribute as the repeat can be used with the follow() approach,
+    which requires an object of type Repeat.
+
+    Parameters:
+        path(*str*): Path of the external repeat.
+
+    Returns:
+        RepeatDate_: An object that corresponds to an external repeat.
+
+    Example::
+
+        pyflow.ExternRepeat('/a/b/c/d:YMD')
+    """
+
+    return ExternAttribute(path, Repeat)
 
 
 def ExternYMD(path):
@@ -63,7 +119,11 @@ def ExternYMD(path):
 
         pyflow.ExternYMD('/a/b/c/d:YMD')
     """
-
+    warn(
+        "'ExternYMD' is deprecated, use ExternAttribute instead",
+        DeprecationWarning,
+        stacklevel=1,
+    )
     return ExternAttribute(
         path, RepeatDate, datetime.datetime.now(), datetime.datetime.now()
     )
@@ -83,7 +143,6 @@ def ExternEvent(path):
 
         pyflow.ExternEvent('/e/f/g/h:ev')
     """
-
     return ExternAttribute(path, Event)
 
 
@@ -101,7 +160,6 @@ def ExternMeter(path):
 
         pyflow.ExternMeter('/g/h/i/j:mt')
     """
-
     return ExternAttribute(path, Meter, 0)
 
 
@@ -119,8 +177,29 @@ def Extern(path):
 
         pyflow.Extern('/f/g/h/i')
     """
-
+    warn(
+        "'Extern' is deprecated, use ExternSuite, ExternFamily or ExternTask instead",
+        DeprecationWarning,
+        stacklevel=1,
+    )
     return ExternNode(path)
+
+
+def ExternSuite(path):
+    """
+    Maps an external suite.
+
+    Parameters:
+        path(str): Path of the external suite.
+
+    Returns:
+       Suite_: An object that corresponds to an external suite.
+
+    Example::
+
+        pyflow.ExternSuite('/a')
+    """
+    return ExternNode(path, Suite)
 
 
 def ExternFamily(path):
@@ -137,8 +216,7 @@ def ExternFamily(path):
 
         pyflow.ExternFamily('/f/g/h/i')
     """
-
-    return ExternNode(path)
+    return ExternNode(path, Family)
 
 
 def ExternTask(path):
@@ -155,5 +233,4 @@ def ExternTask(path):
 
         pyflow.ExternTask('/a/b/c/d')
     """
-
-    return ExternNode(path, tail_cls=Task)
+    return ExternNode(path, Task)

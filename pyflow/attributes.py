@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import datetime
 import re
 
+from . import warn
 from .anchor import AnchorMixin
 from .base import Base, GenerateError
 from .cron import Crontab
@@ -90,26 +91,6 @@ class Attribute(Base):
         return []
 
     shape = "box"
-
-
-class RepeatDay(Attribute):
-    """
-    An attribute that allows a node to be repeated infinitely.
-
-    Parameters:
-        value(int): The repeat step.
-
-    Example::
-
-        pyflow.attributes.RepeatDay(1)
-    """
-
-    def __init__(self, value):
-        super().__init__("_repeat")
-        self._value = value
-
-    def _build(self, ecflow_parent):
-        ecflow_parent.add_repeat(ecflow.RepeatDay(int(self.value)))
 
 
 class Time(Attribute):
@@ -341,7 +322,43 @@ class Edit:
             Variable(key, val)
 
 
-class RepeatString(Exportable):
+class Repeat(Exportable):
+    """
+    A virtual class that defines a repeat attribute
+    """
+
+    def __init__(self, name, values=None):
+        super().__init__(name, values)
+        if self.parent._repeat is not None:
+            warn(
+                "Overwriting an existing repeat value!",
+                category=UserWarning,
+                stacklevel=2,
+            )
+        self.parent._repeat = self  # set the repeat at the node level
+
+
+class RepeatDay(Repeat):
+    """
+    An attribute that allows a node to be repeated infinitely.
+
+    Parameters:
+        value(int): The repeat step.
+
+    Example::
+
+        pyflow.attributes.RepeatDay(1)
+    """
+
+    def __init__(self, value):
+        super().__init__("_repeat")
+        self._value = value
+
+    def _build(self, ecflow_parent):
+        ecflow_parent.add_repeat(ecflow.RepeatDay(int(self.value)))
+
+
+class RepeatString(Repeat):
     """
     An attribute that allows a node to be repeated by a string value.
 
@@ -412,7 +429,7 @@ class RepeatString(Exportable):
         return Sub(self, other)
 
 
-class RepeatEnumerated(Exportable):
+class RepeatEnumerated(Repeat):
     """
     An attribute that allows a node to be repeated by an enumerated list.
 
@@ -422,7 +439,7 @@ class RepeatEnumerated(Exportable):
 
     Example::
 
-        pyflow.RepeatEnumerated("REPEAT_STRING", ["a", "b", "c", "d", "e"])
+        pyflow.RepeatEnumerated("REPEAT_STRING", [1, 3, 4, 5])
     """
 
     def __init__(self, name, value):
@@ -437,9 +454,6 @@ class RepeatEnumerated(Exportable):
         """*list*: The list of enumerated values."""
         return [str(x) for x in self.value]
 
-    def settings(self):
-        return self.value
-
     def __add__(self, other):
         return Add(self, other)
 
@@ -447,7 +461,7 @@ class RepeatEnumerated(Exportable):
         return Sub(self, other)
 
 
-class RepeatDateList(Exportable):
+class RepeatDateList(Repeat):
     """
     An attribute that allows a node to be repeated over a list of dates.
 
@@ -479,9 +493,6 @@ class RepeatDateList(Exportable):
         v = [int(x) for x in v]
         return v
 
-    def settings(self):
-        return self.value
-
     def __add__(self, other):
         return Add(self, other)
 
@@ -489,7 +500,7 @@ class RepeatDateList(Exportable):
         return Sub(self, other)
 
 
-class RepeatInteger(Exportable):
+class RepeatInteger(Repeat):
     """
     An attribute that allows a node to be repeated by an integer range.
 
@@ -527,7 +538,7 @@ class RepeatInteger(Exportable):
         return Sub(self, other)
 
 
-class RepeatDate(Exportable):
+class RepeatDate(Repeat):
     """
     An attribute that allows a node to be repeated by a date value.
 
@@ -579,9 +590,6 @@ class RepeatDate(Exportable):
         else:
             result = Sub(self.julian, other.julian)
         return result
-
-    def settings(self):
-        return self._start, self._end, self._increment
 
     @property
     def julian(self):
@@ -681,9 +689,6 @@ class RepeatDateTime(Exportable):
     def __sub__(self, other):
         return Sub(self, other)
 
-    def settings(self):
-        return self._start, self._end, self._increment
-
     def _delta_to_string(self, delta):
         # there is no strftime for timedelta so we make our own
         total_seconds = int(delta.total_seconds())
@@ -710,12 +715,6 @@ class RepeatDateTime(Exportable):
     def day_of_week(self):
         """*int*: The day of the week of the repeat datetime."""
         return Mod(Add(Div(self, 86400), 4), 7)
-
-
-def string_or_enumerated(name, value):
-    if all(isinstance(v, int) for v in value):
-        return RepeatEnumerated(name, value)
-    return RepeatString(name, value)
 
 
 def is_date(value):
@@ -796,27 +795,9 @@ def make_variable(node, name, value):
 
     with node:
         if isinstance(value, (tuple, list)):
-            if len(value) in [2, 3]:
-                if is_date(value[0]) and is_date(value[1]):
-                    if len(value) == 3:
-                        if isinstance(value[2], int):
-                            return RepeatDate(
-                                name,
-                                as_date(value[0]),
-                                as_date(value[1]),
-                                value[2],
-                            )
-                    else:
-                        return RepeatDate(name, as_date(value[0]), as_date(value[1]), 1)
-
-                if isinstance(value[0], int) and isinstance(value[1], int):
-                    if len(value) == 3:
-                        if isinstance(value[2], int):
-                            return RepeatInteger(name, value[0], value[1], value[2])
-                    else:
-                        return RepeatInteger(name, value[0], value[1], 1)
-
-            return string_or_enumerated(name, value)
+            raise Exception(
+                "Repeat construction through a list is not supported anymore"
+            )
 
         if isinstance(value, (str, int, float)):
             return Variable(name, value)
@@ -1242,23 +1223,32 @@ class Follow(_Trigger):
     An attribute for setting a condition for running the node behind another repeated node which has completed.
 
     Parameters:
-        value(RepeatDate_): The repeat date attribute of the followed node.
+        value(Repeat_ or Task_ or Family_ or Suite_): The followed node or the repeat attribute of the followed node.
 
     Example::
-
-        pyflow.attributes.Follow(pyflow.RepeatDate('REPEAT_DATE',
-                                                   datetime.date(year=2019, month=1, day=1),
-                                                   datetime.date(year=2019, month=12, day=31)))
+        t1 = Task("t1", repeat=(RepeatEnumerated, "NUM", [1, 2, 3]))
+        t2 = Task("t2", repeat=(RepeatEnumerated, "NUM", [1, 2, 3]))
+        t2.follow = t1
     """
 
     def __init__(self, value):
-        super().__init__("_follow_%s" % (value,), value)
-        if not hasattr(value, "settings"):
-            raise Exception(
-                "Cannot follow a node of type %s (%r)" % (type(value), value)
+        super().__init__(f"_follow_{value.name}")
+        from .nodes import Node  # yeah it's bad but there's a circular import
+
+        if isinstance(value, Node):
+            parent = value
+            repeat = value.repeat
+        elif isinstance(value, Repeat):
+            parent = value.parent
+            repeat = value
+        else:
+            raise TypeError(
+                f"Follow attribute {self.name} requires a Repeat or a Node instance"
             )
-        self.parent[value.name] = value.settings()
-        self._value = value.parent.complete | (self.parent[value.name] < value)
+
+        if repeat is None:
+            raise TypeError(f"Follow attribute {self.name} requires a repeat")
+        self._value = parent.complete | (self.parent.repeat < repeat)
 
 
 ###################################################################

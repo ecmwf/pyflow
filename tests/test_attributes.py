@@ -46,9 +46,9 @@ def test_reassign_variable():
     with pyflow.Suite("s") as s:
         with pyflow.Task("t1") as t:
             t.FOO = 61
-            t.FOO = (1, 10)
+            t.FOO = 100
         with pyflow.Task("t2") as t:
-            t.FOO = (1, 10)
+            t.FOO = 100
     assert s.t1.FOO.value == s.t2.FOO.value
 
 
@@ -276,9 +276,11 @@ def test_date():
     assert "date *.*.3" in str(s.ecflow_definition())
 
     with pyflow.Suite("s") as s:
-        t1 = pyflow.Task("t1", DATE=("20180105", "20180206"))
+        t1 = pyflow.Task(
+            "t1", repeat=(pyflow.RepeatString, "DATE", ["20180105", "20180206"])
+        )
 
-    assert t1.DATE.value == ("20180105", "20180206")
+    assert t1.DATE.value == ["20180105", "20180206"]
     assert 'repeat string DATE "20180105" "20180206"' in str(s.ecflow_definition())
 
 
@@ -288,7 +290,9 @@ class TestRepeats:
     def test_string_repeat(self):
         with pyflow.Suite("s") as s:
             with pyflow.Family("f1") as f1:
-                f1.STRING_REPEAT = [str(v) for v in reversed(range(10))]
+                pyflow.RepeatString(
+                    "STRING_REPEAT", [str(v) for v in reversed(range(10))]
+                )
 
                 t1 = pyflow.Task("t1")
                 t1.triggers = (f1.STRING_REPEAT == "7") & (f1.STRING_REPEAT == 3)
@@ -305,9 +309,13 @@ class TestRepeats:
 
     def test_combined_string_repeats(self):
         with pyflow.Suite("s") as s:
-            t1 = pyflow.Task("t1", YMD=["20170101", "20180101"])
-            t2 = pyflow.Task("t2", YMD=["20170101", "20180101"])
-        t2.triggers = t1.YMD >= t2.YMD
+            t1 = pyflow.Task(
+                "t1", repeat=(pyflow.RepeatDate, "YMD", "20170101", "20180101")
+            )
+            t2 = pyflow.Task(
+                "t2", repeat=(pyflow.RepeatDate, "YMD", "20170101", "20180101")
+            )
+        t2.triggers = t1.YMD >= t2.repeat
         assert str(t2.triggers.value) == "(/s/t1:YMD ge /s/t2:YMD)"
 
         s.check_definition()
@@ -315,7 +323,7 @@ class TestRepeats:
     def test_enumerated_repeat(self):
         with pyflow.Suite("s") as s:
             with pyflow.Family("f2") as f2:
-                f2.ENUMERATED_REPEAT = list(reversed(range(10)))
+                pyflow.RepeatEnumerated("ENUMERATED_REPEAT", list(range(10)))
 
                 t2 = pyflow.Task("t2")
                 t2.triggers = (f2.ENUMERATED_REPEAT == "7") & (
@@ -336,8 +344,10 @@ class TestRepeats:
 
     def test_combined_enumerated_repeats(self):
         with pyflow.Suite("s") as s:
-            t1 = pyflow.Task("t1", ENUMERATED_REPEAT=list(range(10)))
-            t2 = pyflow.Task("t2", ENUMERATED_REPEAT=list(range(10)))
+            with pyflow.Task("t1") as t1:
+                pyflow.RepeatEnumerated("ENUMERATED_REPEAT", list(range(10)))
+            with pyflow.Task("t2") as t2:
+                pyflow.RepeatEnumerated("ENUMERATED_REPEAT", list(range(10)))
         t2.triggers = t1.ENUMERATED_REPEAT >= t2.ENUMERATED_REPEAT
         assert (
             str(t2.triggers.value)
@@ -382,7 +392,9 @@ class TestRepeats:
     def test_date_datetime_repeat(self):
         with pyflow.Suite("s") as s:
             with pyflow.Family("f4") as f4:
-                f4.DATE_REPEAT = (datetime(2018, 1, 1), datetime(2019, 12, 31))
+                pyflow.RepeatDateTime(
+                    "DATE_REPEAT", datetime(2018, 1, 1), datetime(2019, 12, 31)
+                )
 
                 t4 = pyflow.Task("t4")
                 t4.triggers = (f4.DATE_REPEAT >= "20180301") & (
@@ -403,7 +415,7 @@ class TestRepeats:
     def test_date_date_repeat(self):
         with pyflow.Suite("s") as s:
             with pyflow.Family("f4") as f4:
-                f4.DATE_REPEAT = (date(2018, 1, 1), date(2019, 12, 31))
+                pyflow.RepeatDate("DATE_REPEAT", date(2018, 1, 1), date(2019, 12, 31))
 
                 t4 = pyflow.Task("t4")
                 t4.triggers = (f4.DATE_REPEAT >= "20180301") & (

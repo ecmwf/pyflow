@@ -48,11 +48,15 @@ from .deployment import DeployGitRepo, Notebook
 from .expressions import Deferred, all_complete, sequence
 from .extern import (
     Extern,
+    ExternAttribute,
     ExternEvent,
     ExternFamily,
+    ExternLimit,
     ExternMeter,
-    ExternNode,
+    ExternRepeat,
+    ExternSuite,
     ExternTask,
+    ExternVariable,
     ExternYMD,
 )
 from .header import FileHeader, FileTail, Header, InlineCodeHeader
