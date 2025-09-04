@@ -47,13 +47,13 @@ class Overloaded:
         return Ge(self, other)
 
     def __sub__(self, other):
-        raise NotImplementedError("__sub__ not implemented for", self)
+        return Sub(self, other)
 
     def __add__(self, other):
-        raise NotImplementedError("__add__ not implemented for", self)
+        return Add(self, other)
 
     def __mul__(self, other):
-        raise NotImplementedError("__mul__ not implemented for", self)
+        return Mul(self, other)
 
     def __div__(self, other):
         return Div(self, other)
@@ -62,10 +62,11 @@ class Overloaded:
         raise NotImplementedError("__matmul__ not implemented for", self)
 
     def __truediv__(self, other):
-        raise NotImplementedError("__truediv__ not implemented for", self)
+        return Div(self, other)
 
     def __floordiv__(self, other):
-        raise NotImplementedError("__floordiv__ not implemented for", self)
+        # ecFlow expressions only support integer division, map '//' to '/'
+        return Div(self, other)
 
     def __mod__(self, other):
         return Mod(self, other)
@@ -86,25 +87,26 @@ class Overloaded:
         raise NotImplementedError("__xor__ not implemented for", self)
 
     def __radd__(self, other):
-        raise NotImplementedError("__radd__ not implemented for", self)
+        return Add(other, self)
 
     def __rsub__(self, other):
-        raise NotImplementedError("__rsub__ not implemented for", self)
+        return Sub(other, self)
 
     def __rmul__(self, other):
-        raise NotImplementedError("__rmul__ not implemented for", self)
+        return Mul(other, self)
 
     def __rmatmul__(self, other):
         raise NotImplementedError("__rmatmul__ not implemented for", self)
 
     def __rtruediv__(self, other):
-        raise NotImplementedError("__rtruediv__ not implemented for", self)
+        return Div(other, self)
 
     def __rfloordiv__(self, other):
-        raise NotImplementedError("__rfloordiv__ not implemented for", self)
+        # Map floor division to integer division in ecFlow expressions
+        return Div(other, self)
 
     def __rmod__(self, other):
-        raise NotImplementedError("__rmod__ not implemented for", self)
+        return Mod(other, self)
 
     def __rdivmod__(self, other):
         raise NotImplementedError("__rdivmod__ not implemented for", self)
@@ -369,6 +371,11 @@ class Div(BinOp):
         super().__init__("/", left, right, 3)
 
 
+class Mul(BinOp):
+    def __init__(self, left, right):
+        super().__init__("*", left, right, 3)
+
+
 class Atom(Expression):
     _priority = 99
 
@@ -498,6 +505,7 @@ JSON_FACTORIES = {
     "mod": binop(Mod),
     "%": binop(Mod),
     "div": binop(Div),
+    "*": binop(Mul),
     "/": binop(Div),
     "not": unop(Not),
     "~": unop(Not),

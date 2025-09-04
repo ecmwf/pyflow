@@ -4,6 +4,14 @@ from operator import and_
 import pytest
 
 import pyflow
+from pyflow.expressions import (
+    Add,
+    Constant,
+    Div,
+    Mod,
+    Sub,
+    expression_from_json,
+)
 
 
 def test_triggers_and():
@@ -90,6 +98,38 @@ def test_sequence():
         str(s2.t2._trigger.value) == "((/s2/main eq complete) and (/s2/t1 eq complete))"
     )
 
+
+def test_arithmetic_generation_constants():
+    # Forward ops on constants
+    assert (Constant(10) / 3).generate_expression(None) == "10 / 3"
+    assert (Constant(10) // 3).generate_expression(None) == "10 / 3"
+    assert (Constant(10) % 3).generate_expression(None) == "10 % 3"
+    assert (Constant(4) + 3).generate_expression(None) == "4 + 3"
+    assert (Constant(4) - 3).generate_expression(None) == "4 - 3"
+    assert (Constant(4) * 3).generate_expression(None) == "4 * 3"
+
+
+def test_arithmetic_generation_reverse_constants():
+    # Reverse ops (number on left, expression on right)
+    assert (3 / Constant(10)).generate_expression(None) == "3 / 10"
+    assert (3 // Constant(10)).generate_expression(None) == "3 / 10"
+    assert (3 % Constant(10)).generate_expression(None) == "3 % 10"
+    assert (3 + Constant(4)).generate_expression(None) == "3 + 4"
+    assert (3 - Constant(4)).generate_expression(None) == "3 - 4"
+    assert (3 * Constant(4)).generate_expression(None) == "3 * 4"
+
+
+def test_precedence_parentheses():
+    # Multiplication has higher precedence than addition
+    expr1 = Add(Constant(1), Add(Constant(2), Constant(3)))
+    # 1 + (2 + 3) because Add priority equals child Add priority -> parentheses
+    assert expr1.generate_expression(None) == "1 + (2 + 3)"
+
+    # (1 + 2) * 3 because Mul priority >= Add priority -> parentheses
+    from pyflow.expressions import Mul
+
+    expr2 = Mul(Add(Constant(1), Constant(2)), Constant(3))
+    assert expr2.generate_expression(None) == "(1 + 2) * 3"
 
 if __name__ == "__main__":
     from os import path
