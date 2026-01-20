@@ -740,7 +740,7 @@ class TestMirror:
                 with pyflow.Task("t") as t:
                     assert "t" == t.name
 
-                    attr = pyflow.Mirror(
+                    pyflow.Mirror(
                         name="MIRROR_ATTRIBUTE",
                         remote_path="/s/f/t",
                         remote_host="remote-ecflow-server",
