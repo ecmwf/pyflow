@@ -11,14 +11,12 @@ def test_generate_variables():
             t = pyflow.Task(
                 "t1",
                 VARIABLE3="variable3",
-                script=textwrap.dedent(
-                    """
+                script=textwrap.dedent("""
                 echo "$VARIABLE1"
                 echo "$VARIABLE2"
                 echo "$VARIABLE3"
                 echo "$VARIABLE4
-            """
-                ),
+            """),
             )
 
     script, includes = t.generate_script()

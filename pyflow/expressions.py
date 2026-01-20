@@ -300,7 +300,7 @@ class Or(BinOp):
         super().__init__("or", left, right, 0)
 
     def _simplify(self):
-        (l, r) = (self._left.evaluate(), self._right.evaluate())
+        l, r = (self._left.evaluate(), self._right.evaluate())
 
         if l is not UNDEFINED and r is not UNDEFINED:
             return self._left.value or self._right.value
@@ -327,7 +327,7 @@ class And(BinOp):
         super().__init__("and", left, right, 0)
 
     def _simplify(self):
-        (l, r) = (self._left.evaluate(), self._right.evaluate())
+        l, r = (self._left.evaluate(), self._right.evaluate())
 
         if l is not UNDEFINED and r is not UNDEFINED:
             return self._left.value and self._right.value

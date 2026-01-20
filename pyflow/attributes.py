@@ -1421,10 +1421,17 @@ class Mirror(Attribute):
         force: bool = False,
     ):
         super().__init__(name)
-        if int(polling) < 60 and not force:
-            raise ValueError(
-                "Polling time should be at least 60 seconds. Use force=True to override."
-            )
+        if not force:
+            try:
+                polling = int(polling)
+            except ValueError:
+                pass  # polling is not an integer, so we cannot validate it here
+
+            if isinstance(polling, int) and polling < 60:
+                raise ValueError(
+                    "Mirror polling interval must be at least 60 seconds. Use force=True to override."
+                )
+
         self.remote_path = str(remote_path)
         self.remote_host = str(remote_host)
         self.remote_port = str(remote_port)
