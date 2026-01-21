@@ -1429,7 +1429,7 @@ class Mirror(Attribute):
 
             if isinstance(polling, int) and polling < 60:
                 raise ValueError(
-                    "Mirror polling interval must be at least 60 seconds. Use force=True to override."
+                    "Mirror polling interval must be at least 60s to avoid overloading the remote server. Use force=True to override."
                 )
 
         self.remote_path = str(remote_path)
