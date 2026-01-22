@@ -378,9 +378,7 @@ class Host:
             *str*: The preamble initialisation script.
         """
 
-        script = (
-            textwrap.dedent(
-                """
+        script = textwrap.dedent("""
         # ----------------------------- ECFLOW INIT ----------------------------
 
         export PATH=%(ecf_path)s:$PATH
@@ -389,10 +387,7 @@ class Host:
 
         # Tell ecFlow we have started
         ecflow_client --init=$$
-        """
-            )
-            % {"ecf_path": ecflowpath}
-        )
+        """) % {"ecf_path": ecflowpath}
 
         return script
 
@@ -409,22 +404,18 @@ class Host:
         """
         script = ""
 
-        script += textwrap.dedent(
-            """
+        script += textwrap.dedent("""
             # custom exit/cleanup code
             exit_hook () {
                 echo "cleaning up ...."
-            """
-        )
+            """)
         if exit_hook:
             for line in exit_hook:
                 script += f"    {line}\n"
         script += "}\n\n"
 
         signal_list = " ".join(str(s) for s in self.trap_signals)
-        script += textwrap.dedent(
-            (
-                """
+        script += textwrap.dedent(("""
             # ----------------------------- TRAPS FOR SUBMITTED JOBS ----------------------------
             set +x
             # Define a error handler
@@ -452,10 +443,7 @@ class Host:
             # Trap any calls to exit and errors caught by the -e flag
             trap ERROR 0
             set -x
-            """  # noqa: E501
-            )
-            % {"ecf_path": ecflowpath, "signal_list": signal_list}
-        )
+            """) % {"ecf_path": ecflowpath, "signal_list": signal_list})  # noqa: E501
         return script
 
     def job_preamble(self, exit_hook=None):
