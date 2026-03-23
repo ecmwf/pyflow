@@ -19,9 +19,9 @@ from .expressions import (
     Le,
     Lt,
     Mod,
+    Mul,
     Ne,
     Sub,
-    Mul,
     expression_from_json,
     make_expression,
 )
@@ -428,7 +428,7 @@ class RepeatString(Repeat):
 
     def __sub__(self, other):
         return Sub(self, other)
-    
+
     def __mul__(self, other):
         return Mul(self, other)
 
@@ -463,7 +463,7 @@ class RepeatEnumerated(Repeat):
 
     def __sub__(self, other):
         return Sub(self, other)
-    
+
     def __mul__(self, other):
         return Mul(self, other)
 
