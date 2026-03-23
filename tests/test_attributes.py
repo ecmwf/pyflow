@@ -296,13 +296,15 @@ class TestRepeats:
 
                 t1 = pyflow.Task("t1")
                 t1.triggers = (f1.STRING_REPEAT == "7") & (f1.STRING_REPEAT == 3)
-                t1.triggers |= (f1.STRING_REPEAT + 2 == 7) & (f1.STRING_REPEAT - 1 == 6)
+                t1.triggers |= (f1.STRING_REPEAT + 2 + 1 == 7) & (
+                    f1.STRING_REPEAT * 2 - 1 == 6
+                )
 
                 assert (
                     str(t1.triggers.value) == "(((/s/f1:STRING_REPEAT eq 2)"
                     " and (/s/f1:STRING_REPEAT eq 3))"
-                    " or (((/s/f1:STRING_REPEAT + 2) eq 7)"
-                    " and ((/s/f1:STRING_REPEAT - 1) eq 6)))"
+                    " or ((((/s/f1:STRING_REPEAT + 2) + 1) eq 7)"
+                    " and (((/s/f1:STRING_REPEAT * 2) - 1) eq 6)))"
                 )
 
         s.check_definition()
@@ -329,15 +331,15 @@ class TestRepeats:
                 t2.triggers = (f2.ENUMERATED_REPEAT == "7") & (
                     f2.ENUMERATED_REPEAT == 3
                 )
-                t2.triggers |= (f2.ENUMERATED_REPEAT + 2 == 7) & (
-                    f2.ENUMERATED_REPEAT - 1 == 6
+                t2.triggers |= (f2.ENUMERATED_REPEAT + 2 + 1 == 7) & (
+                    f2.ENUMERATED_REPEAT * 2 - 1 == 6
                 )
 
                 assert (
                     str(t2.triggers.value) == "(((/s/f2:ENUMERATED_REPEAT eq 7) and "
                     "(/s/f2:ENUMERATED_REPEAT eq 3)) or "
-                    "(((/s/f2:ENUMERATED_REPEAT + 2) eq 7) and "
-                    "((/s/f2:ENUMERATED_REPEAT - 1) eq 6)))"
+                    "((((/s/f2:ENUMERATED_REPEAT + 2) + 1) eq 7) and "
+                    "(((/s/f2:ENUMERATED_REPEAT * 2) - 1) eq 6)))"
                 )
 
         s.check_definition()
@@ -363,15 +365,15 @@ class TestRepeats:
 
                 t3 = pyflow.Task("t3")
                 t3.triggers = (f3.INTEGER_REPEAT == "7") & (f3.INTEGER_REPEAT == 3)
-                t3.triggers |= (f3.INTEGER_REPEAT + 2 == 7) & (
-                    f3.INTEGER_REPEAT - 1 == 6
+                t3.triggers |= (f3.INTEGER_REPEAT + 2 + 1 == 7) & (
+                    f3.INTEGER_REPEAT * 2 - 1 == 6
                 )
 
                 assert (
                     str(t3.triggers.value) == "(((/s/f3:INTEGER_REPEAT eq 7) and "
                     "(/s/f3:INTEGER_REPEAT eq 3)) or "
-                    "(((/s/f3:INTEGER_REPEAT + 2) eq 7) and "
-                    "((/s/f3:INTEGER_REPEAT - 1) eq 6)))"
+                    "((((/s/f3:INTEGER_REPEAT + 2) + 1) eq 7) and "
+                    "(((/s/f3:INTEGER_REPEAT * 2) - 1) eq 6)))"
                 )
 
         s.check_definition()
