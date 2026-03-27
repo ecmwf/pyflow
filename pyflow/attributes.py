@@ -823,7 +823,7 @@ class _Trigger(Attribute):
         if ecflow_parent.get_trigger() is None:
             ecflow_parent.add_trigger(str(e))
         else:
-            ecflow_parent.add_part_trigger(str(e), True)
+            ecflow_parent.add_part_trigger(f"({str(e)})", True)
 
     def _graph(self, dot):
         make_expression(self.value).simplify()._graph(dot, self.parent)
