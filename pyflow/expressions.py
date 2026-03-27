@@ -250,7 +250,7 @@ class BinOp(Expression):
         if self._priority >= self._right._priority:
             expr2 = "(%s)" % expr2
 
-        return "%s %s %s" % (expr1, self._op, expr2)
+        return "(%s %s %s)" % (expr1, self._op, expr2)
 
     def __repr__(self):
         return "(%r %s %r)" % (self._left, self._op, self._right)
