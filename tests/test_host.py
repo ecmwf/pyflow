@@ -3,18 +3,17 @@ import pytest
 import pyflow
 import pyflow.host
 from pyflow.host import (
-    host_factory,
-    register_host,
     HOST_REGISTRY,
-    NullHost,
     LocalHost,
-    SSHHost,
+    NullHost,
+    PBSHost,
     SimpleSSHHost,
     SLURMHost,
-    PBSHost,
+    SSHHost,
     TroikaHost,
+    host_factory,
+    register_host,
 )
-
 
 
 def test_host_task():
@@ -269,7 +268,10 @@ def check_pragma(script, pragmas):
 
 def test_troika_host():
     host1 = pyflow.TroikaHost(
-        name="test_host", user="test_user", troika_version="0.2.1"
+        name="test_host",
+        user="test_user",
+        troika_version="0.2.1",
+        troika_config="%TROIKA_CONFIG%",
     )
     host2 = pyflow.TroikaHost(name="test_host", user="test_user")
 
@@ -478,6 +480,7 @@ def test_host_factory_raises_and_lists_available_types():
 
 def test_register_host_adds_to_registry():
     try:
+
         @register_host("test-dummy")
         class DummyHost:
             pass
@@ -489,6 +492,7 @@ def test_register_host_adds_to_registry():
 
 def test_register_host_returns_class_unchanged():
     try:
+
         class DummyHost2:
             pass
 
@@ -500,6 +504,7 @@ def test_register_host_returns_class_unchanged():
 
 def test_register_host_duplicate_key_overwrites():
     try:
+
         @register_host("test-dup")
         class DummyHostA:
             pass

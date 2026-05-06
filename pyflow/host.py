@@ -85,6 +85,7 @@ SSH_COMMAND = "ssh -v -o StrictHostKeyChecking=no"
 
 HOST_REGISTRY = {}
 
+
 def register_host(registry_key):
     """
     Registers a host class in the host registry.
@@ -92,9 +93,11 @@ def register_host(registry_key):
     Parameters:
         registry_key(str): The key to register the host class under.
     """
+
     def decorator(cls):
         HOST_REGISTRY[registry_key] = cls
         return cls
+
     return decorator
 
 
@@ -832,6 +835,7 @@ class SSHHost(Host):
         """*list*: The host-specific cleanup script, always empty."""
         return []
 
+
 @register_host("ssh-simple")
 class SimpleSSHHost(Host):
     def __init__(self, host, **kwargs):
@@ -1249,4 +1253,6 @@ def host_factory(key, *args, **kwargs):
     if (target := HOST_REGISTRY.get(key)) is not None:
         return target(*args, **kwargs)
     else:
-        raise ValueError(f"Unknown host type: {key}. Available host types are: {list(HOST_REGISTRY.keys())}")
+        raise ValueError(
+            f"Unknown host type: {key}. Available host types are: {list(HOST_REGISTRY.keys())}"
+        )
