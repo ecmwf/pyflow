@@ -2,6 +2,19 @@ import pytest
 
 import pyflow
 import pyflow.host
+from pyflow.host import (
+    host_factory,
+    register_host,
+    HOST_REGISTRY,
+    NullHost,
+    LocalHost,
+    SSHHost,
+    SimpleSSHHost,
+    SLURMHost,
+    PBSHost,
+    TroikaHost,
+)
+
 
 
 def test_host_task():
@@ -430,6 +443,74 @@ def test_traps():
 
     assert signal_list1 in s1
     assert signal_list2 in s2
+
+
+@pytest.mark.parametrize(
+    "key,expected_class,kwargs",
+    [
+        ("null", NullHost, {}),
+        ("localhost", LocalHost, {}),
+        ("ssh", SSHHost, {"name": "test"}),
+        ("ssh-simple", SimpleSSHHost, {"host": "test"}),
+        ("slurm", SLURMHost, {"name": "test"}),
+        ("pbs", PBSHost, {"name": "test"}),
+        ("troika", TroikaHost, {"name": "test", "user": "testuser"}),
+    ],
+)
+def test_host_factory_returns_correct_types(key, expected_class, kwargs):
+    result = host_factory(key, **kwargs)
+    assert isinstance(result, expected_class)
+
+
+def test_host_factory_forwards_kwargs():
+    result = host_factory("localhost", name="myhost", scratch_directory="/tmp/test")
+    assert result.name == "myhost"
+    assert result.scratch_directory == "/tmp/test"
+
+
+def test_host_factory_raises_and_lists_available_types():
+    with pytest.raises(ValueError, match="Unknown host type: bogus") as exc_info:
+        host_factory("bogus")
+    exc_str = str(exc_info.value)
+    for key in ("null", "localhost", "ssh", "ssh-simple", "slurm", "pbs", "troika"):
+        assert key in exc_str
+
+
+def test_register_host_adds_to_registry():
+    try:
+        @register_host("test-dummy")
+        class DummyHost:
+            pass
+
+        assert HOST_REGISTRY["test-dummy"] is DummyHost
+    finally:
+        del HOST_REGISTRY["test-dummy"]
+
+
+def test_register_host_returns_class_unchanged():
+    try:
+        class DummyHost2:
+            pass
+
+        result = register_host("test-dummy2")(DummyHost2)
+        assert result is DummyHost2
+    finally:
+        del HOST_REGISTRY["test-dummy2"]
+
+
+def test_register_host_duplicate_key_overwrites():
+    try:
+        @register_host("test-dup")
+        class DummyHostA:
+            pass
+
+        @register_host("test-dup")
+        class DummyHostB:
+            pass
+
+        assert HOST_REGISTRY["test-dup"] is DummyHostB
+    finally:
+        del HOST_REGISTRY["test-dup"]
 
 
 if __name__ == "__main__":

@@ -83,6 +83,20 @@ DEFAULT_SIGNAL_LIST = [
 
 SSH_COMMAND = "ssh -v -o StrictHostKeyChecking=no"
 
+HOST_REGISTRY = {}
+
+def register_host(registry_key):
+    """
+    Registers a host class in the host registry.
+
+    Parameters:
+        registry_key(str): The key to register the host class under.
+    """
+    def decorator(cls):
+        HOST_REGISTRY[registry_key] = cls
+        return cls
+    return decorator
+
 
 class Host:
     """
@@ -453,6 +467,7 @@ class Host:
         ) + self.preamble_error_function(self.ecflow_path, exit_hook).split("\n")
 
 
+@register_host("null")
 class NullHost(Host):
     """
     A dummy host object invisible to **ecFlow**, but still throws exceptions if **pyflow** attempts to create tasks
@@ -517,6 +532,7 @@ class NullHost(Host):
         return None
 
 
+@register_host("localhost")
 class LocalHost(Host):
     """
     A host object that executes scripts directly on the **ecFlow** server.
@@ -628,6 +644,7 @@ class LocalHost(Host):
         )
 
 
+@register_host("ecflow-default")
 class EcflowDefaultHost(LocalHost):
     """
     By default we just use LocalHost... Slightly modified from ecflow default of
@@ -640,6 +657,7 @@ class EcflowDefaultHost(LocalHost):
         super().__init__("default", **kwargs)
 
 
+@register_host("ssh")
 class SSHHost(Host):
     """
     A host object that executes scripts on the **ecFlow** server via SSH protocol.
@@ -814,10 +832,10 @@ class SSHHost(Host):
         """*list*: The host-specific cleanup script, always empty."""
         return []
 
-
+@register_host("ssh-simple")
 class SimpleSSHHost(Host):
-    def __init__(self, host):
-        super().__init__(host)
+    def __init__(self, host, **kwargs):
+        super().__init__(host, **kwargs)
         self.host = host
 
     @property
@@ -849,6 +867,7 @@ class SimpleSSHHost(Host):
         return POSTAMBLE_SUBMITTED_JOBS.split("\n")
 
 
+@register_host("slurm")
 class SLURMHost(SSHHost):
     """
     A host object that executes scripts on the **ecFlow** server via Slurm job scheduling system.
@@ -943,6 +962,7 @@ class SLURMHost(SSHHost):
         return POSTAMBLE_SUBMITTED_JOBS.split("\n")
 
 
+@register_host("pbs")
 class PBSHost(SSHHost):
     """
     A host object that executes scripts on the **ecFlow** server via batch server.
@@ -1037,6 +1057,7 @@ class PBSHost(SSHHost):
         return POSTAMBLE_SUBMITTED_JOBS.split("\n")
 
 
+@register_host("troika")
 class TroikaHost(Host):
     """
     A host object that executes scripts on the **ecFlow** server via the troika job submitter.
@@ -1077,7 +1098,7 @@ class TroikaHost(Host):
         name,
         user,
         troika_exec="%TROIKA:troika%",
-        troika_config="%TROIKA_CONFIG%",
+        troika_config=None,
         troika_version="0.2.3",
         **kwargs,
     ):
@@ -1210,3 +1231,22 @@ class TroikaHost(Host):
                     args.append("#TROIKA {}={}".format(arg, val))
 
         return args
+
+
+def host_factory(key, *args, **kwargs):
+    """
+    Factory function to create host objects based on a key.
+
+    Parameters:
+        key(str): The key specifying the type of host to create.
+        *args: Positional arguments to pass to the host constructor.
+        **kwargs: Keyword arguments to pass to the host
+            constructor.
+    Returns:
+        Host: The created host object.
+    """
+
+    if (target := HOST_REGISTRY.get(key)) is not None:
+        return target(*args, **kwargs)
+    else:
+        raise ValueError(f"Unknown host type: {key}. Available host types are: {list(HOST_REGISTRY.keys())}")
