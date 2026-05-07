@@ -2,6 +2,18 @@ import pytest
 
 import pyflow
 import pyflow.host
+from pyflow.host import (
+    HOST_REGISTRY,
+    LocalHost,
+    NullHost,
+    PBSHost,
+    SimpleSSHHost,
+    SLURMHost,
+    SSHHost,
+    TroikaHost,
+    host_factory,
+    register_host,
+)
 
 
 def test_host_task():
@@ -258,10 +270,10 @@ def test_troika_host():
     host1 = pyflow.TroikaHost(
         name="test_host",
         user="test_user",
+        troika_version="0.2.1",
+        troika_config="%TROIKA_CONFIG%",
     )
-    host2 = pyflow.TroikaHost(
-        name="test_host", user="test_user", troika_version="2.2.2"
-    )
+    host2 = pyflow.TroikaHost(name="test_host", user="test_user")
 
     submit_args = {
         "total_tasks": 2,
@@ -284,11 +296,11 @@ def test_troika_host():
 
     assert (
         s.ECF_JOB_CMD.value
-        == "%TROIKA:troika% -vv  submit -u test_user -o %ECF_JOBOUT% test_host %ECF_JOB%"
+        == "%TROIKA:troika% -vv -c %TROIKA_CONFIG% submit -u test_user -o %ECF_JOBOUT% test_host %ECF_JOB%"
     )
     assert (
         s.ECF_KILL_CMD.value
-        == "%TROIKA:troika% -vv  kill -u test_user test_host %ECF_JOB%"
+        == "%TROIKA:troika% -vv -c %TROIKA_CONFIG% kill -u test_user test_host %ECF_JOB%"
     )
 
     t1_script = t1.generate_script()
@@ -385,13 +397,32 @@ def test_troika_host_options():
 
     assert (
         s.ECF_JOB_CMD.value
-        == "%TROIKA:/path/to/troika% -vv -c %TROIKA_CONFIG:/path/to/troika.cfg% submit -u test_user -o %ECF_JOBOUT% test_host %ECF_JOB%"  # noqa: E501
+        == "/path/to/troika -vv -c /path/to/troika.cfg submit -u test_user -o %ECF_JOBOUT% test_host %ECF_JOB%"  # noqa: E501
     )
     assert (
         s.ECF_KILL_CMD.value
-        == "%TROIKA:/path/to/troika% -vv -c %TROIKA_CONFIG:/path/to/troika.cfg% kill -u test_user test_host %ECF_JOB%"  # noqa: E501
+        == "/path/to/troika -vv -c /path/to/troika.cfg kill -u test_user test_host %ECF_JOB%"  # noqa: E501
     )
     assert s.host.troika_version == (2, 1, 3)
+
+
+def test_troika_host_options_no_config():
+    host = pyflow.TroikaHost(
+        name="test_host",
+        user="test_user",
+        troika_config=None,
+    )
+
+    s = pyflow.Suite("s", host=host)
+
+    assert (
+        s.ECF_JOB_CMD.value
+        == "%TROIKA:troika% -vv  submit -u test_user -o %ECF_JOBOUT% test_host %ECF_JOB%"  # noqa: E501
+    )
+    assert (
+        s.ECF_KILL_CMD.value
+        == "%TROIKA:troika% -vv  kill -u test_user test_host %ECF_JOB%"  # noqa: E501
+    )
 
 
 def test_traps():
@@ -414,6 +445,77 @@ def test_traps():
 
     assert signal_list1 in s1
     assert signal_list2 in s2
+
+
+@pytest.mark.parametrize(
+    "key,expected_class,kwargs",
+    [
+        ("null", NullHost, {}),
+        ("localhost", LocalHost, {}),
+        ("ssh", SSHHost, {"name": "test"}),
+        ("ssh-simple", SimpleSSHHost, {"host": "test"}),
+        ("slurm", SLURMHost, {"name": "test"}),
+        ("pbs", PBSHost, {"name": "test"}),
+        ("troika", TroikaHost, {"name": "test", "user": "testuser"}),
+    ],
+)
+def test_host_factory_returns_correct_types(key, expected_class, kwargs):
+    result = host_factory(key, **kwargs)
+    assert isinstance(result, expected_class)
+
+
+def test_host_factory_forwards_kwargs():
+    result = host_factory("localhost", name="myhost", scratch_directory="/tmp/test")
+    assert result.name == "myhost"
+    assert result.scratch_directory == "/tmp/test"
+
+
+def test_host_factory_raises_and_lists_available_types():
+    with pytest.raises(ValueError, match="Unknown host type: bogus") as exc_info:
+        host_factory("bogus")
+    exc_str = str(exc_info.value)
+    for key in ("null", "localhost", "ssh", "ssh-simple", "slurm", "pbs", "troika"):
+        assert key in exc_str
+
+
+def test_register_host_adds_to_registry():
+    try:
+
+        @register_host("test-dummy")
+        class DummyHost:
+            pass
+
+        assert HOST_REGISTRY["test-dummy"] is DummyHost
+    finally:
+        del HOST_REGISTRY["test-dummy"]
+
+
+def test_register_host_returns_class_unchanged():
+    try:
+
+        class DummyHost2:
+            pass
+
+        result = register_host("test-dummy2")(DummyHost2)
+        assert result is DummyHost2
+    finally:
+        del HOST_REGISTRY["test-dummy2"]
+
+
+def test_register_host_duplicate_key_overwrites():
+    try:
+
+        @register_host("test-dup")
+        class DummyHostA:
+            pass
+
+        @register_host("test-dup")
+        class DummyHostB:
+            pass
+
+        assert HOST_REGISTRY["test-dup"] is DummyHostB
+    finally:
+        del HOST_REGISTRY["test-dup"]
 
 
 if __name__ == "__main__":
