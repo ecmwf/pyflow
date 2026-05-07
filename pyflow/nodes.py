@@ -1188,11 +1188,7 @@ class Suite(AnchorMixin, Node):
 
         for t in node.all_tasks:
             script, includes = t.generate_script()
-            try:
-                target.deploy_task(t.deploy_path, script, includes)
-            except Exception as e:
-                print(f"\nERROR when deploying task: {t.fullname}\n")
-                raise (e)
+            target.deploy_task(t.deploy_path, script, includes)
         for f in node.all_families:
             manual = self.generate_stub(f.manual)
             if manual:
