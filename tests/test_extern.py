@@ -7,29 +7,35 @@ from pyflow import (
     Event,
     ExternEvent,
     ExternFamily,
+    ExternLimit,
     ExternMeter,
+    ExternRepeat,
+    ExternSuite,
     ExternTask,
-    ExternYMD,
+    ExternVariable,
     Family,
+    Limit,
     Meter,
     Notebook,
     RepeatDate,
     Suite,
     Task,
+    Variable,
 )
-from pyflow.extern import KNOWN_EXTERNS
+from pyflow.extern import KNOWN_EXTERNS, Repeat
 
 now = datetime.datetime.now()
 
 
 def test_extern():
     with Suite("s") as s:
-        t1 = Task("t1", YMD=(now, now))
+        t1 = Task("t1", repeat=(RepeatDate, "YMD", now, now))
 
         et = ExternTask("/a/b/c/d")
         ef = ExternFamily("/f/g/h/i")
+        es = ExternSuite("/j")
 
-        t1.triggers = et & ef
+        t1.triggers = et & ef & es
 
     # Check that the externs have real types --> will have correct functionality available
 
@@ -39,6 +45,9 @@ def test_extern():
     assert isinstance(ef, Family)
     assert ef.name == "i"
     assert ef.fullname == "/f/g/h/i"
+    assert isinstance(es, Suite)
+    assert es.name == "j"
+    assert es.fullname == "/j"
 
     # Check that they work!
 
@@ -62,22 +71,46 @@ def test_extern():
 
     with pytest.raises(AssertionError) as excinfo:
         s.ecflow_definition()
-    assert excinfo.value.args == ("Attempting to add unknown extern reference",)
+    assert excinfo.value.args == (
+        "Attempting to add unknown extern reference /a/b/c/d",
+    )
 
 
 def test_extern_attributes():
+    sext = ExternSuite("/limits")  # extern shall not be under a node suite/family/task
+    evar = ExternVariable("/a/main:SUITE_START")
+    svar = ExternVariable("/a:SUITE_START")
+    limit = ExternLimit(
+        "/limits:hpc"
+    )  # extern shall not be under a node suite/family/task
+
+    # svar = ExternEdit("/b:SUITE_START") # OK
     with Suite("s") as s:
-        eymd = ExternYMD("/a/b/c/d:YMD")
+        eymd = ExternRepeat("/a/b/c/d:YMD")
+        elimit = ExternLimit("/limits/lim:hpc")
+        slimit = ExternLimit("/limits:hpc")
         eevent = ExternEvent("/e/f/g/h:ev")
         emeter = ExternMeter("/g/h/i/j:mt")
 
-        Task("t1", YMD=(now, now)).follow = eymd
+        t1 = Task("t1", repeat=(RepeatDate, "YMD", now, now))
+        t1.follow = eymd
         Task("t2").triggers = eevent
         Task("t3").triggers = emeter == 10
+        Task("t4").completes = evar != eymd
+        Task("t5").inlimits = [elimit, slimit]
+        Task("t6").completes = svar != eymd
+        Task("ts").completes = sext.complete
+        # Check that the externs have real types --> will have correct functionality available
 
-    # Check that the externs have real types --> will have correct functionality available
+    assert isinstance(elimit, Limit)
+    assert limit.name == "hpc"
+    assert limit.fullname == "/limits:hpc"
 
-    assert isinstance(eymd, RepeatDate)
+    assert isinstance(svar, Variable)
+    assert svar.name == "SUITE_START"
+    assert svar.fullname == "/a:SUITE_START"
+
+    assert isinstance(eymd, Repeat)
     assert eymd.name == "YMD"
     assert eymd.fullname == "/a/b/c/d:YMD"
 
@@ -109,16 +142,21 @@ def test_extern_attributes():
 
 def test_extern_safety():
     externs = []
+    externs.append(ExternSuite("/limits"))
+    externs.append(ExternLimit("/limits:hpc"))
+    externs.append(ExternLimit("/limits/lim:hpc"))
+    externs.append(ExternVariable("/a/main:SUITE_START"))
+    externs.append(ExternVariable("/a:SUITE_START"))
 
     with Suite("s"):
-        externs.append(ExternTask("/a/b/c/d"))
-        externs.append(ExternFamily("/e/f/g/h"))
+        externs.append(ExternFamily("/a/b/c/d"))
+        externs.append(ExternTask("/e/f/g/h"))
 
         with externs[-1]:
             # n.b. should never do this in reality, but trying to break things...
             externs.append(Task("e3"))
 
-        externs.append(ExternYMD("i/j/k/l:YMD"))
+        externs.append(ExternRepeat("i/j/k/l:YMD"))
         externs.append(ExternEvent("m/n/o/p:ev"))
         externs.append(ExternMeter("q/s/t/u:mt"))
 

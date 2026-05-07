@@ -46,9 +46,9 @@ def test_reassign_variable():
     with pyflow.Suite("s") as s:
         with pyflow.Task("t1") as t:
             t.FOO = 61
-            t.FOO = (1, 10)
+            t.FOO = 100
         with pyflow.Task("t2") as t:
-            t.FOO = (1, 10)
+            t.FOO = 100
     assert s.t1.FOO.value == s.t2.FOO.value
 
 
@@ -276,9 +276,11 @@ def test_date():
     assert "date *.*.3" in str(s.ecflow_definition())
 
     with pyflow.Suite("s") as s:
-        t1 = pyflow.Task("t1", DATE=("20180105", "20180206"))
+        t1 = pyflow.Task(
+            "t1", repeat=(pyflow.RepeatString, "DATE", ["20180105", "20180206"])
+        )
 
-    assert t1.DATE.value == ("20180105", "20180206")
+    assert t1.DATE.value == ["20180105", "20180206"]
     assert 'repeat string DATE "20180105" "20180206"' in str(s.ecflow_definition())
 
 
@@ -288,26 +290,34 @@ class TestRepeats:
     def test_string_repeat(self):
         with pyflow.Suite("s") as s:
             with pyflow.Family("f1") as f1:
-                f1.STRING_REPEAT = [str(v) for v in reversed(range(10))]
+                pyflow.RepeatString(
+                    "STRING_REPEAT", [str(v) for v in reversed(range(10))]
+                )
 
                 t1 = pyflow.Task("t1")
                 t1.triggers = (f1.STRING_REPEAT == "7") & (f1.STRING_REPEAT == 3)
-                t1.triggers |= (f1.STRING_REPEAT + 2 == 7) & (f1.STRING_REPEAT - 1 == 6)
+                t1.triggers |= (f1.STRING_REPEAT + 2 + 1 == 7) & (
+                    f1.STRING_REPEAT * 2 - 1 == 6
+                )
 
                 assert (
                     str(t1.triggers.value) == "(((/s/f1:STRING_REPEAT eq 2)"
                     " and (/s/f1:STRING_REPEAT eq 3))"
-                    " or (((/s/f1:STRING_REPEAT + 2) eq 7)"
-                    " and ((/s/f1:STRING_REPEAT - 1) eq 6)))"
+                    " or ((((/s/f1:STRING_REPEAT + 2) + 1) eq 7)"
+                    " and (((/s/f1:STRING_REPEAT * 2) - 1) eq 6)))"
                 )
 
         s.check_definition()
 
     def test_combined_string_repeats(self):
         with pyflow.Suite("s") as s:
-            t1 = pyflow.Task("t1", YMD=["20170101", "20180101"])
-            t2 = pyflow.Task("t2", YMD=["20170101", "20180101"])
-        t2.triggers = t1.YMD >= t2.YMD
+            t1 = pyflow.Task(
+                "t1", repeat=(pyflow.RepeatDate, "YMD", "20170101", "20180101")
+            )
+            t2 = pyflow.Task(
+                "t2", repeat=(pyflow.RepeatDate, "YMD", "20170101", "20180101")
+            )
+        t2.triggers = t1.YMD >= t2.repeat
         assert str(t2.triggers.value) == "(/s/t1:YMD ge /s/t2:YMD)"
 
         s.check_definition()
@@ -315,29 +325,31 @@ class TestRepeats:
     def test_enumerated_repeat(self):
         with pyflow.Suite("s") as s:
             with pyflow.Family("f2") as f2:
-                f2.ENUMERATED_REPEAT = list(reversed(range(10)))
+                pyflow.RepeatEnumerated("ENUMERATED_REPEAT", list(range(10)))
 
                 t2 = pyflow.Task("t2")
                 t2.triggers = (f2.ENUMERATED_REPEAT == "7") & (
                     f2.ENUMERATED_REPEAT == 3
                 )
-                t2.triggers |= (f2.ENUMERATED_REPEAT + 2 == 7) & (
-                    f2.ENUMERATED_REPEAT - 1 == 6
+                t2.triggers |= (f2.ENUMERATED_REPEAT + 2 + 1 == 7) & (
+                    f2.ENUMERATED_REPEAT * 2 - 1 == 6
                 )
 
                 assert (
                     str(t2.triggers.value) == "(((/s/f2:ENUMERATED_REPEAT eq 7) and "
                     "(/s/f2:ENUMERATED_REPEAT eq 3)) or "
-                    "(((/s/f2:ENUMERATED_REPEAT + 2) eq 7) and "
-                    "((/s/f2:ENUMERATED_REPEAT - 1) eq 6)))"
+                    "((((/s/f2:ENUMERATED_REPEAT + 2) + 1) eq 7) and "
+                    "(((/s/f2:ENUMERATED_REPEAT * 2) - 1) eq 6)))"
                 )
 
         s.check_definition()
 
     def test_combined_enumerated_repeats(self):
         with pyflow.Suite("s") as s:
-            t1 = pyflow.Task("t1", ENUMERATED_REPEAT=list(range(10)))
-            t2 = pyflow.Task("t2", ENUMERATED_REPEAT=list(range(10)))
+            with pyflow.Task("t1") as t1:
+                pyflow.RepeatEnumerated("ENUMERATED_REPEAT", list(range(10)))
+            with pyflow.Task("t2") as t2:
+                pyflow.RepeatEnumerated("ENUMERATED_REPEAT", list(range(10)))
         t2.triggers = t1.ENUMERATED_REPEAT >= t2.ENUMERATED_REPEAT
         assert (
             str(t2.triggers.value)
@@ -353,15 +365,15 @@ class TestRepeats:
 
                 t3 = pyflow.Task("t3")
                 t3.triggers = (f3.INTEGER_REPEAT == "7") & (f3.INTEGER_REPEAT == 3)
-                t3.triggers |= (f3.INTEGER_REPEAT + 2 == 7) & (
-                    f3.INTEGER_REPEAT - 1 == 6
+                t3.triggers |= (f3.INTEGER_REPEAT + 2 + 1 == 7) & (
+                    f3.INTEGER_REPEAT * 2 - 1 == 6
                 )
 
                 assert (
                     str(t3.triggers.value) == "(((/s/f3:INTEGER_REPEAT eq 7) and "
                     "(/s/f3:INTEGER_REPEAT eq 3)) or "
-                    "(((/s/f3:INTEGER_REPEAT + 2) eq 7) and "
-                    "((/s/f3:INTEGER_REPEAT - 1) eq 6)))"
+                    "((((/s/f3:INTEGER_REPEAT + 2) + 1) eq 7) and "
+                    "(((/s/f3:INTEGER_REPEAT * 2) - 1) eq 6)))"
                 )
 
         s.check_definition()
@@ -382,7 +394,9 @@ class TestRepeats:
     def test_date_datetime_repeat(self):
         with pyflow.Suite("s") as s:
             with pyflow.Family("f4") as f4:
-                f4.DATE_REPEAT = (datetime(2018, 1, 1), datetime(2019, 12, 31))
+                pyflow.RepeatDateTime(
+                    "DATE_REPEAT", datetime(2018, 1, 1), datetime(2019, 12, 31)
+                )
 
                 t4 = pyflow.Task("t4")
                 t4.triggers = (f4.DATE_REPEAT >= "20180301") & (
@@ -403,7 +417,7 @@ class TestRepeats:
     def test_date_date_repeat(self):
         with pyflow.Suite("s") as s:
             with pyflow.Family("f4") as f4:
-                f4.DATE_REPEAT = (date(2018, 1, 1), date(2019, 12, 31))
+                pyflow.RepeatDate("DATE_REPEAT", date(2018, 1, 1), date(2019, 12, 31))
 
                 t4 = pyflow.Task("t4")
                 t4.triggers = (f4.DATE_REPEAT >= "20180301") & (
@@ -669,46 +683,36 @@ class TestMirror:
     """A set of tests for Mirror attributes."""
 
     def test_create_mirror_from_strings(self):
-        name = "MIRROR_ATTRIBUTE"
-        remote_path = "/s/f/t"
-        remote_host = "remote-ecflow-server"
-        remote_port = "3141"
-        polling = "%ECFLOW_MIRROR_POLLING%"
-        ssl = True
-        auth = "/path/to/auth.json"
+        setup = {
+            "name": "MIRROR_ATTRIBUTE",
+            "remote_path": "/s/f/t",
+            "remote_host": "remote-ecflow-server",
+            "remote_port": "3141",
+            "polling": "%ECFLOW_MIRROR_REMOTE_POLLING%",
+            "ssl": True,
+            "auth": "/path/to/auth.json",
+        }
 
-        attr = pyflow.Mirror(
-            name, remote_path, remote_host, remote_port, polling, ssl, auth
-        )
+        attr = pyflow.Mirror(**setup)
 
-        assert attr.name == name
-        assert attr.remote_path == remote_path
-        assert attr.remote_host == remote_host
-        assert attr.remote_port == remote_port
-        assert attr.polling == polling
-        assert attr.ssl == ssl
-        assert attr.auth == auth
+        for name, value in setup.items():
+            assert getattr(attr, name) == value
 
     def test_create_mirror_from_objects(self):
-        name = "MIRROR_ATTRIBUTE"
-        remote_path = "/s/f/t"
-        remote_host = "remote-ecflow-server"
-        remote_port = 3141
-        polling = 60
-        ssl = True
-        auth = "/path/to/auth.json"
+        setup = {
+            "name": "MIRROR_ATTRIBUTE",
+            "remote_path": "/s/f/t",
+            "remote_host": "remote-ecflow-server",
+            "remote_port": "3141",
+            "polling": 600,
+            "ssl": True,
+            "auth": "/path/to/auth.json",
+        }
 
-        attr = pyflow.Mirror(
-            name, remote_path, remote_host, remote_port, polling, ssl, auth
-        )
+        attr = pyflow.Mirror(**setup)
 
-        assert attr.name == name
-        assert attr.remote_path == remote_path
-        assert attr.remote_host == remote_host
-        assert attr.remote_port == str(remote_port)
-        assert attr.polling == str(polling)
-        assert attr.ssl == ssl
-        assert attr.auth == auth
+        for name, value in setup.items():
+            assert type(value)(getattr(attr, name)) == value
 
     def test_create_mirror_on_task(self):
         with pyflow.Suite("s") as s:
@@ -718,16 +722,14 @@ class TestMirror:
                 with pyflow.Task("t") as t:
                     assert "t" == t.name
 
-                    name = "MIRROR_ATTRIBUTE"
-                    remote_path = "/s/f/t"
-                    remote_host = "remote-ecflow-server"
-                    remote_port = 3141
-                    polling = 60
-                    ssl = True
-                    auth = "/path/to/auth.json"
-
                     pyflow.Mirror(
-                        name, remote_path, remote_host, remote_port, polling, ssl, auth
+                        name="MIRROR_ATTRIBUTE",
+                        remote_path="/s/f/t",
+                        remote_host="remote-ecflow-server",
+                        remote_port="3141",
+                        polling=600,
+                        ssl=True,
+                        auth="/path/to/auth.json",
                     )
 
         s.check_definition()
@@ -740,16 +742,14 @@ class TestMirror:
                 with pyflow.Task("t") as t:
                     assert "t" == t.name
 
-                    name = "MIRROR_ATTRIBUTE"
-                    remote_path = "/s/f/t"
-                    remote_host = "remote-ecflow-server"
-                    remote_port = 3141
-                    polling = 60
-                    ssl = True
-                    auth = "/path/to/auth.json"
-
                     pyflow.Mirror(
-                        name, remote_path, remote_host, remote_port, polling, ssl, auth
+                        name="MIRROR_ATTRIBUTE",
+                        remote_path="/s/f/t",
+                        remote_host="remote-ecflow-server",
+                        remote_port="3141",
+                        polling=600,
+                        ssl=True,
+                        auth="/path/to/auth.json",
                     )
 
         defs = s.ecflow_definition()

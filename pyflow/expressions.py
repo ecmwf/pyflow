@@ -265,6 +265,17 @@ class BinOp(Expression):
         return self._simplify()
 
 
+class BinMatOp(BinOp):
+    def __mul__(self, other):
+        return Mul(self, other)
+
+    def __add__(self, other):
+        return Add(self, other)
+
+    def __sub__(self, other):
+        return Sub(self, other)
+
+
 class Ne(BinOp):
     def __init__(self, left, right):
         super().__init__("ne", left, right, 1)
@@ -300,7 +311,7 @@ class Or(BinOp):
         super().__init__("or", left, right, 0)
 
     def _simplify(self):
-        (l, r) = (self._left.evaluate(), self._right.evaluate())
+        l, r = (self._left.evaluate(), self._right.evaluate())
 
         if l is not UNDEFINED and r is not UNDEFINED:
             return self._left.value or self._right.value
@@ -327,7 +338,7 @@ class And(BinOp):
         super().__init__("and", left, right, 0)
 
     def _simplify(self):
-        (l, r) = (self._left.evaluate(), self._right.evaluate())
+        l, r = (self._left.evaluate(), self._right.evaluate())
 
         if l is not UNDEFINED and r is not UNDEFINED:
             return self._left.value and self._right.value
@@ -349,24 +360,29 @@ class And(BinOp):
         return self
 
 
-class Sub(BinOp):
+class Sub(BinMatOp):
     def __init__(self, left, right):
         super().__init__("-", left, right, 2)
 
 
-class Add(BinOp):
+class Add(BinMatOp):
     def __init__(self, left, right):
         super().__init__("+", left, right, 2)
 
 
-class Mod(BinOp):
+class Mod(BinMatOp):
     def __init__(self, left, right):
         super().__init__("%", left, right, 3)
 
 
-class Div(BinOp):
+class Div(BinMatOp):
     def __init__(self, left, right):
         super().__init__("/", left, right, 3)
+
+
+class Mul(BinMatOp):
+    def __init__(self, left, right):
+        super().__init__("*", left, right, 3)
 
 
 class Atom(Expression):

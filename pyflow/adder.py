@@ -55,7 +55,9 @@ class NodeAdder:
         self.add(other)
 
     def _create(self, other):
-        assert other is not None
+        result = []
+        if other is None:
+            return result
 
         if isinstance(other, dict):
             other = [it for it in other.items()]
@@ -63,7 +65,6 @@ class NodeAdder:
         if not isinstance(other, list):
             other = [other]
 
-        result = []
         for o in other:
             if isinstance(o, tuple):
                 if len(o) == 2 and isinstance(o[1], dict):

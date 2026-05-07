@@ -2,7 +2,7 @@ import datetime
 
 import pytest
 
-from pyflow import Family, Suite, Task
+from pyflow import Family, RepeatDate, RepeatString, Suite, Task
 from pyflow.base import GenerateError
 
 
@@ -18,8 +18,10 @@ def test_suite():
     t1["DATE"] = 19900101
 
     t1.FOOO = 42
-    t1.BAR = ["ab", "cd", "ef"]
-    t2.YMD = (datetime.datetime(2000, 1, 1), datetime.datetime(2010, 1, 1))
+    with t1:
+        RepeatString("BAR", ["ab", "cd", "ef"])
+    with t2:
+        RepeatDate("YMD", datetime.datetime(2000, 1, 1), datetime.datetime(2010, 1, 1))
 
     f += Family("g")
     f.g += Task("t4")
@@ -63,7 +65,7 @@ def test_suite():
         "a": {
             "inlimits": s.l1,
             "FOO": 42,
-            "YMD": (now, then),
+            "repeat": (RepeatDate, "YMD", now, then),
             "labels": [("info", "hi"), ("status", "ok")],
             "meters": ("progress", 0, 100),
         }
@@ -84,8 +86,10 @@ def test_suite_builtin_triggers():
     t1["DATE"] = 19900101
 
     t1.FOOO = 42
-    t1.BAR = ["ab", "cd", "ef"]
-    t2.YMD = (datetime.datetime(2000, 1, 1), datetime.datetime(2010, 1, 1))
+    with t1:
+        RepeatString("BAR", ["ab", "cd", "ef"])
+    with t2:
+        RepeatDate("YMD", datetime.datetime(2000, 1, 1), datetime.datetime(2010, 1, 1))
 
     f += Family("g")
     f.g += Task("t4")
@@ -129,7 +133,7 @@ def test_suite_builtin_triggers():
         "a": {
             "inlimits": s.l1,
             "FOO": 42,
-            "YMD": (now, then),
+            "repeat": (RepeatDate, "YMD", now, then),
             "labels": [("info", "hi"), ("status", "ok")],
             "meters": ("progress", 0, 100),
         }

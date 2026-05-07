@@ -83,6 +83,23 @@ DEFAULT_SIGNAL_LIST = [
 
 SSH_COMMAND = "ssh -v -o StrictHostKeyChecking=no"
 
+HOST_REGISTRY = {}
+
+
+def register_host(registry_key):
+    """
+    Registers a host class in the host registry.
+
+    Parameters:
+        registry_key(str): The key to register the host class under.
+    """
+
+    def decorator(cls):
+        HOST_REGISTRY[registry_key] = cls
+        return cls
+
+    return decorator
+
 
 class Host:
     """
@@ -186,21 +203,52 @@ class Host:
     def __repr__(self):
         return str(self)
 
-    @property
-    def ecflow_variables(self):
-        """*dict*: The variables that must be set on relevant nodes to run on this host."""
+    def update_node_attributes(self, options):
+        """
+        Updates the attributes of a node with the host-specific values.
+
+        Parameters:
+        - options (dict): The options dictionary to update with host-specific attributes.
+        """
         if self.server_ecfvars:
-            vars = {}
-        else:
-            vars = {
-                "ECF_JOB_CMD": self.job_cmd,
-                "ECF_KILL_CMD": self.kill_cmd,
-                "ECF_STATUS_CMD": self.status_cmd,
-                "ECF_CHECK_CMD": self.check_cmd,
-                "ECF_OUT": self.log_directory,
+            # Use generated variables to be able to export the variables in tasks
+            host_attrs = {
+                "generated_variables": [
+                    "ECF_JOB_CMD",
+                    "ECF_KILL_CMD",
+                    "ECF_STATUS_CMD",
+                    "ECF_CHECK_CMD",
+                    "ECF_OUT",
+                ],
+                "variables": {**self.extra_variables},
             }
-        vars.update(self.extra_variables)
-        return vars
+        else:
+            host_attrs = {
+                "generated_variables": [],
+                "variables": {
+                    "ECF_JOB_CMD": self.job_cmd,
+                    "ECF_KILL_CMD": self.kill_cmd,
+                    "ECF_STATUS_CMD": self.status_cmd,
+                    "ECF_CHECK_CMD": self.check_cmd,
+                    "ECF_OUT": self.log_directory,
+                    **self.extra_variables,
+                },
+            }
+
+        # Update the options with host-specific attributes
+        for attribute, values in host_attrs.items():
+            if attribute in ["variables"]:
+                variables = options.pop(attribute, {})
+                values.update(variables)
+                options[attribute] = values
+            elif attribute in ["generated_variables"]:
+                gen_variables = options.pop(attribute, [])
+                values += gen_variables
+                options[attribute] = values
+            else:
+                raise Exception("Unknown attribute: {}".format(attribute))
+
+        return options
 
     @property
     def job_cmd(self):
@@ -347,9 +395,7 @@ class Host:
             *str*: The preamble initialisation script.
         """
 
-        script = (
-            textwrap.dedent(
-                """
+        script = textwrap.dedent("""
         # ----------------------------- ECFLOW INIT ----------------------------
 
         export PATH=%(ecf_path)s:$PATH
@@ -358,10 +404,7 @@ class Host:
 
         # Tell ecFlow we have started
         ecflow_client --init=$$
-        """
-            )
-            % {"ecf_path": ecflowpath}
-        )
+        """) % {"ecf_path": ecflowpath}
 
         return script
 
@@ -378,22 +421,18 @@ class Host:
         """
         script = ""
 
-        script += textwrap.dedent(
-            """
+        script += textwrap.dedent("""
             # custom exit/cleanup code
             exit_hook () {
                 echo "cleaning up ...."
-            """
-        )
+            """)
         if exit_hook:
             for line in exit_hook:
                 script += f"    {line}\n"
         script += "}\n\n"
 
         signal_list = " ".join(str(s) for s in self.trap_signals)
-        script += textwrap.dedent(
-            (
-                """
+        script += textwrap.dedent(("""
             # ----------------------------- TRAPS FOR SUBMITTED JOBS ----------------------------
             set +x
             # Define a error handler
@@ -421,10 +460,7 @@ class Host:
             # Trap any calls to exit and errors caught by the -e flag
             trap ERROR 0
             set -x
-            """  # noqa: E501
-            )
-            % {"ecf_path": ecflowpath, "signal_list": signal_list}
-        )
+            """) % {"ecf_path": ecflowpath, "signal_list": signal_list})  # noqa: E501
         return script
 
     def job_preamble(self, exit_hook=None):
@@ -434,6 +470,7 @@ class Host:
         ) + self.preamble_error_function(self.ecflow_path, exit_hook).split("\n")
 
 
+@register_host("null")
 class NullHost(Host):
     """
     A dummy host object invisible to **ecFlow**, but still throws exceptions if **pyflow** attempts to create tasks
@@ -469,10 +506,8 @@ class NullHost(Host):
         kwargs.setdefault("limit", None)
         super().__init__("null", **kwargs)
 
-    @property
-    def ecflow_variables(self):
-        """*dict*: The variables that must be set on relevant nodes to run on this host, always empty."""
-        return {}
+    def update_node_attributes(self, options):
+        return options
 
     def host_preamble(self, exit_hook=None):
         """
@@ -500,6 +535,7 @@ class NullHost(Host):
         return None
 
 
+@register_host("localhost")
 class LocalHost(Host):
     """
     A host object that executes scripts directly on the **ecFlow** server.
@@ -611,6 +647,7 @@ class LocalHost(Host):
         )
 
 
+@register_host("ecflow-default")
 class EcflowDefaultHost(LocalHost):
     """
     By default we just use LocalHost... Slightly modified from ecflow default of
@@ -623,6 +660,7 @@ class EcflowDefaultHost(LocalHost):
         super().__init__("default", **kwargs)
 
 
+@register_host("ssh")
 class SSHHost(Host):
     """
     A host object that executes scripts on the **ecFlow** server via SSH protocol.
@@ -798,9 +836,10 @@ class SSHHost(Host):
         return []
 
 
+@register_host("ssh-simple")
 class SimpleSSHHost(Host):
-    def __init__(self, host):
-        super().__init__(host)
+    def __init__(self, host, **kwargs):
+        super().__init__(host, **kwargs)
         self.host = host
 
     @property
@@ -832,6 +871,7 @@ class SimpleSSHHost(Host):
         return POSTAMBLE_SUBMITTED_JOBS.split("\n")
 
 
+@register_host("slurm")
 class SLURMHost(SSHHost):
     """
     A host object that executes scripts on the **ecFlow** server via Slurm job scheduling system.
@@ -926,6 +966,7 @@ class SLURMHost(SSHHost):
         return POSTAMBLE_SUBMITTED_JOBS.split("\n")
 
 
+@register_host("pbs")
 class PBSHost(SSHHost):
     """
     A host object that executes scripts on the **ecFlow** server via batch server.
@@ -1020,6 +1061,7 @@ class PBSHost(SSHHost):
         return POSTAMBLE_SUBMITTED_JOBS.split("\n")
 
 
+@register_host("troika")
 class TroikaHost(Host):
     """
     A host object that executes scripts on the **ecFlow** server via the troika job submitter.
@@ -1027,6 +1069,10 @@ class TroikaHost(Host):
     Parameters:
         name(str): The name of the host.
         user(str): The user to use for troika commands to the host.
+        troika_exec(str): The path to the troika executable, defaults to `%TROIKA:troika%`.
+        troika_config(str): The path to the troika configuration file, defaults to `%TROIKA_CONFIG%`.
+            Value False or None will deactivate the config in the command.
+        troika_version(str): The version of the troika executable, defaults to `0.2.3`.
         hostname(str): The hostname of the host, otherwise `name` will be used.
         scratch_directory(str): The path in which tasks will be run, unless otherwise specified.
         log_directory(str): The directory to use for script output. Normally `ECF_HOME`, but may need to be changed on
@@ -1051,24 +1097,26 @@ class TroikaHost(Host):
             pass
     """
 
-    def __init__(self, name, user, **kwargs):
-        self.troika_exec = kwargs.pop("troika_exec", "troika")
-        self.troika_config = kwargs.pop("troika_config", "")
-        self.troika_version = tuple(
-            map(int, kwargs.pop("troika_version", "0.2.1").split("."))
-        )
+    def __init__(
+        self,
+        name,
+        user,
+        troika_exec="%TROIKA:troika%",
+        troika_config=None,
+        troika_version="0.2.3",
+        **kwargs,
+    ):
+        self.troika_exec = troika_exec
+        self.troika_config = troika_config
+        self.troika_version = tuple(map(int, troika_version.split(".")))
         super().__init__(name, user=user, **kwargs)
 
     def troika_command(self, command):
         cmd = " ".join(
             [
-                f"%TROIKA:{self.troika_exec}%",
+                f"{self.troika_exec}",
                 "-vv",
-                (
-                    f"-c %TROIKA_CONFIG:{self.troika_config}%"
-                    if self.troika_config
-                    else ""
-                ),
+                (f"-c {self.troika_config}" if self.troika_config else ""),
                 f"{command}",
                 f"-u {self.user}",
             ]
@@ -1187,3 +1235,24 @@ class TroikaHost(Host):
                     args.append("#TROIKA {}={}".format(arg, val))
 
         return args
+
+
+def host_factory(key, *args, **kwargs):
+    """
+    Factory function to create host objects based on a key.
+
+    Parameters:
+        key(str): The key specifying the type of host to create.
+        *args: Positional arguments to pass to the host constructor.
+        **kwargs: Keyword arguments to pass to the host
+            constructor.
+    Returns:
+        Host: The created host object.
+    """
+
+    if (target := HOST_REGISTRY.get(key)) is not None:
+        return target(*args, **kwargs)
+    else:
+        raise ValueError(
+            f"Unknown host type: {key}. Available host types are: {list(HOST_REGISTRY.keys())}"
+        )

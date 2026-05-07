@@ -226,19 +226,21 @@ External
 
 .. _Extern:
 
-.. autoclass:: pyflow.Extern
+.. autoclass:: pyflow.ExternSuite
 
-.. autoclass:: pyflow.ExternNode
+.. autoclass:: pyflow.ExternFamily
 
 .. autoclass:: pyflow.ExternTask
 
-.. autoclass:: pyflow.ExternFamily
+.. autoclass:: pyflow.ExternVariable
+
+.. autoclass:: pyflow.ExternLimit
 
 .. autoclass:: pyflow.ExternEvent
 
 .. autoclass:: pyflow.ExternMeter
 
-.. autoclass:: pyflow.ExternYMD
+.. autoclass:: pyflow.ExternRepeat
 
 
 Deployment

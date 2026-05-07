@@ -25,7 +25,7 @@ from .attributes import (
     Limit,
     Manual,
     Meter,
-    RepeatDay,
+    Mirror,
     Time,
     Today,
     Trigger,
@@ -112,6 +112,7 @@ class Node(Base):
         purge_modules=False,
         extern=False,
         workdir=None,
+        repeat=None,
         **kwargs,
     ):
         """
@@ -142,7 +143,7 @@ class Node(Base):
             limits(Limit_): An attribute for a simple load management by limiting the number of tasks submitted by a
                 specific **ecFlow** server.
             meters(Meter_): An attribute for a range of integer values that can be set from a script.
-            repeat(RepeatDay_): An attribute that allows a node to be repeated infinitely.
+            mirror(Mirror_): An attribute for a mirroring a node on another ecflow server.
             tasks(Task_): An attribute for adding a child task on the node.
             time(Time_): An attribute for setting a time dependency of the node.
             today(Today_): An attribute for setting a cron dependency of the node for the current day.
@@ -152,6 +153,7 @@ class Node(Base):
             generated_variables(GeneratedVariable_): An attribute for setting an **ecFlow** generated variable.
             zombies(Zombies_): An attribute that defines how a zombie should be handled in an automated fashion.
             events(Event_): An attribute for declaring an action that a task can trigger while it is running.
+            repeat(Repeat_): An attribute for setting a repeat schedule for the node.
             **kwargs(str): Accept extra keyword arguments as variables to be set on the node.
         """
 
@@ -162,12 +164,17 @@ class Node(Base):
         self._modules = modules or []
         self._purge_modules = purge_modules
         self._extern = extern
+        self._repeat = None  # can't be set in constructor, needs to be done in context
+        if repeat is not None:
+            if not isinstance(repeat, (list, tuple)):
+                raise TypeError("Repeat attribute must be passed as a list or tuple")
+            with self:
+                self._repeat = repeat[0](*repeat[1:])
 
         # If we have changed the host, then set the relevant directories
         self._host = host
         if host is not None:
-            for variable_name, variable_val in host.ecflow_variables.items():
-                kwargs.setdefault(variable_name, variable_val)
+            host.update_node_attributes(kwargs)
 
             # If we have set/changed the host, then add a label as decided by the Host object
             with self:
@@ -301,6 +308,26 @@ class Node(Base):
 
         self.add_node(node)
         return self
+
+    @property
+    def repeat(self):
+        """
+        Returns the currently active repeat object.
+        If not found in current node, search in parents.
+
+        Returns:
+            Repeat_: Currently active repeat object.
+        """
+        if self._repeat is not None:
+            return self._repeat
+        return self.parent.repeat
+
+    @repeat.setter
+    def repeat(self, value):
+        if not isinstance(value, (list, tuple)):
+            raise TypeError("Repeat attribute must be passed as a list or tuple")
+        with self:
+            self._repeat = value[0](*value[1:])
 
     @property
     def host(self):
@@ -602,7 +629,9 @@ class Node(Base):
 
         d.auto_add_externs(True)
         for ext in d.externs:
-            assert is_extern_known(ext), "Attempting to add unknown extern reference"
+            assert is_extern_known(
+                ext
+            ), f"Attempting to add unknown extern reference {ext}"
 
         return d
 
@@ -830,7 +859,6 @@ class Family(Node):
             limits(Limit_): An attribute for a simple load management by limiting the number of tasks submitted by a
                 specific **ecFlow** server.
             meters(Meter_): An attribute for a range of integer values that can be set from a script.
-            repeat(RepeatDay_): An attribute that allows a node to be repeated infinitely.
             tasks(Task_): An attribute for adding a child task on the node.
             time(Time_): An attribute for setting a time dependency of the node.
             today(Today_): An attribute for setting a cron dependency of the node for the current day.
@@ -840,6 +868,7 @@ class Family(Node):
             generated_variables(GeneratedVariable_): An attribute for setting an **ecFlow** generated variable.
             zombies(Zombies_): An attribute that defines how a zombie should be handled in an automated fashion.
             events(Event_): An attribute for declaring an action that a task can trigger while it is running.
+            repeat(Repeat_): An attribute for setting a repeat schedule for the node.
             **kwargs(str): Accept extra keyword arguments as variables to be set on the family.
 
         Example::
@@ -958,7 +987,6 @@ class AnchorFamily(AnchorMixin, Family):
             limits(Limit_): An attribute for a simple load management by limiting the number of tasks submitted by a
                 specific **ecFlow** server.
             meters(Meter_): An attribute for a range of integer values that can be set from a script.
-            repeat(RepeatDay_): An attribute that allows a node to be repeated infinitely.
             tasks(Task_): An attribute for adding a child task on the node.
             time(Time_): An attribute for setting a time dependency of the node.
             today(Today_): An attribute for setting a cron dependency of the node for the current day.
@@ -967,6 +995,7 @@ class AnchorFamily(AnchorMixin, Family):
             variables(Variable_): An attribute for setting an **ecFlow** variable.
             zombies(Zombies_): An attribute that defines how a zombie should be handled in an automated fashion.
             events(Event_): An attribute for declaring an action that a task can trigger while it is running.
+            repeat(Repeat_): An attribute for setting a repeat schedule for the node.
             **kwargs(str): Accept extra keyword arguments as variables to be set on the anchor family.
 
         Example::
@@ -1033,7 +1062,6 @@ class Suite(AnchorMixin, Node):
             limits(Limit_): An attribute for a simple load management by limiting the number of tasks submitted by a
                 specific **ecFlow** server.
             meters(Meter_): An attribute for a range of integer values that can be set from a script.
-            repeat(RepeatDay_): An attribute that allows a node to be repeated infinitely.
             tasks(Task_): An attribute for adding a child task on the node.
             time(Time_): An attribute for setting a time dependency of the node.
             today(Today_): An attribute for setting a cron dependency of the node for the current day.
@@ -1043,6 +1071,7 @@ class Suite(AnchorMixin, Node):
             generated_variables(GeneratedVariable_): An attribute for setting an **ecFlow** generated variable.
             zombies(Zombies_): An attribute that defines how a zombie should be handled in an automated fashion.
             events(Event_): An attribute for declaring an action that a task can trigger while it is running.
+            repeat(Repeat_): An attribute for setting a repeat schedule for the node.
             **kwargs(str): Accept extra keyword arguments as variables to be set on the suite.
 
         Example::
@@ -1159,11 +1188,7 @@ class Suite(AnchorMixin, Node):
 
         for t in node.all_tasks:
             script, includes = t.generate_script()
-            try:
-                target.deploy_task(t.deploy_path, script, includes)
-            except Exception as e:
-                print(f"\nERROR when deploying task: {t.fullname}\n")
-                raise (e)
+            target.deploy_task(t.deploy_path, script, includes)
         for f in node.all_families:
             manual = self.generate_stub(f.manual)
             if manual:
@@ -1243,7 +1268,7 @@ class Task(Node):
             limits(Limit_): An attribute for a simple load management by limiting the number of tasks submitted by a
                 specific **ecFlow** server.
             meters(Meter_): An attribute for a range of integer values that can be set from a script.
-            repeat(RepeatDay_): An attribute that allows a node to be repeated infinitely.
+            mirror(Mirror_): An attribute for a mirroring a node on another ecflow server.
             tasks(Task_): An attribute for adding a child task on the node.
             time(Time_): An attribute for setting a time dependency of the node.
             today(Today_): An attribute for setting a cron dependency of the node for the current day.
@@ -1253,6 +1278,7 @@ class Task(Node):
             generated_variables(GeneratedVariable_): An attribute for setting an **ecFlow** generated variable.
             zombies(Zombies_): An attribute that defines how a zombie should be handled in an automated fashion.
             events(Event_): An attribute for declaring an action that a task can trigger while it is running.
+            repeat(Repeat_): An attribute for setting a repeat schedule for the node.
             **kwargs(str): Accept extra keyword arguments as variables to be set on the task.
 
         Example::
@@ -1518,7 +1544,6 @@ ACCESSORS = [
     ("labels", Label),
     ("limits", Limit),
     ("meters", Meter),
-    ("repeat", RepeatDay),
     ("tasks", Task),
     ("time", Time),
     ("today", Today),
@@ -1527,6 +1552,7 @@ ACCESSORS = [
     ("generated_variables", GeneratedVariable),
     ("zombies", Zombies),
     ("events", Event),
+    ("mirror", Mirror),
 ]
 
 

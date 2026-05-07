@@ -44,20 +44,14 @@ def test_script_lists():
     t2.script += "echo 'bit4'"
     t2.script += ["echo 'bit5'", "echo 'bit6'"]
 
-    checkscript = os.linesep.join(
-        line
-        for line in textwrap.dedent(
-            """
+    checkscript = os.linesep.join(line for line in textwrap.dedent("""
         echo 'bit1'
         echo 'bit2'
         echo 'bit3'
         echo 'bit4'
         echo 'bit5'
         echo 'bit6'
-    """
-        ).splitlines()
-        if line
-    )
+    """).splitlines() if line)
 
     assert t1.script.value == checkscript
     assert t2.script.value == checkscript
@@ -156,10 +150,7 @@ def test_python_script():
 
             t = pyflow.Task("t", script=[s1, s2, s3, s4, s5])
 
-    checkscript = os.linesep.join(
-        line
-        for line in textwrap.dedent(
-            """
+    checkscript = os.linesep.join(line for line in textwrap.dedent("""
         echo 'bit1'
         python3 -u - <<EOS
         print "I am in Python (default)"
@@ -171,10 +162,7 @@ def test_python_script():
         print("I am a python 3 script")
         EOS
         echo 'bit3'
-    """
-        ).splitlines()
-        if line
-    )
+    """).splitlines() if line)
 
     assert checkscript == t.script.value
 
@@ -183,8 +171,7 @@ def test_python_script_cmd_args():
     with pyflow.Suite("s"):
         with pyflow.Family("f"):
             s1 = pyflow.PythonScript(
-                textwrap.dedent(
-                    """
+                textwrap.dedent("""
                 import argparse
 
                 if __name__ == "__main__":
@@ -196,14 +183,12 @@ def test_python_script_cmd_args():
 
                     print(args.key_1)
                     print(args.key_2)
-                """
-                ),
+                """),
                 cmd_args={"key-1": "value-1", "key-2": "value-2"},
                 python=3,
             )
             s2 = pyflow.PythonScript(
-                textwrap.dedent(
-                    """
+                textwrap.dedent("""
                 import argparse
 
                 if __name__ == "__main__":
@@ -215,8 +200,7 @@ def test_python_script_cmd_args():
 
                     print(args.key_1)
                     print(args.key_2)
-                """
-                ),
+                """),
                 cmd_args={"key-1": "value-1", "key-2": "value-2"},
                 python=2,
             )
@@ -229,8 +213,7 @@ def test_python_script_cmd_args():
             t2 = pyflow.Task("t2", script=[s2])
             t3 = pyflow.Task("t3", script=[s3])
 
-    checkscript_python3 = textwrap.dedent(
-        """
+    checkscript_python3 = textwrap.dedent("""
         python3 -u - --key-1=value-1 --key-2=value-2 <<EOS
         import argparse
 
@@ -244,11 +227,9 @@ def test_python_script_cmd_args():
             print(args.key_1)
             print(args.key_2)
         EOS
-        """
-    )
+        """)
 
-    checkscript_python2 = textwrap.dedent(
-        """
+    checkscript_python2 = textwrap.dedent("""
         python2 -u - --key-1=value-1 --key-2=value-2 <<EOS
         import argparse
 
@@ -262,15 +243,12 @@ def test_python_script_cmd_args():
             print(args.key_1)
             print(args.key_2)
         EOS
-        """
-    )
+        """)
 
-    checkscript_empty = textwrap.dedent(
-        """
+    checkscript_empty = textwrap.dedent("""
         python3 -u - <<EOS
         EOS
-        """
-    )
+        """)
 
     assert checkscript_python3.strip() == t1.script.value.strip()
     assert checkscript_python2.strip() == t2.script.value.strip()
@@ -320,16 +298,14 @@ def test_template_script():
 
     task.script = pyflow.TemplateScript(
         pyflow.PythonScript(
-            textwrap.dedent(
-                """
+            textwrap.dedent("""
                 import ecflow
                 print("Static text {{ TEXT_STRING }}")
                 print("Contents of variable ({{ TEMPLATE_VARIABLE.fullname }}): {{ TEMPLATE_VARIABLE }}")
                 print("Contents of another ({{ ANOTHER_VARIABLE.fullname }}): {{ ANOTHER_VARIABLE }}")
                 ci = ecflow.Client()
                 ci.alter("{{ LABEL.parent.fullname }}", "change", "label", "{{ LABEL.name }}", "value")
-            """
-            ),
+            """),
             python=3,
         ),
         TEXT_STRING="some text",
@@ -338,8 +314,7 @@ def test_template_script():
         LABEL=lab,
     )
 
-    checkscript = textwrap.dedent(
-        """
+    checkscript = textwrap.dedent("""
         python3 -u - <<EOS
         import ecflow
         print("Static text some text")
@@ -348,8 +323,7 @@ def test_template_script():
         ci = ecflow.Client()
         ci.alter("/s/f", "change", "label", "A_LABEL", "value")
         EOS
-    """
-    )[1:-1]
+    """)[1:-1]
 
     assert task.script.value == checkscript
 
@@ -358,14 +332,12 @@ def test_variable_detection_script():
     s_vars = {"S_FOO": "hello", "S_BAR": 1, "S_FOO_S_BAR": "3"}
     with pyflow.Suite("s", variables=s_vars):
         t_vars = {"T_FOO": "salut", "T_BAR": 2, "T_FOO_T_BAR": "4"}
-        t_script = pyflow.Script(
-            """
+        t_script = pyflow.Script("""
                 echo S_BAR is $S_BAR
                 echo S_FOO_S_BAR is ${S_FOO_S_BAR}
                 echo T_FOO is ${T_FOO:-2}
                 echo T_BAR is ${T_BAR=10}
-            """
-        )
+            """)
         t = pyflow.Task("t", variables=t_vars, script=t_script)
 
     full_script = t.generate_script()
