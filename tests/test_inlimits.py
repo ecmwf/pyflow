@@ -1,4 +1,5 @@
-from pyflow import Limits, Suite, Tasks
+import pytest
+from pyflow import Limit, Limits, InLimit, Suite, Tasks
 
 
 def test_inlimits():
@@ -9,6 +10,29 @@ def test_inlimits():
     with Suite("s") as s:
         Limits("tlimit", "t2limit", value=3)
         Tasks("t", "t2", inlimits=lambda lim: "{}limit".format(lim.parent.name))
+
+    s.check_definition()
+    s.generate_node()
+
+
+@pytest.mark.parametrize(
+    "options",
+    [
+        {},
+        {"path": "/s"},
+        {"value": "tlimit"},
+        {"value": "tlimit", "path": "/s"},
+        {"value": "tlimit", "tokens": 1},
+        {"value": "tlimit", "limit_this_node_only": True},
+        {"value": "tlimit", "limit_submission": True},
+    ],
+)
+def test_options(options):
+    with Suite("s") as s:
+        limit = Limit("tlimit", value=3)
+        if "value" not in options:
+            options["value"] = limit
+        Tasks("t", "t2", inlimits=InLimit(**options))
 
     s.check_definition()
     s.generate_node()

@@ -939,6 +939,10 @@ class InLimit(Attribute):
 
     Parameters:
         value(str,Limit_): The name of the limit or a limit object.
+        path(str): The optional path to the limit if the limit is not in the same node as the InLimit attribute.
+        tokens(int): The number of tokens to consume from the limit when a task is submitted.
+        limit_this_node_only(bool): Whether the limit should only apply to current node.
+        limit_submission(bool): Whether the limit should only apply to submissions
 
     Example::
 
@@ -946,8 +950,19 @@ class InLimit(Attribute):
         pyflow.InLimit(l)
     """
 
-    def __init__(self, value):
+    def __init__(
+        self,
+        value: str | Limit,
+        path: str = "",
+        tokens: int = 1,
+        limit_this_node_only: bool = False,
+        limit_submission: bool = False,
+    ):
         super().__init__("_" + str(value), value)
+        self.path = path
+        self.tokens = tokens
+        self.limit_this_node_only = limit_this_node_only
+        self.limit_submission = limit_submission
 
     def _build(self, ecflow_parent):
         value = self.value
@@ -955,9 +970,32 @@ class InLimit(Attribute):
             return
         if isinstance(value, Limit):
             value = value.fullname.split(":")
-            ecflow_parent.add_inlimit(ecflow.InLimit(value[1], value[0]))
+            if self.path:
+                if self.path != value[0]:
+                    raise ValueError(
+                        "InLimit path {} does not match limit path {}".format(
+                            self.path, value[0]
+                        )
+                    )
+            ecflow_parent.add_inlimit(
+                ecflow.InLimit(
+                    value[1],
+                    value[0],
+                    self.tokens,
+                    self.limit_this_node_only,
+                    self.limit_submission,
+                )
+            )
         else:
-            ecflow_parent.add_inlimit(ecflow.InLimit(str(value)))
+            ecflow_parent.add_inlimit(
+                ecflow.InLimit(
+                    str(value),
+                    self.path,
+                    self.tokens,
+                    self.limit_this_node_only,
+                    self.limit_submission,
+                )
+            )
 
 
 class Inlimit(InLimit):
