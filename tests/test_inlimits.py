@@ -1,5 +1,6 @@
 import pytest
-from pyflow import Limit, Limits, InLimit, Suite, Tasks
+
+from pyflow import InLimit, Limit, Limits, Suite, Tasks
 
 
 def test_inlimits():
