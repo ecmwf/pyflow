@@ -727,6 +727,65 @@ class RepeatDateTime(Exportable):
         return Mod(Add(Div(self, 86400), 4), 7)
 
 
+class RepeatDateTimeList(Repeat):
+    """
+    An attribute that allows a node to be repeated by a list of datetime values.
+
+    Parameters:
+        name(str): The name of the repeat attribute.
+        values(list of datetime): The list of datetime values, as datetime objects or strings.
+
+    Example::
+
+        pyflow.RepeatDateTimeList('REPEAT_DATETIME',
+                                  [datetime.datetime(year=2019, month=1, day=1),
+                                   datetime.datetime(year=2019, month=1, day=3)])
+
+    Values can also be strings in ISO 8601 basic format `yyyymmddTHHMMSS`, or `YYYYMMDD`::
+
+        pyflow.RepeatDateTimeList('REPEAT_DATETIME', ['20190101T120000', '20190103'])
+    """
+
+    def __init__(self, name, values):
+        super().__init__(name, values)
+
+    def _build(self, ecflow_parent):
+        values = [as_date(value).strftime("%Y%m%dT%H%M%S") for value in self.values]
+
+        repeat = ecflow.RepeatDateTimeList(
+            str(self.name),
+            values,
+        )
+
+        ecflow_parent.add_repeat(repeat)
+
+    def __add__(self, other):
+        return Add(self, other)
+
+    def __sub__(self, other):
+        return Sub(self, other)
+
+    @property
+    def second(self):
+        """*int*: The second of the repeat datetime."""
+        return Mod(self, 60)
+
+    @property
+    def minute(self):
+        """*int*: The minute of the repeat datetime."""
+        return Mod(Div(self, 60), 60)
+
+    @property
+    def hour(self):
+        """*int*: The hour of the repeat datetime."""
+        return Mod(Div(self, 3600), 24)
+
+    @property
+    def day_of_week(self):
+        """*int*: The day of the week of the repeat datetime."""
+        return Mod(Add(Div(self, 86400), 4), 7)
+
+
 def is_date(value):
     return (
         isinstance(value, (datetime.date, datetime.datetime))
