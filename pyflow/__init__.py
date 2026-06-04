@@ -30,6 +30,7 @@ from .attributes import (
     RepeatDate,
     RepeatDateList,
     RepeatDateTime,
+    RepeatDateTimeList,
     RepeatDay,
     RepeatEnumerated,
     RepeatInteger,
