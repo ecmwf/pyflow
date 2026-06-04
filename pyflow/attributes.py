@@ -750,8 +750,7 @@ class RepeatDateTimeList(Repeat):
         super().__init__(name, values)
 
     def _build(self, ecflow_parent):
-        values = [as_date(value).strftime("%Y%m%dT%H%M%S") for value in self.values]
-
+        values = [as_date(value).strftime("%Y%m%dT%H%M%S") for value in self.value]
         repeat = ecflow.RepeatDateTimeList(
             str(self.name),
             values,
