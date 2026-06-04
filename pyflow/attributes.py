@@ -757,7 +757,10 @@ class RepeatDateTimeList(Repeat):
             raise TypeError("values must be a list")
         if isinstance(values, list) and not values:
             raise ValueError("values cannot be an empty list")
-        if not all(isinstance(value, (datetime.datetime, datetime.date, str)) for value in values):
+        if not all(
+            isinstance(value, (datetime.datetime, datetime.date, str))
+            for value in values
+        ):
             raise TypeError("values must be a list of datetime objects or strings")
 
         super().__init__(name, values)
