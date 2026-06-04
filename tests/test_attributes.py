@@ -554,6 +554,35 @@ class TestRepeats:
 
         s.check_definition()
 
+    def test_repeat_datetime_list(self):
+        from datetime import datetime as dt
+        i = dt(2000, 1, 1, 12, 0, 0)
+        j = dt(2000, 1, 2)
+
+        input_tests = (
+            ("A", [i]),
+            ("B", [i, j]),
+            ("C", ["20000103T120000", "20000104"]),
+            ("D", [i, "20010105T123456"]),
+        )
+
+        with pyflow.Suite("s") as s:
+            for idx, args in enumerate(input_tests):
+                with pyflow.Task(f"t{idx}"):
+                    pyflow.RepeatDateTimeList(*args)
+
+        asserts = (
+            'repeat datetimelist A "20000101T120000"',
+            'repeat datetimelist B "20000101T120000" "20000102T000000"',
+            'repeat datetimelist C "20000103T120000" "20000104T000000"',
+            'repeat datetimelist D "20000101T120000" "20010105T123456"',
+        )
+        defn = str(s.ecflow_definition())
+        for a in asserts:
+            assert a in defn
+
+        s.check_definition()
+
     def test_repeat_date_list(self):
         i = date(year=2019, month=12, day=31)
         j = date(year=2020, month=1, day=1)
