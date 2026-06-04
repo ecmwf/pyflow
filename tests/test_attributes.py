@@ -562,7 +562,7 @@ class TestRepeats:
         input_tests = (
             ("A", [i]),
             ("B", [i, j]),
-            ("C", ["20000103T120000", "20000104"]),
+            ("C", ["20000103T120000", "20000104T000000"]),
             ("D", [i, "20010105T123456"]),
         )
 
@@ -576,6 +576,27 @@ class TestRepeats:
             'repeat datetimelist B "20000101T120000" "20000102T000000"',
             'repeat datetimelist C "20000103T120000" "20000104T000000"',
             'repeat datetimelist D "20000101T120000" "20010105T123456"',
+        )
+        defn = str(s.ecflow_definition())
+        for a in asserts:
+            assert a in defn
+
+        s.check_definition()
+
+    def test_repeat_datetimelist_with_truncated_string_values(self):
+        input_tests = (
+            ("A", ["20000101T01", "20000102T0102", "20000103T010203"]),
+            ("B", ["20000104", "20000105T12", "20010106T1234"]),
+        )
+
+        with pyflow.Suite("s") as s:
+            for idx, args in enumerate(input_tests):
+                with pyflow.Task(f"t{idx}"):
+                    pyflow.RepeatDateTimeList(*args)
+
+        asserts = (
+            'repeat datetimelist A "20000101T010000" "20000102T010200" "20000103T010203"',
+            'repeat datetimelist B "20000104T000000" "20000105T120000" "20010106T123400"',
         )
         defn = str(s.ecflow_definition())
         for a in asserts:

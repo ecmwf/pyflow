@@ -658,7 +658,9 @@ class RepeatDateTime(Exportable):
                               datetime.datetime(year=2019, month=12, day=31, hour=12, minute=0, second=0),
                               datetime.timedelta(hours=12, minutes=0, seconds=0))
 
-    Date and increment can also be strings::
+    Start/End values can also be strings: ISO 8601 basic format `yyyymmddTHHMMSS`, DateTime with
+    hours and minutes ``yyyymmddTHHMM``, DateTime with hours only ``yyyymmddTHH``,
+    or simply a date ``yyyymmdd`` (the missing components are assumed to be 0), and increment can also be a string::
 
         pyflow.RepeatDateTime('REPEAT_DATETIME',
                               '20190101T120000', '20191231T120000', '12:00:00')
@@ -741,7 +743,9 @@ class RepeatDateTimeList(Repeat):
                                   [datetime.datetime(year=2019, month=1, day=1),
                                    datetime.datetime(year=2019, month=1, day=3)])
 
-    Values can also be strings in ISO 8601 basic format `yyyymmddTHHMMSS`, or `yyyymmdd`::
+    Values can also be strings: ISO 8601 basic format `yyyymmddTHHMMSS`, DateTime with
+    hours and minutes ``yyyymmddTHHMM``, DateTime with hours only ``yyyymmddTHH``,
+    or simply a date ``yyyymmdd`` (the missing components are assumed to be 0)::
 
         pyflow.RepeatDateTimeList('REPEAT_DATETIME', ['20190101T120000', '20190103'])
     """
