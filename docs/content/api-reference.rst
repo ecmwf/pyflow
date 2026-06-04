@@ -160,6 +160,14 @@ Repeat
 
 .. autoclass:: pyflow.attributes.RepeatDateList
 
+.. _RepeatDateTime:
+
+.. autoclass:: pyflow.attributes.RepeatDateTime
+
+.. _RepeatDateTimeList:
+
+.. autoclass:: pyflow.attributes.RepeatDateTimeList
+
 .. _RepeatDay:
 
 .. autoclass:: pyflow.attributes.RepeatDay
