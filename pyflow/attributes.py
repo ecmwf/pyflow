@@ -735,13 +735,13 @@ class RepeatDateTimeList(Repeat):
 
     Parameters:
         name(str): The name of the repeat attribute.
-        values(list of datetime): The list of datetime values, as datetime objects or strings.
+        values(list of datetime/date): The list of datetime/date values, as datetime/date objects or strings.
 
     Example::
 
         pyflow.RepeatDateTimeList('REPEAT_DATETIME',
-                                  [datetime.datetime(year=2019, month=1, day=1),
-                                   datetime.datetime(year=2019, month=1, day=3)])
+                                  [datetime.date(year=2019, month=1, day=1),
+                                   datetime.datetime(year=2019, month=1, day=3, hour=12, minute=0, seconds=0)])
 
     Values can also be strings: ISO 8601 basic format `yyyymmddTHHMMSS`, DateTime with
     hours and minutes ``yyyymmddTHHMM``, DateTime with hours only ``yyyymmddTHH``,
@@ -757,7 +757,7 @@ class RepeatDateTimeList(Repeat):
             raise TypeError("values must be a list")
         if isinstance(values, list) and not values:
             raise ValueError("values cannot be an empty list")
-        if not all(isinstance(value, (datetime.datetime, str)) for value in values):
+        if not all(isinstance(value, (datetime.datetime, datetime.date, str)) for value in values):
             raise TypeError("values must be a list of datetime objects or strings")
 
         super().__init__(name, values)
