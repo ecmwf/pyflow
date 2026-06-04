@@ -750,13 +750,22 @@ class RepeatDateTimeList(Repeat):
         super().__init__(name, values)
 
     def _build(self, ecflow_parent):
-        values = [as_date(value).strftime("%Y%m%dT%H%M%S") for value in self.value]
+        # Format all datetime values as ISO 8601 basic format `yyyymmddTHHMMSS`
+        values = [as_date(value).strftime("%Y%m%dT%H%M%S") for value in self.values]
+
         repeat = ecflow.RepeatDateTimeList(
             str(self.name),
             values,
         )
 
         ecflow_parent.add_repeat(repeat)
+
+    @property
+    def values(self):
+        """*list*: The list of datetime values."""
+        return [
+            x if isinstance(x, datetime.datetime) else as_date(x) for x in self.value
+        ]
 
     def __add__(self, other):
         return Add(self, other)
