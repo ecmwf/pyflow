@@ -583,6 +583,29 @@ class TestRepeats:
 
         s.check_definition()
 
+    def test_repeat_datetimelist_allowing_date_and_datetime_object(self):
+        import datetime
+        i = datetime.datetime(2000, 1, 1, 12, 34, 56)
+        j = datetime.date(2000, 1, 2)
+
+        input_tests = (
+            ("A", [i, j]),
+        )
+
+        with pyflow.Suite("s") as s:
+            for idx, args in enumerate(input_tests):
+                with pyflow.Task(f"t{idx}"):
+                    pyflow.RepeatDateTimeList(*args)
+
+        asserts = (
+            'repeat datetimelist A "20000101T123456" "20000102T000000"'
+        )
+        defn = str(s.ecflow_definition())
+        for a in asserts:
+            assert a in defn
+
+        s.check_definition()
+
     def test_repeat_datetimelist_with_truncated_string_values(self):
         input_tests = (
             ("A", ["20000101T01", "20000102T0102", "20000103T010203"]),
