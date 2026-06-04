@@ -554,7 +554,7 @@ class TestRepeats:
 
         s.check_definition()
 
-    def test_repeat_datetime_list(self):
+    def test_repeat_datetimelist_basic_usage(self):
         from datetime import datetime as dt
         i = dt(2000, 1, 1, 12, 0, 0)
         j = dt(2000, 1, 2)
@@ -582,6 +582,23 @@ class TestRepeats:
             assert a in defn
 
         s.check_definition()
+
+    def test_repeat_datetimelist_with_none_value(self):
+        with pytest.raises(ValueError, match="values cannot be None" ):
+            pyflow.RepeatDateTimeList("N", None)
+
+    def test_repeat_datetimelist_with_empty_values_list(self):
+        with pytest.raises(ValueError, match="values cannot be an empty list" ):
+            pyflow.RepeatDateTimeList("E", [])
+
+    def test_repeat_datetimelist_with_invalid_type_values_list(self):
+        with pytest.raises(TypeError, match="values must be a list of datetime objects or strings" ):
+            pyflow.RepeatDateTimeList("I", [20050101])
+
+    def test_repeat_datetimelist_with_literal_type_value(self):
+        from datetime import datetime as dt
+        with pytest.raises(TypeError, match="values must be a list" ):
+            pyflow.RepeatDateTimeList("I", dt(2000, 1, 1, 0, 0, 0))
 
     def test_repeat_date_list(self):
         i = date(year=2019, month=12, day=31)

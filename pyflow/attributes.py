@@ -729,7 +729,7 @@ class RepeatDateTime(Exportable):
 
 class RepeatDateTimeList(Repeat):
     """
-    An attribute that allows a node to be repeated by a list of datetime values.
+    An attribute that allows a node to be repeated over a list of datetime values.
 
     Parameters:
         name(str): The name of the repeat attribute.
@@ -741,12 +741,21 @@ class RepeatDateTimeList(Repeat):
                                   [datetime.datetime(year=2019, month=1, day=1),
                                    datetime.datetime(year=2019, month=1, day=3)])
 
-    Values can also be strings in ISO 8601 basic format `yyyymmddTHHMMSS`, or `YYYYMMDD`::
+    Values can also be strings in ISO 8601 basic format `yyyymmddTHHMMSS`, or `yyyymmdd`::
 
         pyflow.RepeatDateTimeList('REPEAT_DATETIME', ['20190101T120000', '20190103'])
     """
 
     def __init__(self, name, values):
+        if values is None:
+            raise ValueError("values cannot be None")
+        if not isinstance(values, list):
+            raise TypeError("values must be a list")
+        if isinstance(values, list) and not values:
+            raise ValueError("values cannot be an empty list")
+        if not all(isinstance(value, (datetime.datetime, str)) for value in values):
+            raise TypeError("values must be a list of datetime objects or strings")
+
         super().__init__(name, values)
 
     def _build(self, ecflow_parent):
