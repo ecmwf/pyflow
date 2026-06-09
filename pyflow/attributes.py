@@ -25,7 +25,7 @@ from .expressions import (
     expression_from_json,
     make_expression,
 )
-from .importer import ecflow
+from .importer import ecflow, supported
 from .state import aborted, active, complete, queued, submitted, suspended, unknown
 
 NO_TRIGGER = False
@@ -641,6 +641,7 @@ for dow, day in enumerate(
     setattr(RepeatDate, day, property(lambda self: Eq(self.day_of_week, dow)))
 
 
+@supported(">=5.12.0")
 class RepeatDateTime(Exportable):
     """
     An attribute that allows a node to be repeated by a date+time value.
@@ -664,6 +665,10 @@ class RepeatDateTime(Exportable):
 
         pyflow.RepeatDateTime('REPEAT_DATETIME',
                               '20190101T120000', '20191231T120000', '12:00:00')
+
+    Note::
+
+        This repeat type is only supported in ecFlow 5.12.0 and later.
 
     """
 
@@ -729,6 +734,7 @@ class RepeatDateTime(Exportable):
         return Mod(Add(Div(self, 86400), 4), 7)
 
 
+@supported(">=5.17.0")
 class RepeatDateTimeList(Repeat):
     """
     An attribute that allows a node to be repeated over a list of datetime values.
@@ -748,6 +754,10 @@ class RepeatDateTimeList(Repeat):
     or simply a date ``yyyymmdd`` (the missing components are assumed to be 0)::
 
         pyflow.RepeatDateTimeList('REPEAT_DATETIME', ['20190101T120000', '20190103'])
+
+    Note::
+
+        This repeat type is only supported in ecFlow 5.17.0 and later.
     """
 
     def __init__(self, name, values):
