@@ -437,6 +437,9 @@ class Host:
             set +x
             # Define a error handler
             ERROR() {
+                export EXIT_REASON="$1"
+                export EXIT_DETAIL="$2"
+                export EXIT_RC="${3:-1}"
                 export PATH=%(ecf_path)s:$PATH
                 set +eu  # Clear -eu flag, so we don't fail
                 wait  # wait for background process to stop
@@ -454,11 +457,11 @@ class Host:
             export SIGNAL_LIST='%(signal_list)s'
 
             for signal in $SIGNAL_LIST; do
-                trap "ERROR $signal \\"Signal $(kill -l $signal) ($signal) received \\"" $signal
+                trap "rc=\\$?; ERROR $signal \\"Signal $(kill -l $signal) ($signal) received \\"" $signal
             done
 
             # Trap any calls to exit and errors caught by the -e flag
-            trap ERROR 0
+            trap 'rc=$?; ERROR EXIT "$rc"' 0
             set -x
             """) % {"ecf_path": ecflowpath, "signal_list": signal_list})  # noqa: E501
         return script
