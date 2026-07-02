@@ -34,6 +34,7 @@
 
 
 ## Installation
+
 To install pyflow using conda (including ecFlow):
 
     conda env create -n pyflow -f environment.yml
@@ -43,7 +44,36 @@ To install pyflow using pip (requires a local installation of ecFlow):
     pip install pyflow-workflow-generator
 
 ## Documentation
+
 The documentation can be found at <https://pyflow-workflow-generator.readthedocs.io>.
+
+## QA Checks (CI-equivalent)
+
+The CI `qa` job runs the following checks, in order:
+
+1. `isort --check .`
+2. `black --check .`
+3. `flake8 .`
+
+This repository includes a matching pre-commit configuration in
+`.pre-commit-config.yaml` using standard upstream hooks, pinned to the
+tool versions from the CI run:
+
+- `isort==8.0.1`
+- `black==26.5.1`
+- `flake8==7.3.0`
+
+Run locally:
+
+```bash
+python -m pip install ".[dev]"
+pre-commit run --all-files
+```
+
+The hooks are split into three sequential checks (isort, then black, then
+flake8) to avoid conflicts and to match CI behavior. Running `isort` before
+`black` prevents import-format churn, and running `flake8` last ensures linting
+sees code after formatting checks.
 
 
 ## License
