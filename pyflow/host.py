@@ -457,11 +457,11 @@ class Host:
             export SIGNAL_LIST='%(signal_list)s'
 
             for signal in $SIGNAL_LIST; do
-                trap "rc=\\$?; ERROR $signal \\"Signal $(kill -l $signal) ($signal) received \\"" $signal
+                trap "rc=\\$?; ERROR $signal \\"Signal $(kill -l $signal) ($signal) received\\" \\"\\$rc\\"" $signal
             done
 
             # Trap any calls to exit and errors caught by the -e flag
-            trap 'rc=$?; ERROR EXIT "$rc"' 0
+            trap 'rc=$?; ERROR EXIT "" "$rc"' 0
             set -x
             """) % {"ecf_path": ecflowpath, "signal_list": signal_list})  # noqa: E501
         return script
