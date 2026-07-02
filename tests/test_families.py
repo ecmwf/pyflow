@@ -165,7 +165,12 @@ def test_exit_hook_scripts():
         "hook_f2_line",
         "hook_t2_line",
     ]
-    assert f3._exit_hook == ["hook_f3_line_1\nhook_f3_line_2", "common_hook_line", "hook_f_line", "hook_f2_line"]
+    assert f3._exit_hook == [
+        "hook_f3_line_1\nhook_f3_line_2",
+        "common_hook_line",
+        "hook_f_line",
+        "hook_f2_line",
+    ]
     assert t3._exit_hook == [
         "hook_f3_line_1\nhook_f3_line_2",
         "hook_t3_line",
@@ -173,7 +178,12 @@ def test_exit_hook_scripts():
         "hook_f_line",
         "hook_f2_line",
     ]
-    assert t4._exit_hook == ["hook_f3_line_1\nhook_f3_line_2", "common_hook_line", "hook_f_line", "hook_f2_line"]
+    assert t4._exit_hook == [
+        "hook_f3_line_1\nhook_f3_line_2",
+        "common_hook_line",
+        "hook_f_line",
+        "hook_f2_line",
+    ]
     assert t5._exit_hook == ["common_hook_line", "hook_f_line"]
 
 
@@ -201,6 +211,7 @@ def test_exit_hook_list_strings_preserves_duplicate_lines():
 
     assert f._exit_hook == expected
     assert t1._exit_hook == expected
+
 
 if __name__ == "__main__":
     from os import path
