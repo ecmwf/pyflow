@@ -69,8 +69,8 @@ where = ["."]
 exclude = ["tests"]
 
 [tool.setuptools_scm]
-write_to = "pyflow/_version.py"
-write_to_template = '''
+version_file = "pyflow/_version.py"
+version_file_template = '''
 # Do not change! Do not track in version control!
 __version__ = "{version}"
 '''
