@@ -446,6 +446,16 @@ def test_traps():
     assert signal_list1 in s1
     assert signal_list2 in s2
 
+    # Ensure ERROR exposes contract variables used by custom exit hooks.
+    assert 'export EXIT_REASON="$1"' in s1
+    assert 'export EXIT_DETAIL="$2"' in s1
+    assert 'export EXIT_RC="${3:-1}"' in s1
+
+    # Ensure traps pass the command return code through to ERROR.
+    assert 'trap "rc=\\$?; ERROR $signal' in s1
+    assert '\\"\\$rc\\"" $signal' in s1
+    assert 'trap \'rc=$?; ERROR EXIT "" "$rc"\' 0' in s1
+
 
 @pytest.mark.parametrize(
     "key,expected_class,kwargs",
