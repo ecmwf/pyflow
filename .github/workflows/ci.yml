@@ -21,7 +21,7 @@ jobs:
 
   docs:
     name: docs
-    runs-on: ubuntu-lts-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v2
       - uses: mamba-org/setup-micromamba@v1
