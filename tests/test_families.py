@@ -1,4 +1,6 @@
-from pyflow import AnchorFamily, Family, Limit, Suite, Task, Variable
+import pytest
+
+from pyflow import AnchorFamily, Family, Limit, Script, Suite, Task, Variable
 
 
 def test_families():
@@ -99,7 +101,7 @@ def test_files_locations():
     assert t7.deploy_path == "/a/base/path/f5/f6/t7.ecf"
 
 
-def test_exit_hook():
+def test_exit_hook_strings():
     """
     Propagate exit hook to children of a given family
     """
@@ -110,7 +112,8 @@ def test_exit_hook():
 
     t5 = Task("t5")
 
-    with Suite("S"):
+    common_hook = "one_hook"
+    with Suite("S", exit_hook=common_hook):
         with Family("f", exit_hook="hook_f", tasks=t5) as f:
             Limit("limit1", 15)
             Variable("VARIABLE1", 1234)
@@ -118,15 +121,86 @@ def test_exit_hook():
             with Family("f2", families=f3, exit_hook="hook_f2") as f2:
                 t2 = Task("t2", exit_hook="hook_t2")
 
-    assert f._exit_hook == ["hook_f"]
-    assert t1._exit_hook == ["hook_f", "hook_t1"]
-    assert f2._exit_hook == ["hook_f", "hook_f2"]
-    assert t2._exit_hook == ["hook_f", "hook_f2", "hook_t2"]
-    assert f3._exit_hook == ["hook_f3", "hook_f", "hook_f2"]
-    assert t3._exit_hook == ["hook_f3", "hook_t3", "hook_f", "hook_f2"]
-    assert t4._exit_hook == ["hook_f3", "hook_f", "hook_f2"]
-    assert t5._exit_hook == ["hook_f"]
+    assert f._exit_hook == [common_hook, "hook_f"]
+    assert t1._exit_hook == [common_hook, "hook_f", "hook_t1"]
+    assert f2._exit_hook == [common_hook, "hook_f", "hook_f2"]
+    assert t2._exit_hook == [common_hook, "hook_f", "hook_f2", "hook_t2"]
+    assert f3._exit_hook == ["hook_f3", common_hook, "hook_f", "hook_f2"]
+    assert t3._exit_hook == ["hook_f3", "hook_t3", common_hook, "hook_f", "hook_f2"]
+    assert t4._exit_hook == ["hook_f3", common_hook, "hook_f", "hook_f2"]
+    assert t5._exit_hook == [common_hook, "hook_f"]
 
+
+def test_exit_hook_scripts():
+    """
+    Support Script objects as exit hooks and propagate to children of a given family
+    """
+    script_hook_f3 = Script(["hook_f3_line_1", "hook_f3_line_2"])
+    script_hook_t3 = Script("hook_t3_line")
+    with Family("f3", exit_hook=script_hook_f3) as f3:
+        t3 = Task("t3", exit_hook=script_hook_t3)
+        t4 = Task("t4")
+
+    t5 = Task("t5")
+
+    common_hook = Script("common_hook_line")
+    hook_f = Script("hook_f_line")
+    hook_t1 = Script("hook_t1_line")
+    hook_f2 = Script("hook_f2_line")
+    hook_t2 = Script("hook_t2_line")
+    with Suite("S", exit_hook=common_hook):
+        with Family("f", exit_hook=hook_f, tasks=t5) as f:
+            Limit("limit1", 15)
+            Variable("VARIABLE1", 1234)
+            t1 = Task("t1", exit_hook=hook_t1)
+            with Family("f2", families=f3, exit_hook=hook_f2) as f2:
+                t2 = Task("t2", exit_hook=hook_t2)
+
+    assert f._exit_hook == ["common_hook_line", "hook_f_line"]
+    assert t1._exit_hook == ["common_hook_line", "hook_f_line", "hook_t1_line"]
+    assert f2._exit_hook == ["common_hook_line", "hook_f_line", "hook_f2_line"]
+    assert t2._exit_hook == [
+        "common_hook_line",
+        "hook_f_line",
+        "hook_f2_line",
+        "hook_t2_line",
+    ]
+    assert f3._exit_hook == ["hook_f3_line_1\nhook_f3_line_2", "common_hook_line", "hook_f_line", "hook_f2_line"]
+    assert t3._exit_hook == [
+        "hook_f3_line_1\nhook_f3_line_2",
+        "hook_t3_line",
+        "common_hook_line",
+        "hook_f_line",
+        "hook_f2_line",
+    ]
+    assert t4._exit_hook == ["hook_f3_line_1\nhook_f3_line_2", "common_hook_line", "hook_f_line", "hook_f2_line"]
+    assert t5._exit_hook == ["common_hook_line", "hook_f_line"]
+
+
+@pytest.mark.xfail(
+    reason="Known issue: duplicate list exit_hook lines are de-duplicated when inherited"
+)
+def test_exit_hook_list_strings_preserves_duplicate_lines():
+    """
+    Lists of string exit hooks should preserve ordering and duplicate lines.
+    """
+
+    parent_lines = ["echo pre_cleanup", "echo duplicate_line"]
+    child_lines = ["echo duplicate_line", "echo post_cleanup"]
+
+    with Suite("S", exit_hook=parent_lines):
+        with Family("f", exit_hook=child_lines) as f:
+            t1 = Task("t1")
+
+    expected = [
+        "echo pre_cleanup",
+        "echo duplicate_line",
+        "echo duplicate_line",
+        "echo post_cleanup",
+    ]
+
+    assert f._exit_hook == expected
+    assert t1._exit_hook == expected
 
 if __name__ == "__main__":
     from os import path
