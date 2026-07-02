@@ -43,6 +43,13 @@ dependencies = [
     test = [
         "pytest",
     ]
+    qa = [
+        "black==26.5.1",
+        "flake8==7.3.0",
+        "isort==8.0.1",
+        "pre-commit",
+    ]
+    dev = ["pyflow-workflow-generator[test,qa]"]
     diagrams = [
         "graphviz",
     ]

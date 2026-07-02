@@ -1,0 +1,27 @@
+repos:
+  - repo: https://github.com/pycqa/isort
+    rev: 8.0.1
+    hooks:
+      - id: isort
+        name: ci qa isort --check
+        args: ["--check-only", "."]
+        pass_filenames: false
+        require_serial: true
+
+  - repo: https://github.com/psf/black
+    rev: 26.5.1
+    hooks:
+      - id: black
+        name: ci qa black --check
+        args: ["--check", "."]
+        pass_filenames: false
+        require_serial: true
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.3.0
+    hooks:
+      - id: flake8
+        name: ci qa flake8
+        args: ["."]
+        pass_filenames: false
+        require_serial: true
