@@ -747,7 +747,7 @@ class RepeatDateTimeList(Repeat):
 
         pyflow.RepeatDateTimeList('REPEAT_DATETIME',
                                   [datetime.date(year=2019, month=1, day=1),
-                                   datetime.datetime(year=2019, month=1, day=3, hour=12, minute=0, seconds=0)])
+                                   datetime.datetime(year=2019, month=1, day=3, hour=12, minute=0, second=0)])
 
     Values can also be strings: ISO 8601 basic format `yyyymmddTHHMMSS`, DateTime with
     hours and minutes ``yyyymmddTHHMM``, DateTime with hours only ``yyyymmddTHH``,
