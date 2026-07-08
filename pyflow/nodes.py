@@ -940,8 +940,7 @@ class Family(Node):
         if isinstance(hook, str):
             hook = [hook]
         for hk in hook:
-            if hk not in self._exit_hook:
-                self._exit_hook.append(hk)
+            self._exit_hook.append(hk)
         # Check if properly initialised
         if "_nodes" in self.__dict__:
             for chld in self.executable_children:
@@ -1206,8 +1205,7 @@ class Suite(AnchorMixin, Node):
         if isinstance(hook, str):
             hook = [hook]
         for hk in hook:
-            if hk not in self._exit_hook:
-                self._exit_hook.append(hk)
+            self._exit_hook.append(hk)
         # Check if properly initialised
         if "_nodes" in self.__dict__:
             for chld in self.executable_children:
@@ -1405,8 +1403,7 @@ class Task(Node):
         if isinstance(hook, str):
             hook = [hook]
         for hk in hook:
-            if hk not in self._exit_hook:
-                self._exit_hook.append(hk)
+            self._exit_hook.append(hk)
 
     def generate_script(self):
         """
