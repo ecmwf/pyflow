@@ -187,12 +187,11 @@ def test_exit_hook_scripts():
     assert t5._exit_hook == ["common_hook_line", "hook_f_line"]
 
 
-@pytest.mark.xfail(
-    reason="Known issue: duplicate list exit_hook lines are de-duplicated when inherited"
-)
 def test_exit_hook_list_strings_preserves_duplicate_lines():
     """
     Lists of string exit hooks should preserve ordering and duplicate lines.
+
+    Changed in v3.7.0. In previous versions duplication in exit_hook scripts were not allowed.
     """
 
     parent_lines = ["echo pre_cleanup", "echo duplicate_line"]
