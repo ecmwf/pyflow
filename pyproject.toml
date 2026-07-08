@@ -30,6 +30,7 @@ dynamic = ["version", "readme"]
 
 dependencies = [
     "jinja2",
+    "packaging",
     "requests",
 ]
 

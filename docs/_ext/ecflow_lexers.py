@@ -33,7 +33,7 @@ class EcflowDefLexer(RegexLexer):
                 bygroups(Keyword, Name.Constant),
             ),
             (
-                r"(repeat)(\s+(?:date(?:list)?|day|month|year|integer|enumerated|string))(\s+(?:.+?))(\s(?:.*))",
+                r"(repeat)(\s+(?:date(?:time)?(?:list)?|day|month|year|integer|enumerated|string))(\s+(?:.+?))(\s(?:.*))",  # noqa: E501
                 bygroups(Keyword, Name.Other, Name.Variable, Literal.Date),
             ),
             # Required

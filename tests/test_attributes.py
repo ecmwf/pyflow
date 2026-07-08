@@ -554,6 +554,97 @@ class TestRepeats:
 
         s.check_definition()
 
+    def test_repeat_datetimelist_basic_usage(self):
+        from datetime import datetime as dt
+
+        i = dt(2000, 1, 1, 12, 0, 0)
+        j = dt(2000, 1, 2)
+
+        input_tests = (
+            ("A", [i]),
+            ("B", [i, j]),
+            ("C", ["20000103T120000", "20000104T000000"]),
+            ("D", [i, "20010105T123456"]),
+        )
+
+        with pyflow.Suite("s") as s:
+            for idx, args in enumerate(input_tests):
+                with pyflow.Task(f"t{idx}"):
+                    pyflow.RepeatDateTimeList(*args)
+
+        asserts = (
+            'repeat datetimelist A "20000101T120000"',
+            'repeat datetimelist B "20000101T120000" "20000102T000000"',
+            'repeat datetimelist C "20000103T120000" "20000104T000000"',
+            'repeat datetimelist D "20000101T120000" "20010105T123456"',
+        )
+        defn = str(s.ecflow_definition())
+        for a in asserts:
+            assert a in defn
+
+        s.check_definition()
+
+    def test_repeat_datetimelist_allowing_date_and_datetime_object(self):
+        import datetime
+
+        i = datetime.datetime(2000, 1, 1, 12, 34, 56)
+        j = datetime.date(2000, 1, 2)
+
+        input_tests = (("A", [i, j]),)
+
+        with pyflow.Suite("s") as s:
+            for idx, args in enumerate(input_tests):
+                with pyflow.Task(f"t{idx}"):
+                    pyflow.RepeatDateTimeList(*args)
+
+        asserts = 'repeat datetimelist A "20000101T123456" "20000102T000000"'
+        defn = str(s.ecflow_definition())
+        for a in asserts:
+            assert a in defn
+
+        s.check_definition()
+
+    def test_repeat_datetimelist_with_truncated_string_values(self):
+        input_tests = (
+            ("A", ["20000101T01", "20000102T0102", "20000103T010203"]),
+            ("B", ["20000104", "20000105T12", "20010106T1234"]),
+        )
+
+        with pyflow.Suite("s") as s:
+            for idx, args in enumerate(input_tests):
+                with pyflow.Task(f"t{idx}"):
+                    pyflow.RepeatDateTimeList(*args)
+
+        asserts = (
+            'repeat datetimelist A "20000101T010000" "20000102T010200" "20000103T010203"',
+            'repeat datetimelist B "20000104T000000" "20000105T120000" "20010106T123400"',
+        )
+        defn = str(s.ecflow_definition())
+        for a in asserts:
+            assert a in defn
+
+        s.check_definition()
+
+    def test_repeat_datetimelist_with_none_value(self):
+        with pytest.raises(ValueError, match="values cannot be None"):
+            pyflow.RepeatDateTimeList("N", None)
+
+    def test_repeat_datetimelist_with_empty_values_list(self):
+        with pytest.raises(ValueError, match="values cannot be an empty list"):
+            pyflow.RepeatDateTimeList("E", [])
+
+    def test_repeat_datetimelist_with_invalid_type_values_list(self):
+        with pytest.raises(
+            TypeError, match="values must be a list of datetime objects or strings"
+        ):
+            pyflow.RepeatDateTimeList("I", [20050101])
+
+    def test_repeat_datetimelist_with_literal_type_value(self):
+        from datetime import datetime as dt
+
+        with pytest.raises(TypeError, match="values must be a list"):
+            pyflow.RepeatDateTimeList("I", dt(2000, 1, 1, 0, 0, 0))
+
     def test_repeat_date_list(self):
         i = date(year=2019, month=12, day=31)
         j = date(year=2020, month=1, day=1)
