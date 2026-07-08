@@ -771,7 +771,7 @@ class RepeatDateTimeList(Repeat):
             isinstance(value, (datetime.datetime, datetime.date, str))
             for value in values
         ):
-            raise TypeError("values must be a list of datetime objects or strings")
+            raise TypeError("values must be a list of datetime/date objects or strings")
 
         super().__init__(name, values)
 

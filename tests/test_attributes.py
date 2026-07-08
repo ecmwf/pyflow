@@ -635,7 +635,7 @@ class TestRepeats:
 
     def test_repeat_datetimelist_with_invalid_type_values_list(self):
         with pytest.raises(
-            TypeError, match="values must be a list of datetime objects or strings"
+            TypeError, match="values must be a list of datetime/date objects or strings"
         ):
             pyflow.RepeatDateTimeList("I", [20050101])
 
