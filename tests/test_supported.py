@@ -23,6 +23,16 @@ def make_widget(specifier, current):
             "A Widget property."
             return self.value * 2
 
+        @staticmethod
+        def a_static():
+            "A Widget static method."
+            return 42
+
+        @classmethod
+        def a_classmethod(cls):
+            "A Widget class method."
+            return cls.__name__
+
     return Widget
 
 
@@ -174,3 +184,35 @@ def test_repeat_datetimelist_builds_on_installed_ecflow():
     assert repeat.name == "REPEAT_DATETIME"
     assert not callable(repeat.values)
     assert isinstance(type(repeat).__dict__["values"], property)
+
+
+def test_staticmethod_is_guarded_when_unsupported():
+    Widget = make_widget(specifier=">=5.12.0", current="5.0.0")
+    with pytest.raises(NotImplementedError):
+        Widget.a_static()
+
+
+def test_staticmethod_works_when_supported():
+    Widget = make_widget(specifier=">=5.12.0", current="5.20.0")
+    assert Widget.a_static() == 42
+
+
+def test_classmethod_is_guarded_when_unsupported():
+    Widget = make_widget(specifier=">=5.12.0", current="5.0.0")
+    with pytest.raises(NotImplementedError):
+        Widget.a_classmethod()
+
+
+def test_classmethod_works_when_supported():
+    Widget = make_widget(specifier=">=5.12.0", current="5.20.0")
+    assert Widget.a_classmethod() == "Widget"
+
+
+def test_staticmethod_remains_static_after_decoration():
+    Widget = make_widget(specifier=">=5.12.0", current="5.20.0")
+    assert isinstance(Widget.__dict__["a_static"], staticmethod)
+
+
+def test_classmethod_remains_classmethod_after_decoration():
+    Widget = make_widget(specifier=">=5.12.0", current="5.20.0")
+    assert isinstance(Widget.__dict__["a_classmethod"], classmethod)

@@ -98,6 +98,14 @@ def supported(specifier: str, current: str = ecflow.__version__):
                     ),
                 )
 
+            elif isinstance(attr_value, staticmethod):
+                # Unwrap the inner function, wrap it, and re-wrap as staticmethod.
+                setattr(cls, attr_name, staticmethod(make_wrapper(attr_value.__func__)))
+
+            elif isinstance(attr_value, classmethod):
+                # Unwrap the inner function, wrap it, and re-wrap as classmethod.
+                setattr(cls, attr_name, classmethod(make_wrapper(attr_value.__func__)))
+
         return cls
 
     return decorator
