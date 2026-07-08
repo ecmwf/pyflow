@@ -597,10 +597,9 @@ class TestRepeats:
                 with pyflow.Task(f"t{idx}"):
                     pyflow.RepeatDateTimeList(*args)
 
-        asserts = 'repeat datetimelist A "20000101T123456" "20000102T000000"'
+        assert_ = 'repeat datetimelist A "20000101T123456" "20000102T000000"'
         defn = str(s.ecflow_definition())
-        for a in asserts:
-            assert a in defn
+        assert assert_ in defn
 
         s.check_definition()
 
