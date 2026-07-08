@@ -213,6 +213,7 @@ def test_exit_hook_list_strings_preserves_duplicate_lines():
 
 
 if __name__ == "__main__":
+    # flake8: noqa
     from os import path
 
     import pytest
