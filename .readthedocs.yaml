@@ -19,6 +19,12 @@ conda:
     environment: docs/environment.yml
 
 build:
-    os: "ubuntu-20.04"
+    os: "ubuntu-22.04"
     tools:
         python: "mambaforge-4.10"
+    jobs:
+        # Install the checked-out source (e.g. the current PR) into the conda
+        # environment, so the docs are built against this code. Dependencies are
+        # already provided by docs/environment.yml, hence --no-deps.
+        post_install:
+            - pip install --no-deps .

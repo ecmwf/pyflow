@@ -25,7 +25,7 @@ from .expressions import (
     expression_from_json,
     make_expression,
 )
-from .importer import ecflow
+from .importer import ecflow, supported
 from .state import aborted, active, complete, queued, submitted, suspended, unknown
 
 NO_TRIGGER = False
@@ -641,6 +641,7 @@ for dow, day in enumerate(
     setattr(RepeatDate, day, property(lambda self: Eq(self.day_of_week, dow)))
 
 
+@supported(">=5.12.0")
 class RepeatDateTime(Exportable):
     """
     An attribute that allows a node to be repeated by a date+time value.
@@ -658,10 +659,16 @@ class RepeatDateTime(Exportable):
                               datetime.datetime(year=2019, month=12, day=31, hour=12, minute=0, second=0),
                               datetime.timedelta(hours=12, minutes=0, seconds=0))
 
-    Date and increment can also be strings::
+    Start/End values can also be strings: ISO 8601 basic format `yyyymmddTHHMMSS`, DateTime with
+    hours and minutes ``yyyymmddTHHMM``, DateTime with hours only ``yyyymmddTHH``,
+    or simply a date ``yyyymmdd`` (the missing components are assumed to be 0), and increment can also be a string::
 
         pyflow.RepeatDateTime('REPEAT_DATETIME',
                               '20190101T120000', '20191231T120000', '12:00:00')
+
+    Note::
+
+        This repeat type is only supported in ecFlow 5.12.0 and later.
 
     """
 
@@ -705,6 +712,92 @@ class RepeatDateTime(Exportable):
         hours, remainder = divmod(total_seconds, 3600)
         minutes, seconds = divmod(remainder, 60)
         return "{:02d}:{:02d}:{:02d}".format(hours, minutes, seconds)
+
+    @property
+    def second(self):
+        """*int*: The second of the repeat datetime."""
+        return Mod(self, 60)
+
+    @property
+    def minute(self):
+        """*int*: The minute of the repeat datetime."""
+        return Mod(Div(self, 60), 60)
+
+    @property
+    def hour(self):
+        """*int*: The hour of the repeat datetime."""
+        return Mod(Div(self, 3600), 24)
+
+    @property
+    def day_of_week(self):
+        """*int*: The day of the week of the repeat datetime."""
+        return Mod(Add(Div(self, 86400), 4), 7)
+
+
+@supported(">=5.17.0")
+class RepeatDateTimeList(Repeat):
+    """
+    An attribute that allows a node to be repeated over a list of datetime values.
+
+    Parameters:
+        name(str): The name of the repeat attribute.
+        values(list of datetime/date): The list of datetime/date values, as datetime/date objects or strings.
+
+    Example::
+
+        pyflow.RepeatDateTimeList('REPEAT_DATETIME',
+                                  [datetime.date(year=2019, month=1, day=1),
+                                   datetime.datetime(year=2019, month=1, day=3, hour=12, minute=0, second=0)])
+
+    Values can also be strings: ISO 8601 basic format `yyyymmddTHHMMSS`, DateTime with
+    hours and minutes ``yyyymmddTHHMM``, DateTime with hours only ``yyyymmddTHH``,
+    or simply a date ``yyyymmdd`` (the missing components are assumed to be 0)::
+
+        pyflow.RepeatDateTimeList('REPEAT_DATETIME', ['20190101T120000', '20190103'])
+
+    Note::
+
+        This repeat type is only supported in ecFlow 5.17.0 and later.
+    """
+
+    def __init__(self, name, values):
+        if values is None:
+            raise ValueError("values cannot be None")
+        if not isinstance(values, list):
+            raise TypeError("values must be a list")
+        if isinstance(values, list) and not values:
+            raise ValueError("values cannot be an empty list")
+        if not all(
+            isinstance(value, (datetime.datetime, datetime.date, str))
+            for value in values
+        ):
+            raise TypeError("values must be a list of datetime/date objects or strings")
+
+        super().__init__(name, values)
+
+    def _build(self, ecflow_parent):
+        # Format all datetime values as ISO 8601 basic format `yyyymmddTHHMMSS`
+        values = [as_date(value).strftime("%Y%m%dT%H%M%S") for value in self.values]
+
+        repeat = ecflow.RepeatDateTimeList(
+            str(self.name),
+            values,
+        )
+
+        ecflow_parent.add_repeat(repeat)
+
+    @property
+    def values(self):
+        """*list*: The list of datetime values."""
+        return [
+            x if isinstance(x, datetime.datetime) else as_date(x) for x in self.value
+        ]
+
+    def __add__(self, other):
+        return Add(self, other)
+
+    def __sub__(self, other):
+        return Sub(self, other)
 
     @property
     def second(self):
@@ -939,6 +1032,10 @@ class InLimit(Attribute):
 
     Parameters:
         value(str,Limit_): The name of the limit or a limit object.
+        path(str): The optional path to the limit if the limit is not in the same node as the InLimit attribute.
+        tokens(int): The number of tokens to consume from the limit when a task is submitted.
+        limit_this_node_only(bool): Whether the limit should only apply to current node.
+        limit_submission(bool): Whether the limit should only apply to submissions
 
     Example::
 
@@ -946,8 +1043,19 @@ class InLimit(Attribute):
         pyflow.InLimit(l)
     """
 
-    def __init__(self, value):
+    def __init__(
+        self,
+        value: str | Limit,
+        path: str = "",
+        tokens: int = 1,
+        limit_this_node_only: bool = False,
+        limit_submission: bool = False,
+    ):
         super().__init__("_" + str(value), value)
+        self.path = path
+        self.tokens = tokens
+        self.limit_this_node_only = limit_this_node_only
+        self.limit_submission = limit_submission
 
     def _build(self, ecflow_parent):
         value = self.value
@@ -955,9 +1063,32 @@ class InLimit(Attribute):
             return
         if isinstance(value, Limit):
             value = value.fullname.split(":")
-            ecflow_parent.add_inlimit(ecflow.InLimit(value[1], value[0]))
+            if self.path:
+                if self.path != value[0]:
+                    raise ValueError(
+                        "InLimit path {} does not match limit path {}".format(
+                            self.path, value[0]
+                        )
+                    )
+            ecflow_parent.add_inlimit(
+                ecflow.InLimit(
+                    value[1],
+                    value[0],
+                    self.tokens,
+                    self.limit_this_node_only,
+                    self.limit_submission,
+                )
+            )
         else:
-            ecflow_parent.add_inlimit(ecflow.InLimit(str(value)))
+            ecflow_parent.add_inlimit(
+                ecflow.InLimit(
+                    str(value),
+                    self.path,
+                    self.tokens,
+                    self.limit_this_node_only,
+                    self.limit_submission,
+                )
+            )
 
 
 class Inlimit(InLimit):

@@ -95,6 +95,25 @@ def _from_json(node, tree):
                     json_build(Task, k, v)
 
 
+def _normalize_exit_hook(hook):
+    if isinstance(hook, str):
+        return [hook]
+    if isinstance(hook, Script):
+        return [hook.value]
+
+    try:
+        hook_items = list(hook)
+    except TypeError as exc:
+        raise TypeError(
+            "exit_hook must be a string, Script, or iterable containing those types"
+        ) from exc
+
+    normalized = []
+    for item in hook_items:
+        normalized.extend(_normalize_exit_hook(item))
+    return normalized
+
+
 class DuplicateNodeError(RuntimeError):
     def __init__(self, parent, new, existing):
         super().__init__(
@@ -937,15 +956,13 @@ class Family(Node):
         super()._add_single_node(node)
 
     def _add_exit_hook(self, hook):
-        if isinstance(hook, str):
-            hook = [hook]
-        for hk in hook:
-            if hk not in self._exit_hook:
-                self._exit_hook.append(hk)
+        normalized_hook = _normalize_exit_hook(hook)
+        for hk in normalized_hook:
+            self._exit_hook.append(hk)
         # Check if properly initialised
         if "_nodes" in self.__dict__:
             for chld in self.executable_children:
-                chld._add_exit_hook(hook)
+                chld._add_exit_hook(normalized_hook)
 
 
 class AnchorFamily(AnchorMixin, Family):
@@ -1203,15 +1220,13 @@ class Suite(AnchorMixin, Node):
         super()._add_single_node(node)
 
     def _add_exit_hook(self, hook):
-        if isinstance(hook, str):
-            hook = [hook]
-        for hk in hook:
-            if hk not in self._exit_hook:
-                self._exit_hook.append(hk)
+        normalized_hook = _normalize_exit_hook(hook)
+        for hk in normalized_hook:
+            self._exit_hook.append(hk)
         # Check if properly initialised
         if "_nodes" in self.__dict__:
             for chld in self.executable_children:
-                chld._add_exit_hook(hook)
+                chld._add_exit_hook(normalized_hook)
 
 
 class Task(Node):
@@ -1401,12 +1416,10 @@ class Task(Node):
 
         return self.host.purge_modules or super().task_purge_modules()
 
-    def _add_exit_hook(self, hook: str):
-        if isinstance(hook, str):
-            hook = [hook]
-        for hk in hook:
-            if hk not in self._exit_hook:
-                self._exit_hook.append(hk)
+    def _add_exit_hook(self, hook):
+        normalized_hook = _normalize_exit_hook(hook)
+        for hk in normalized_hook:
+            self._exit_hook.append(hk)
 
     def generate_script(self):
         """

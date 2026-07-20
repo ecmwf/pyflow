@@ -18,7 +18,6 @@ dependencies:
     - sphinx-rtd-theme
     - sphinx-copybutton
     - sphinx-tabs
-    - git+https://github.com/ecmwf/pyflow.git
 
 variables:
   QT_MAC_WANTS_LAYER: 1

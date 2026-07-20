@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyflow-workflow-generator"
-requires-python = ">=3.8"
+requires-python = ">=3.12"
 authors = [
     {name = "European Centre for Medium-Range Weather Forecasts (ECMWF)", email = "software.support@ecmwf.int"},
 ]
@@ -22,14 +22,14 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering",
 ]
 dynamic = ["version", "readme"]
 
 dependencies = [
     "jinja2",
+    "packaging",
     "requests",
 ]
 
@@ -42,6 +42,13 @@ dependencies = [
     test = [
         "pytest",
     ]
+    qa = [
+        "black==26.5.1",
+        "flake8==7.3.0",
+        "isort==8.0.1",
+        "pre-commit",
+    ]
+    dev = ["pyflow-workflow-generator[test,qa]"]
     diagrams = [
         "graphviz",
     ]
@@ -61,8 +68,8 @@ where = ["."]
 exclude = ["tests"]
 
 [tool.setuptools_scm]
-write_to = "pyflow/_version.py"
-write_to_template = '''
+version_file = "pyflow/_version.py"
+version_file_template = '''
 # Do not change! Do not track in version control!
 __version__ = "{version}"
 '''
